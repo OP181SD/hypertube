@@ -47,3 +47,5 @@ lerna-debug.log*
 *.tsbuildinfo
 
 AUDIT.md
+
+pnpm-lock.yaml

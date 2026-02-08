@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Mockup } from "@/components/ui/Mockup";
 import { DashboardNavbar } from "@/components/dashboard/DashboardNavbar";
 import type { Tab } from "@/types/ui/Tabs";
+import { Profile } from "@/pages/Profile"
 
 export default function Dashboard() {
   const [search, setSearch] = useState("");
@@ -28,16 +29,10 @@ export default function Dashboard() {
         {activeTab === "home" && <Mockup />}
         {activeTab === "profile" && (
           <div className="text-white text-center mt-10">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Page Profil</h2>
-            <p className="text-sm sm:text-base text-white/70">(Parti de nesrine)</p>
+            <Profile></Profile>
           </div>
         )}
-        {activeTab === "settings" && (
-          <div className="text-white text-center mt-10">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Page Paramètres</h2>
-            <p className="text-sm sm:text-base text-white/70">(Parti de farouk)</p>
-          </div>
-        )}
+       
       </main>
     </div>
   );

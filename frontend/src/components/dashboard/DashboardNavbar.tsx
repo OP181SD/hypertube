@@ -5,6 +5,7 @@ import { Hamburger } from "./Hamburger";
 import { MobileMenu } from "./MobileMenu";
 import type { Tab } from "@/types/ui/Tabs";
 
+
 interface Props {
   search: string;
   setSearch: (value: string) => void;
@@ -20,7 +21,7 @@ function renderNavButtons(
   setActiveTab: (tab: Tab) => void,
   t: (key: string) => string
 ) {
-  const tabs: Tab[] = ["home", "profile", "settings"];
+  const tabs: Tab[] = ["home", "profile"];
 
   return tabs.map((tab) => (
     <button
@@ -83,7 +84,8 @@ export function DashboardNavbar({
             </select>
 
 
-            <ProfileIcon />
+            <ProfileIcon onClick={() => setActiveTab("profile")} />
+
 
             <button
               onClick={handleLogout}
