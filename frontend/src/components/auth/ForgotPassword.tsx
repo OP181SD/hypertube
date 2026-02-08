@@ -1,0 +1,72 @@
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { Action, goToLogin } from "./types";
+
+interface Props {
+  email: string;
+  setEmail: (value: string) => void;
+  dispatch: (action: Action) => void;
+}
+
+export const AuthForgotPassword: React.FC<Props> = ({
+  email,
+  setEmail,
+  dispatch,
+}) => {
+  const { t } = useTranslation();
+
+  const handleResetPassword = () => {
+    if (!email) {
+      alert(t("enter_your_email"));
+      return;
+    }
+    alert(t("reset_link_sent", { email }));
+  };
+
+  return (
+    <div className="flex flex-col gap-6 p-12 pt-16 bg-[#1c1c1e] w-150 h-full relative overflow-y-auto">
+      {/* Logo */}
+      <div className="absolute top-4 right-4 text-[#f5f5f7] font-bold text-xl">
+        Hyper <span className="colors-title-gradient">Tube</span>
+      </div>
+
+      <div className="flex grow flex-col items-center gap-4">
+        <h2 className="text-[#f5f5f7] text-2xl font-semibold text-center">
+          {t("reset_your_password")}
+        </h2>
+
+        <p className="text-[#86868b] text-sm text-center leading-relaxed max-w-105">
+          {t("reset_description")}
+        </p>
+
+        <div className="w-full flex flex-col gap-3 mt-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("email_placeholder")}
+            className="w-full px-4 py-3 rounded-xl bg-[#2c2c2e] text-[#f5f5f7] border border-[#424245] focus:border-[#0071e3] focus:outline-none placeholder-[#86868b]"
+          />
+        </div>
+
+        <button
+          onClick={handleResetPassword}
+          className="w-full mt-4 px-4 py-3 rounded-xl bg-[#0071e3] text-white font-medium hover:bg-[#0077ed] transition-colors"
+        >
+          {t("send_reset_link")}
+        </button>
+
+        <button
+          onClick={() => dispatch(goToLogin())}
+          className="text-[#0071e3] hover:text-[#0077ed] transition-colors text-sm font-medium mt-2 cursor-pointer"
+        >
+          {t("back_to_login")}
+        </button>
+
+        <p className="text-[#8e8e93] text-xs text-center mt-4 max-w-120">
+          {t("reset_confirmation")}
+        </p>
+      </div>
+    </div>
+  );
+};

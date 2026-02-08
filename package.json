@@ -1,0 +1,31 @@
+{
+  "name": "hypertube",
+  "version": "6.3.0",
+  "private": true,
+  "scripts": {
+    "dev:back": "pnpm --filter hypertube-backend start:dev",
+    "dev:front": "pnpm --filter frontend dev",
+    "build:back": "pnpm --filter hypertube-backend build",
+    "build:front": "pnpm --filter frontend build",
+    "lint:back": "pnpm --filter hypertube-backend lint",
+    "lint:front": "pnpm --filter frontend lint",
+    "test": "pnpm --filter hypertube-backend test",
+    "test:e2e": "pnpm --filter hypertube-backend test:e2e",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "prisma:generate": "pnpm --filter hypertube-backend prisma:generate",
+    "prisma:migrate:dev": "pnpm --filter hypertube-backend prisma:migrate:dev",
+    "prisma:studio": "pnpm --filter hypertube-backend prisma:studio"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "argon2",
+      "@nestjs/core",
+      "@prisma/engines",
+      "@swc/core",
+      "esbuild",
+      "prisma"
+    ]
+  },
+  "packageManager": "pnpm@10.28.2"
+}

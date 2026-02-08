@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+}
+
+body {
+  background: var(--background);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; 
+}
+
+.colors-title-gradient {
+  @apply bg-linear-to-r from-[#795EF0] via-[#C270ED] to-[#38BDF8] bg-clip-text text-transparent;
+}
+
+.border-gradient {
+  @apply bg-linear-to-r from-[#795EF0] via-[#C270ED] to-[#38BDF8];
+}
