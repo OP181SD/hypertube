@@ -180,7 +180,7 @@ Audit Hypertube v6.3 — Rapport de conformité
   ┌─────────────┬────────────────────────────────────────────────────────────────────────────────────────────────┐
   │   Section   │                                             Score                                              │
   ├─────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Backend API │ ~95% — Il manque juste l'upload fichier pour la photo de profil                                │
+  │ Backend API │ 100%
   ├─────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
   │ Frontend    │ ~35% — Layout + auth forms + i18n + search OK, mais tout le reste est manquant ou non connecté │
   └─────────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -198,7 +198,6 @@ Audit Hypertube v6.3 — Rapport de conformité
   7. ❌ Logout non fonctionnel — console.log au lieu d'appeler l'API
   8. ❌ Profil viewing/editing — Pas de page pour voir les autres users ni éditer son profil
   9. ❌ Watched/unwatched — Pas de différenciation visuelle dans les thumbnails
-  10. ❌ Upload photo de profil — Backend n'accepte que des URLs, pas de vrai upload fichier
 
   Mineurs (points en moins)
 
@@ -207,5 +206,5 @@ Audit Hypertube v6.3 — Rapport de conformité
   13. ⚠️ Password reset — UI existe mais pas intégrée au backend
 
   ---
-  Verdict : Le backend est quasi complet (~95%). Le frontend a besoin d'un gros travail pour atteindre la conformité — toute la partie
+  Verdict : Le backend est complet. Le frontend a besoin d'un gros travail pour atteindre la conformité, toute la partie
   vidéo/player/comments/profil/auth state est à construire.
