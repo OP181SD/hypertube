@@ -1,5 +1,5 @@
 import { useState } from "react";
-// import { renderButton } from "./utils/renderButton";
+import { SortTypes } from "./types/filters";
 
 interface NavigationDesktopProps {
   openGenres: boolean;
@@ -7,8 +7,9 @@ interface NavigationDesktopProps {
   setOpenGenres: (value: boolean) => void;
   setOpenCategory: (value: boolean) => void;
   genres: string[];
-  sortTypes: string[];
+  sortTypes: SortTypes[];
   onSelectGenre: (genreName: string) => void;
+  onSelectSort?: (sortType: SortTypes) => void;
 }
 
 export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
@@ -19,12 +20,19 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
   genres,
   sortTypes,
   onSelectGenre,
+  onSelectSort,
 }) => {
   const [activeGenre, setActiveGenre] = useState<string>("");
+  const [activeSort, setActiveSort] = useState<SortTypes>("Popular");
 
   const handleClickGenre = (genre: string) => {
     setActiveGenre(genre);
     onSelectGenre(genre);
+  };
+
+  const handleClickSort = (type: SortTypes) => {
+    setActiveSort(type);
+    onSelectSort?.(type);
   };
 
   return (
@@ -81,8 +89,10 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
         {sortTypes.map((type) => (
           <button
             key={type}
-            onClick={() => console.log("Category clicked:", type)}
-            className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium bg-white/10 text-white shadow-sm hover:shadow-md transition-all duration-300 whitespace-nowrap"
+            onClick={() => handleClickSort(type)}
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-300 whitespace-nowrap ${
+              activeSort === type ? "bg-white text-black shadow-md" : "bg-white/10 text-white"
+            }`}
           >
             {type}
           </button>

@@ -41,11 +41,17 @@ export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore
             key={`${m.id}-${index}`}
             className="group relative rounded-lg overflow-hidden bg-gray-900 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
           >
-            <img
-              src={m.coverUrl}
-              alt={m.title}
-              className="w-full h-87.5 object-cover"
-            />
+            {m.coverUrl ? (
+              <img
+                src={m.coverUrl}
+                alt={m.title}
+                className="w-full h-87.5 object-cover"
+              />
+            ) : (
+              <div className="w-full h-87.5 bg-gray-800 flex items-center justify-center text-white/40 text-sm">
+                No image
+              </div>
+            )}
 
             <div className="absolute bottom-0 left-0 w-full h-2/5 bg-linear-to-t from-black via-black/60 to-transparent pointer-events-none" />
 
@@ -65,7 +71,6 @@ export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore
         ))}
       </div>
 
-      {/* Sentinel for infinite scroll */}
       <div ref={sentinelRef} className="w-full py-8 flex justify-center">
         {loading && (
           <div className="flex items-center gap-2 text-white/60 text-sm">

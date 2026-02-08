@@ -2,13 +2,16 @@
 import { useState } from "react";
 import { genres, sortTypes } from "./types/filters";
 import { NavigationDesktop } from "./NavigationDesktop";
+import { SortTypes } from "./types/filters";
 import { NavigationMobile } from "./NavigationMobile";
+
 
 interface NavigationGenderProps {
   onSelectGenre: (genreName: string) => void;
+  onSelectSort: (sortType: SortTypes) => void;
 }
 
-export const NavigationGender: React.FC<NavigationGenderProps> = ({ onSelectGenre }) => {
+export const NavigationGender: React.FC<NavigationGenderProps> = ({ onSelectGenre,  onSelectSort }) => {
 
   const [openGenres, setOpenGenres] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
@@ -25,6 +28,7 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({ onSelectGenr
         genres={genres}
         sortTypes={sortTypes}
         onSelectGenre={onSelectGenre}
+        onSelectSort={onSelectSort}
       />
 
       <NavigationMobile
@@ -34,6 +38,8 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({ onSelectGenr
         setOpenCategory={setOpenCategory}
         genres={genres}
         sortTypes={sortTypes}
+        onSelectGenre={onSelectGenre}
+        onSelectSort={onSelectSort}
       />
     </div>
   );
