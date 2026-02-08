@@ -1,17 +1,28 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Param,
   Body,
+  Req,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
   ParseUUIDPipe,
 } from "@nestjs/common";
+import { FastifyRequest } from "fastify";
 import { UsersService } from "./users.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { User } from "@prisma/client";
+
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
 
 @Controller("users")
 export class UsersController {
@@ -61,5 +72,31 @@ export class UsersController {
     }
 
     return this.usersService.update(id, updateUserDto);
+  }
+
+  @Post(":id/avatar")
+  async uploadAvatar(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Req() req: FastifyRequest,
+    @CurrentUser() currentUser: User,
+  ) {
+    if (currentUser.id !== id) {
+      throw new ForbiddenException("You can only update your own profile");
+    }
+
+    const file = await req.file();
+    if (!file) {
+      throw new BadRequestException("No file uploaded");
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
+      );
+    }
+
+    const profilePictureUrl = await this.usersService.saveAvatar(id, file);
+
+    return { profilePictureUrl };
   }
 }

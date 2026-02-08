@@ -1,6 +1,12 @@
 import { Injectable, ConflictException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthProvider, Language, User } from "@prisma/client";
+import { MultipartFile } from "@fastify/multipart";
+import { createWriteStream } from "fs";
+import { join, extname } from "path";
+import { pipeline } from "stream/promises";
+import { randomUUID } from "crypto";
 import * as argon2 from "argon2";
 
 export interface CreateUserData {
@@ -27,7 +33,14 @@ export interface UpdateUserData {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly uploadPath: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {
+    this.uploadPath = this.config.get<string>("UPLOAD_PATH", "./data/uploads");
+  }
 
   async findAll(): Promise<Pick<User, "id" | "username">[]> {
     return this.prisma.user.findMany({
@@ -136,5 +149,22 @@ export class UsersService {
       where: { id },
       data: updateData,
     });
+  }
+
+  async saveAvatar(userId: string, file: MultipartFile): Promise<string> {
+    const ext = extname(file.filename).toLowerCase() || ".jpg";
+    const filename = `${randomUUID()}${ext}`;
+    const filePath = join(this.uploadPath, "avatars", filename);
+
+    await pipeline(file.file, createWriteStream(filePath));
+
+    const profilePictureUrl = `/uploads/avatars/${filename}`;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { profilePictureUrl },
+    });
+
+    return profilePictureUrl;
   }
 }

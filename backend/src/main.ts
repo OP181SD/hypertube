@@ -5,6 +5,10 @@ import {
 } from "@nestjs/platform-fastify";
 import { ValidationPipe } from "@nestjs/common";
 import fastifyCookie from "@fastify/cookie";
+import fastifyMultipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
+import { join } from "path";
+import { mkdirSync } from "fs";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/http-exception.filter";
 
@@ -16,6 +20,22 @@ async function bootstrap() {
 
   await app.register(fastifyCookie, {
     secret: process.env.COOKIE_SECRET,
+  });
+
+  await app.register(fastifyMultipart, {
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5 MB
+      files: 1,
+    },
+  });
+
+  const uploadPath = process.env.UPLOAD_PATH || "./data/uploads";
+  mkdirSync(join(uploadPath, "avatars"), { recursive: true });
+
+  await app.register(fastifyStatic, {
+    root: join(process.cwd(), uploadPath),
+    prefix: "/uploads/",
+    decorateReply: false,
   });
 
   app.useGlobalPipes(

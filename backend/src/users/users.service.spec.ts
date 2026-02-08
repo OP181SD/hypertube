@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConflictException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { UsersService } from "./users.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthProvider, Language } from "@prisma/client";
@@ -12,6 +13,14 @@ vi.mock("argon2", () => ({
   verify: vi.fn().mockResolvedValue(true),
 }));
 
+// Mock fs and stream/promises for saveAvatar
+vi.mock("fs", () => ({
+  createWriteStream: vi.fn().mockReturnValue({ on: vi.fn() }),
+}));
+vi.mock("stream/promises", () => ({
+  pipeline: vi.fn().mockResolvedValue(undefined),
+}));
+
 const mockPrismaService = {
   user: {
     findMany: vi.fn(),
@@ -20,6 +29,10 @@ const mockPrismaService = {
     create: vi.fn(),
     update: vi.fn(),
   },
+};
+
+const mockConfigService = {
+  get: vi.fn().mockReturnValue("./data/uploads"),
 };
 
 describe("UsersService", () => {
@@ -32,6 +45,7 @@ describe("UsersService", () => {
       providers: [
         UsersService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -156,10 +170,9 @@ describe("UsersService", () => {
     });
 
     it("should throw ConflictException for duplicate username", async () => {
-      // First call (findByEmail) returns null, second (findByUsername) returns existing
       mockPrismaService.user.findUnique
-        .mockResolvedValueOnce(null) // email check
-        .mockResolvedValueOnce(mockDbUser); // username check
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockDbUser);
 
       await expect(
         service.create({
@@ -236,8 +249,8 @@ describe("UsersService", () => {
 
     it("should throw ConflictException if username is taken by another user", async () => {
       mockPrismaService.user.findFirst
-        .mockResolvedValueOnce(null) // email check passes
-        .mockResolvedValueOnce(mockDbUser2); // username check fails
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockDbUser2);
 
       await expect(
         service.update(mockDbUser.id, {
@@ -256,6 +269,29 @@ describe("UsersService", () => {
       });
 
       expect(result.language).toBe(Language.FR);
+    });
+  });
+
+  describe("saveAvatar", () => {
+    it("should save file and update user profilePictureUrl", async () => {
+      const mockFile = {
+        filename: "photo.jpg",
+        mimetype: "image/jpeg",
+        file: { pipe: vi.fn() },
+      } as any;
+
+      mockPrismaService.user.update.mockResolvedValue({
+        ...mockDbUser,
+        profilePictureUrl: "/uploads/avatars/some-uuid.jpg",
+      });
+
+      const result = await service.saveAvatar(mockDbUser.id, mockFile);
+
+      expect(result).toMatch(/^\/uploads\/avatars\/.+\.jpg$/);
+      expect(mockPrismaService.user.update).toHaveBeenCalledWith({
+        where: { id: mockDbUser.id },
+        data: { profilePictureUrl: expect.stringMatching(/^\/uploads\/avatars\/.+\.jpg$/) },
+      });
     });
   });
 });

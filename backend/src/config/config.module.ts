@@ -61,6 +61,9 @@ import Joi from "joi";
           .uri()
           .default("https://eztv.re/api"),
 
+        // Uploads
+        UPLOAD_PATH: Joi.string().default("./data/uploads"),
+
         // Streaming
         STORAGE_PATH: Joi.string().default("./data/videos"),
         FFMPEG_PATH: Joi.string().allow("").default(""),

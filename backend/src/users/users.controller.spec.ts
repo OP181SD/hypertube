@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { NotFoundException, ForbiddenException } from "@nestjs/common";
+import { NotFoundException, ForbiddenException, BadRequestException } from "@nestjs/common";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -9,6 +9,7 @@ const mockUsersService = {
   findAll: vi.fn(),
   findById: vi.fn(),
   update: vi.fn(),
+  saveAvatar: vi.fn(),
 };
 
 describe("UsersController", () => {
@@ -104,6 +105,56 @@ describe("UsersController", () => {
           mockDbUser as any,
         ),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("POST /users/:id/avatar", () => {
+    const mockFile = {
+      filename: "photo.jpg",
+      mimetype: "image/jpeg",
+      file: { pipe: vi.fn() },
+    };
+
+    it("should upload avatar for own profile", async () => {
+      const mockReq = { file: vi.fn().mockResolvedValue(mockFile) } as any;
+      mockUsersService.saveAvatar.mockResolvedValue("/uploads/avatars/uuid.jpg");
+
+      const result = await controller.uploadAvatar(
+        mockDbUser.id,
+        mockReq,
+        mockDbUser as any,
+      );
+
+      expect(result.profilePictureUrl).toBe("/uploads/avatars/uuid.jpg");
+      expect(mockUsersService.saveAvatar).toHaveBeenCalledWith(
+        mockDbUser.id,
+        mockFile,
+      );
+    });
+
+    it("should throw ForbiddenException when uploading for another user", async () => {
+      const mockReq = { file: vi.fn() } as any;
+
+      await expect(
+        controller.uploadAvatar(mockDbUser.id, mockReq, mockDbUser2 as any),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should throw BadRequestException when no file uploaded", async () => {
+      const mockReq = { file: vi.fn().mockResolvedValue(null) } as any;
+
+      await expect(
+        controller.uploadAvatar(mockDbUser.id, mockReq, mockDbUser as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException for invalid file type", async () => {
+      const invalidFile = { ...mockFile, mimetype: "application/pdf" };
+      const mockReq = { file: vi.fn().mockResolvedValue(invalidFile) } as any;
+
+      await expect(
+        controller.uploadAvatar(mockDbUser.id, mockReq, mockDbUser as any),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
