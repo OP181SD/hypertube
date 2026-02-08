@@ -180,7 +180,7 @@ importers:
         specifier: ^4.1.18
         version: 4.1.18(vite@7.3.1(@types/node@24.10.12)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(tsx@4.21.0))
       axios:
-        specifier: ^1.13.3
+        specifier: ^1.13.4
         version: 1.13.4
       i18next:
         specifier: ^25.8.0
