@@ -131,6 +131,29 @@ describe("MoviesService", () => {
       expect(result.data[0].watched).toBe(true);
     });
 
+    it("should skip watched status when no userId is provided", async () => {
+      mockYtsService.searchMovies.mockResolvedValue({
+        movies: [ytsMovie],
+        movieCount: 1,
+      });
+      mockEztvService.searchTorrents.mockResolvedValue({
+        torrents: [],
+        torrentsCount: 0,
+      });
+      mockPrisma.movie.upsert.mockResolvedValue(mockDbMovie);
+      mockPrisma.torrent.upsert.mockResolvedValue({});
+      mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie]);
+      mockPrisma.movie.count.mockResolvedValue(1);
+
+      const result = await service.search(
+        { query: "matrix", page: 1, limit: 20 },
+        undefined,
+      );
+
+      expect(result.data[0].watched).toBe(false);
+      expect(mockPrisma.watchHistory.findMany).not.toHaveBeenCalled();
+    });
+
     it("should handle YTS failure gracefully", async () => {
       mockYtsService.searchMovies.mockResolvedValue({
         movies: [],
@@ -313,6 +336,7 @@ describe("MoviesService", () => {
         ...movieWithoutTmdb,
         tmdbId: 603,
         director: "Lana Wachowski",
+        producer: "Joel Silver",
         cast: ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss"],
         summary: tmdbMovieDetail.overview,
         runtime: 136,

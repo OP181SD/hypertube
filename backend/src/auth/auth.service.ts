@@ -12,7 +12,7 @@ import { MailService } from "../mail/mail.service";
 import { RegisterDto } from "./dto/register.dto";
 import { AuthProvider, User } from "@prisma/client";
 import * as argon2 from "argon2";
-import { randomBytes } from "crypto";
+import { randomBytes, timingSafeEqual } from "crypto";
 
 export interface TokenPair {
   access_token: string;
@@ -171,7 +171,14 @@ export class AuthService {
       return false;
     }
 
-    return client.clientSecret === clientSecret;
+    const storedBuf = Buffer.from(client.clientSecret, "utf8");
+    const providedBuf = Buffer.from(clientSecret, "utf8");
+
+    if (storedBuf.length !== providedBuf.length) {
+      return false;
+    }
+
+    return timingSafeEqual(storedBuf, providedBuf);
   }
 
   async forgotPassword(email: string): Promise<void> {

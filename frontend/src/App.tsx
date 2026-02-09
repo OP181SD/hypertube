@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import MovieDetailPage from "@/pages/MovieDetailPage";
+import UserProfilePage from "@/pages/UserProfilePage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import OAuthCallback from "@/pages/OAuthCallback";
 import Navbar from "@/components/layout/home/Navbar";
@@ -80,6 +81,16 @@ export default function App() {
               <ProtectedRoute>
                 <AuthPageLayout>
                   <MovieDetailPage />
+                </AuthPageLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/:id"
+            element={
+              <ProtectedRoute>
+                <AuthPageLayout>
+                  <UserProfilePage />
                 </AuthPageLayout>
               </ProtectedRoute>
             }

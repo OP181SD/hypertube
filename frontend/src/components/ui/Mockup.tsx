@@ -45,7 +45,7 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
   };
 
   return (
-    <main className="flex flex-col items-center w-full">
+    <section className="flex flex-col items-center w-full">
       {hero.movies.length > 0 && (
         <HeroSection
           movies={hero.movies}
@@ -67,6 +67,6 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
         hasMore={hasMore}
         onLoadMore={loadMore}
       />
-    </main>
+    </section>
   );
 };

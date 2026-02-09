@@ -38,6 +38,18 @@ export class SearchMoviesDto {
 
   @IsOptional()
   @IsInt()
+  @Min(1888)
+  @Type(() => Number)
+  minYear?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1888)
+  @Type(() => Number)
+  maxYear?: number;
+
+  @IsOptional()
+  @IsInt()
   @Min(1)
   @Type(() => Number)
   page?: number;

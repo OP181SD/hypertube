@@ -17,11 +17,12 @@ export async function updateUser(
 export async function uploadProfilePicture(
   id: string,
   file: File,
-): Promise<UserPublic> {
+): Promise<{ profilePictureUrl: string }> {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await client.patch<UserPublic>(`/users/${id}/profile-picture`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const res = await client.post<{ profilePictureUrl: string }>(
+    `/users/${id}/avatar`,
+    formData,
+  );
   return res.data;
 }

@@ -23,6 +23,8 @@ export interface SearchParams {
   sortBy?: string;
   order?: string;
   minRating?: number;
+  minYear?: number;
+  maxYear?: number;
   page?: number;
   limit?: number;
 }
@@ -50,7 +52,7 @@ export class MoviesService {
     private readonly subtitleService: SubtitleService,
   ) {}
 
-  async search(params: SearchParams, userId: string): Promise<PaginatedMovies> {
+  async search(params: SearchParams, userId?: string): Promise<PaginatedMovies> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
 
@@ -90,11 +92,10 @@ export class MoviesService {
       this.prisma.movie.count({ where }),
     ]);
 
-    // Get watched movie IDs for this user
-    const watchedMovieIds = await this.getWatchedMovieIds(
-      userId,
-      movies.map((m) => m.id),
-    );
+    // Get watched movie IDs for this user (if authenticated)
+    const watchedMovieIds = userId
+      ? await this.getWatchedMovieIds(userId, movies.map((m) => m.id))
+      : new Set<string>();
 
     const totalPages = Math.ceil(total / limit);
 
@@ -149,6 +150,8 @@ export class MoviesService {
 
       const director =
         tmdbData.credits?.crew.find((c) => c.job === "Director")?.name ?? null;
+      const producer =
+        tmdbData.credits?.crew.find((c) => c.job === "Producer")?.name ?? null;
       const cast =
         tmdbData.credits?.cast
           .sort((a, b) => a.order - b.order)
@@ -164,6 +167,7 @@ export class MoviesService {
           summary: tmdbData.overview || movie.summary,
           runtime: tmdbData.runtime || movie.runtime,
           director,
+          producer,
           cast,
           genres: genres.length > 0 ? genres : movie.genres,
           posterUrl: posterUrl || movie.posterUrl,
@@ -292,6 +296,13 @@ export class MoviesService {
       where.imdbRating = { gte: params.minRating };
     }
 
+    if (params.minYear != null || params.maxYear != null) {
+      where.year = {
+        ...(params.minYear != null ? { gte: params.minYear } : {}),
+        ...(params.maxYear != null ? { lte: params.maxYear } : {}),
+      };
+    }
+
     return where;
   }
 
@@ -382,6 +393,7 @@ export class MoviesService {
       posterUrl: movie.posterUrl,
       genres: movie.genres,
       director: movie.director,
+      producer: movie.producer,
       cast: movie.cast,
       torrents,
       subtitles,

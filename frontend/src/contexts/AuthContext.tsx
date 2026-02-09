@@ -14,13 +14,17 @@ import {
   forgotPassword as forgotPwdApi,
   resetPassword as resetPwdApi,
 } from "@/api/auth.api";
-import { getUser } from "@/api/users.api";
+import { getUser, updateUser as updateUserApi } from "@/api/users.api";
 import client from "@/api/client";
+import i18n from "@/i18n";
 import type {
   UserPublic,
   RegisterRequest,
   MessageResponse,
 } from "@/types/api";
+
+const LANG_TO_I18N: Record<string, string> = { EN: "en", FR: "fr", ES: "es" };
+const I18N_TO_LANG: Record<string, string> = { en: "EN", fr: "FR", es: "ES" };
 
 interface AuthContextValue {
   user: UserPublic | null;
@@ -33,6 +37,8 @@ interface AuthContextValue {
   forgotPassword: (email: string) => Promise<MessageResponse>;
   resetPassword: (token: string, password: string) => Promise<MessageResponse>;
   restoreSession: () => Promise<void>;
+  updateUser: (data: Partial<Pick<UserPublic, "username" | "email" | "firstName" | "lastName" | "language">>) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -45,6 +51,15 @@ function decodeToken(token: string): { sub: string } | null {
     return null;
   }
 }
+
+function syncLanguage(user: UserPublic) {
+  if (user.language) {
+    const lng = LANG_TO_I18N[user.language] ?? "en";
+    i18n.changeLanguage(lng);
+  }
+}
+
+export { I18N_TO_LANG };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserPublic | null>(null);
@@ -75,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const u = await getUser(decoded.sub);
       setUser(u);
+      syncLanguage(u);
     } catch {
       clearAuth();
     } finally {
@@ -135,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (decoded?.sub) {
           const u = await getUser(decoded.sub);
           setUser(u);
+          syncLanguage(u);
         }
       } catch (err: unknown) {
         const axiosErr = err as {
@@ -161,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (decoded?.sub) {
           const u = await getUser(decoded.sub);
           setUser(u);
+          syncLanguage(u);
         }
       } catch (err: unknown) {
         const axiosErr = err as {
@@ -196,6 +214,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const updateUser = useCallback(
+    async (data: Partial<Pick<UserPublic, "username" | "email" | "firstName" | "lastName" | "language">>) => {
+      if (!user) return;
+      const updated = await updateUserApi(user.id, data);
+      setUser(updated);
+    },
+    [user],
+  );
+
+  const refreshUser = useCallback(async () => {
+    if (!user) return;
+    const u = await getUser(user.id);
+    setUser(u);
+  }, [user]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -209,6 +242,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         forgotPassword,
         resetPassword,
         restoreSession,
+        updateUser,
+        refreshUser,
       }}
     >
       {children}

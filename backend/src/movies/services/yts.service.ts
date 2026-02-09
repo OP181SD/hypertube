@@ -25,7 +25,7 @@ export class YtsService {
   constructor(private readonly configService: ConfigService) {
     this.baseUrl =
       this.configService.get<string>("YTS_BASE_URL") ??
-      "https://yts.mx/api/v2";
+      "https://yts.torrentbay.st/api/v2";
   }
 
   async searchMovies(params: YtsSearchParams): Promise<YtsSearchResult> {

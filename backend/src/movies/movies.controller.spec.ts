@@ -60,6 +60,29 @@ describe("MoviesController", () => {
       );
     });
 
+    it("should work without authenticated user (public)", async () => {
+      const paginatedResult: PaginatedMovies = {
+        data: [],
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        hasMore: false,
+      };
+      mockMoviesService.search.mockResolvedValue(paginatedResult);
+
+      const result = await controller.searchMovies(
+        { query: "matrix", page: 1, limit: 20 },
+        undefined,
+      );
+
+      expect(result).toEqual(paginatedResult);
+      expect(mockMoviesService.search).toHaveBeenCalledWith(
+        { query: "matrix", page: 1, limit: 20 },
+        undefined,
+      );
+    });
+
     it("should pass all search params to service", async () => {
       mockMoviesService.search.mockResolvedValue({
         data: [],
@@ -99,6 +122,7 @@ describe("MoviesController", () => {
         posterUrl: mockDbMovie.posterUrl,
         genres: ["Action", "Sci-Fi"],
         director: "Lana Wachowski",
+        producer: "Joel Silver",
         cast: ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss"],
         torrents: [
           {
@@ -110,6 +134,7 @@ describe("MoviesController", () => {
             magnetUrl: mockDbTorrent.magnetUrl,
           },
         ],
+        subtitles: [{ lang: "en", label: "English" }],
         commentsCount: 5,
         watched: false,
       };

@@ -21,13 +21,15 @@ describe("Movies E2E", () => {
   });
 
   describe("GET /movies", () => {
-    it("should require authentication", async () => {
+    it("should be accessible without authentication (public)", async () => {
       const response = await app.inject({
         method: "GET",
         url: "/movies",
       });
 
-      expect(response.statusCode).toBe(401);
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty("data");
     });
 
     it("should return paginated response structure", async () => {
@@ -197,6 +199,7 @@ describe("Movies E2E", () => {
           posterUrl: "https://example.com/poster.jpg",
           genres: ["Action", "Sci-Fi"],
           director: "Lana Wachowski",
+          producer: "Joel Silver",
           cast: ["Keanu Reeves", "Laurence Fishburne"],
           tmdbId: 603,
           torrents: {

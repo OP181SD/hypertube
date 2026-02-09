@@ -1,4 +1,5 @@
 import { FC, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { createComment, updateComment, deleteComment } from "@/api/comments.api";
@@ -93,9 +94,12 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
           >
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">
+                <Link
+                  to={`/users/${comment.author.id}`}
+                  className="text-sm font-medium text-white hover:text-blue-400 transition-colors"
+                >
                   {comment.author.username}
-                </span>
+                </Link>
                 <span className="text-xs text-white/40">
                   {new Date(comment.createdAt).toLocaleDateString()}
                 </span>

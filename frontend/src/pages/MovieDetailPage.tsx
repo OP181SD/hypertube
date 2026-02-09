@@ -72,7 +72,7 @@ export default function MovieDetailPage() {
               alt=""
               className="w-full h-full object-cover opacity-20 blur-xl"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
+            <div className="absolute inset-0 bg-linear-to-b from-transparent to-black" />
           </div>
         )}
 

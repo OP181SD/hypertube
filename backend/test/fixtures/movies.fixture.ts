@@ -152,6 +152,7 @@ export const tmdbMovieDetail: TmdbMovieDetail = {
     crew: [
       { name: "Lana Wachowski", job: "Director", department: "Directing" },
       { name: "Lilly Wachowski", job: "Director", department: "Directing" },
+      { name: "Joel Silver", job: "Producer", department: "Production" },
     ],
   },
 };
@@ -207,6 +208,7 @@ export const mockDbMovie = {
   tmdbId: 603,
   genres: ["Action", "Sci-Fi"],
   director: "Lana Wachowski",
+  producer: "Joel Silver",
   cast: ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss"],
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
@@ -224,6 +226,7 @@ export const mockDbMovie2 = {
   tmdbId: null,
   genres: ["Action", "Adventure", "Sci-Fi"],
   director: null,
+  producer: null,
   cast: [],
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),

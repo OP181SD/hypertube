@@ -113,7 +113,7 @@ describe("TmdbService", () => {
       expect(result!.title).toBe("The Matrix");
       expect(result!.runtime).toBe(136);
       expect(result!.credits?.cast).toHaveLength(3);
-      expect(result!.credits?.crew).toHaveLength(2);
+      expect(result!.credits?.crew).toHaveLength(3);
 
       const url = (global.fetch as ReturnType<typeof vi.fn>).mock
         .calls[0][0] as string;

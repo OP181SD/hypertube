@@ -1,12 +1,14 @@
 import { useTranslation } from "react-i18next";
+import { useHeroMovies } from "@/hooks/useHeroMovies";
+import { MoviesSection } from "@/components/ui/MoviesSection";
 
 export default function MainContent() {
   const { t } = useTranslation();
+  const { movies, loading } = useHeroMovies();
 
   return (
-    <div className="flex flex-1 items-center justify-center px-4">
-      <div className="flex flex-col items-center text-center max-w-4xl">
-
+    <div className="flex flex-1 flex-col items-center px-4">
+      <div className="flex flex-col items-center text-center max-w-4xl mt-16">
         <h1
           className="
             font-extrabold
@@ -46,6 +48,15 @@ export default function MainContent() {
           </span>
         </p>
       </div>
+
+      {(movies.length > 0 || loading) && (
+        <div className="w-full mt-12">
+          <MoviesSection
+            movies={movies}
+            loading={loading}
+          />
+        </div>
+      )}
     </div>
   );
 }

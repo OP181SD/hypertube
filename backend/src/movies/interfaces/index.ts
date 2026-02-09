@@ -165,6 +165,7 @@ export interface MovieDetail {
   posterUrl: string | null;
   genres: string[];
   director: string | null;
+  producer: string | null;
   cast: string[];
   torrents: TorrentItem[];
   subtitles: SubtitleInfo[];

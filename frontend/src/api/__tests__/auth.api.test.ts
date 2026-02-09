@@ -57,6 +57,8 @@ describe("auth.api", () => {
           grant_type: "password",
           username: "testuser",
           password: "Password1",
+          client_id: expect.any(String),
+          client_secret: expect.any(String),
         }),
       );
       expect(result).toEqual(TOKEN_PAIR);
@@ -74,6 +76,8 @@ describe("auth.api", () => {
         expect.objectContaining({
           grant_type: "refresh_token",
           refresh_token: "old-rt",
+          client_id: expect.any(String),
+          client_secret: expect.any(String),
         }),
       );
       expect(result).toEqual(TOKEN_PAIR);

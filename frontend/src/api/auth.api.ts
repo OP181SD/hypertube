@@ -1,6 +1,10 @@
 import client from "./client";
 import type { TokenPair, RegisterRequest, MessageResponse } from "@/types/api";
 
+const CLIENT_ID = import.meta.env.VITE_OAUTH_CLIENT_ID ?? "hypertube-web";
+const CLIENT_SECRET =
+  import.meta.env.VITE_OAUTH_CLIENT_SECRET ?? "hypertube-web-secret";
+
 export async function register(data: RegisterRequest): Promise<TokenPair> {
   const res = await client.post<TokenPair>("/auth/register", data);
   return res.data;
@@ -14,6 +18,8 @@ export async function login(credentials: {
     grant_type: "password",
     username: credentials.username,
     password: credentials.password,
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
   });
   return res.data;
 }
@@ -24,6 +30,8 @@ export async function refreshTokens(
   const res = await client.post<TokenPair>("/oauth/token", {
     grant_type: "refresh_token",
     refresh_token: refreshToken,
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
   });
   return res.data;
 }

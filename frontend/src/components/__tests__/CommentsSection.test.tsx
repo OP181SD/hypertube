@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CommentsSection } from "../comments/CommentsSection";
 import type { Comment } from "@/types/api";
@@ -40,7 +41,7 @@ describe("CommentsSection", () => {
   });
 
   it("renders comments list", () => {
-    render(<CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={vi.fn()} />);
+    render(<MemoryRouter><CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={vi.fn()} /></MemoryRouter>);
 
     expect(screen.getByText("Great movie!")).toBeInTheDocument();
     expect(screen.getByText("Not bad.")).toBeInTheDocument();
@@ -61,7 +62,7 @@ describe("CommentsSection", () => {
     vi.mocked(createComment).mockResolvedValue(newComment);
     const onCommentChange = vi.fn();
 
-    render(<CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={onCommentChange} />);
+    render(<MemoryRouter><CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={onCommentChange} /></MemoryRouter>);
 
     const input = screen.getByPlaceholderText("add_comment");
     await userEvent.type(input, "Nice!");
@@ -74,7 +75,7 @@ describe("CommentsSection", () => {
   });
 
   it("shows edit/delete buttons only for own comments", () => {
-    render(<CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={vi.fn()} />);
+    render(<MemoryRouter><CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={vi.fn()} /></MemoryRouter>);
 
     // alice's comment (user-1 = current user) should have edit/delete
     const aliceComment = screen.getByText("Great movie!").closest("[data-comment-id]")!;
@@ -92,7 +93,7 @@ describe("CommentsSection", () => {
     vi.mocked(deleteComment).mockResolvedValue();
     const onCommentChange = vi.fn();
 
-    render(<CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={onCommentChange} />);
+    render(<MemoryRouter><CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={onCommentChange} /></MemoryRouter>);
 
     const aliceComment = screen.getByText("Great movie!").closest("[data-comment-id]")!;
     await userEvent.click(aliceComment.querySelector("[aria-label='delete_comment']")!);

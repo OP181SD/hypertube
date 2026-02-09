@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useAuth, I18N_TO_LANG } from "@/contexts/AuthContext";
 import { SearchBar } from "./SearchBar";
 import { ProfileIcon } from "./ProfileIcon";
 import { Hamburger } from "./Hamburger";
@@ -45,8 +46,19 @@ export function DashboardNavbar({
   handleLogout,
 }: Props) {
   const { t, i18n } = useTranslation();
+  const { updateUser } = useAuth();
 
-  const changeLanguage = (lng: string) => i18n.changeLanguage(lng);
+  const changeLanguage = async (lng: string) => {
+    i18n.changeLanguage(lng);
+    const backendLang = I18N_TO_LANG[lng];
+    if (backendLang) {
+      try {
+        await updateUser({ language: backendLang });
+      } catch {
+        // Language still changed locally
+      }
+    }
+  };
 
   return (
     <header>
