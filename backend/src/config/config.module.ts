@@ -47,6 +47,16 @@ import Joi from "joi";
         GITHUB_CLIENT_SECRET: Joi.string().required(),
         GITHUB_CALLBACK_URL: Joi.string().uri().required(),
 
+        // OAuth - Facebook
+        FACEBOOK_CLIENT_ID: Joi.string().required(),
+        FACEBOOK_CLIENT_SECRET: Joi.string().required(),
+        FACEBOOK_CALLBACK_URL: Joi.string().uri().required(),
+
+        // OAuth - Twitter/X
+        TWITTER_CONSUMER_KEY: Joi.string().required(),
+        TWITTER_CONSUMER_SECRET: Joi.string().required(),
+        TWITTER_CALLBACK_URL: Joi.string().uri().required(),
+
         // SMTP
         SMTP_HOST: Joi.string().required(),
         SMTP_PORT: Joi.number().default(587),

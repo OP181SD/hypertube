@@ -9,6 +9,8 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 import { FtStrategy } from "./strategies/ft.strategy";
 import { GoogleStrategy } from "./strategies/google.strategy";
 import { GithubStrategy } from "./strategies/github.strategy";
+import { FacebookStrategy } from "./strategies/facebook.strategy";
+import { TwitterStrategy } from "./strategies/twitter.strategy";
 import { UsersModule } from "../users/users.module";
 import { MailModule } from "../mail/mail.module";
 
@@ -29,7 +31,16 @@ import { MailModule } from "../mail/mail.module";
     MailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, FtStrategy, GoogleStrategy, GithubStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    FtStrategy,
+    GoogleStrategy,
+    GithubStrategy,
+    FacebookStrategy,
+    TwitterStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -11,6 +11,8 @@ enum AuthProvider {
   FORTY_TWO
   GOOGLE
   GITHUB
+  FACEBOOK
+  TWITTER
 }
 
 enum Language {

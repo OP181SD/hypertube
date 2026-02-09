@@ -20,6 +20,8 @@ import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { FtAuthGuard } from "./guards/ft-auth.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
 import { GithubAuthGuard } from "./guards/github-auth.guard";
+import { FacebookAuthGuard } from "./guards/facebook-auth.guard";
+import { TwitterAuthGuard } from "./guards/twitter-auth.guard";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { User } from "@prisma/client";
@@ -73,7 +75,7 @@ export class AuthController {
         }
         // The code exchange is handled by the OAuth callback
         throw new BadRequestException(
-          "Use /auth/42/callback, /auth/google/callback or /auth/github/callback for authorization code exchange",
+          "Use the appropriate /auth/{provider}/callback for authorization code exchange",
         );
       }
 
@@ -171,6 +173,50 @@ export class AuthController {
   @UseGuards(GithubAuthGuard)
   @Get("auth/github/callback")
   async githubCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    const user = req.user as User;
+    const tokens = await this.authService.generateTokens(user.id);
+    const frontendUrl =
+      process.env.FRONTEND_URL || "http://localhost:5173";
+
+    res.redirect(
+      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
+    );
+  }
+
+  // OAuth - Facebook
+  @Public()
+  @UseGuards(FacebookAuthGuard)
+  @Get("auth/facebook")
+  async facebookLogin() {
+    // Passport redirects to Facebook
+  }
+
+  @Public()
+  @UseGuards(FacebookAuthGuard)
+  @Get("auth/facebook/callback")
+  async facebookCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    const user = req.user as User;
+    const tokens = await this.authService.generateTokens(user.id);
+    const frontendUrl =
+      process.env.FRONTEND_URL || "http://localhost:5173";
+
+    res.redirect(
+      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
+    );
+  }
+
+  // OAuth - Twitter/X
+  @Public()
+  @UseGuards(TwitterAuthGuard)
+  @Get("auth/twitter")
+  async twitterLogin() {
+    // Passport redirects to Twitter/X
+  }
+
+  @Public()
+  @UseGuards(TwitterAuthGuard)
+  @Get("auth/twitter/callback")
+  async twitterCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     const user = req.user as User;
     const tokens = await this.authService.generateTokens(user.id);
     const frontendUrl =
