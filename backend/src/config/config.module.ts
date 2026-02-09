@@ -57,6 +57,11 @@ import Joi from "joi";
         TWITTER_CONSUMER_SECRET: Joi.string().required(),
         TWITTER_CALLBACK_URL: Joi.string().uri().required(),
 
+        // OAuth - Discord
+        DISCORD_CLIENT_ID: Joi.string().required(),
+        DISCORD_CLIENT_SECRET: Joi.string().required(),
+        DISCORD_CALLBACK_URL: Joi.string().uri().required(),
+
         // SMTP
         SMTP_HOST: Joi.string().required(),
         SMTP_PORT: Joi.number().default(587),

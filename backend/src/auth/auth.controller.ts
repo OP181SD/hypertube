@@ -22,6 +22,7 @@ import { GoogleAuthGuard } from "./guards/google-auth.guard";
 import { GithubAuthGuard } from "./guards/github-auth.guard";
 import { FacebookAuthGuard } from "./guards/facebook-auth.guard";
 import { TwitterAuthGuard } from "./guards/twitter-auth.guard";
+import { DiscordAuthGuard } from "./guards/discord-auth.guard";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { User } from "@prisma/client";
@@ -217,6 +218,28 @@ export class AuthController {
   @UseGuards(TwitterAuthGuard)
   @Get("auth/twitter/callback")
   async twitterCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    const user = req.user as User;
+    const tokens = await this.authService.generateTokens(user.id);
+    const frontendUrl =
+      process.env.FRONTEND_URL || "http://localhost:5173";
+
+    res.redirect(
+      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
+    );
+  }
+
+  // OAuth - Discord
+  @Public()
+  @UseGuards(DiscordAuthGuard)
+  @Get("auth/discord")
+  async discordLogin() {
+    // Passport redirects to Discord
+  }
+
+  @Public()
+  @UseGuards(DiscordAuthGuard)
+  @Get("auth/discord/callback")
+  async discordCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     const user = req.user as User;
     const tokens = await this.authService.generateTokens(user.id);
     const frontendUrl =

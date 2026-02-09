@@ -13,6 +13,7 @@ enum AuthProvider {
   GITHUB
   FACEBOOK
   TWITTER
+  DISCORD
 }
 
 enum Language {
