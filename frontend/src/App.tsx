@@ -3,6 +3,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
+import MovieDetailPage from "@/pages/MovieDetailPage";
 import OAuthCallback from "@/pages/OAuthCallback";
 import Navbar from "@/components/layout/home/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -49,6 +50,16 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/movies/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <MovieDetailPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

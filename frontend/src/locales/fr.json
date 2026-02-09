@@ -68,5 +68,18 @@
   "error_invalid_email": "Veuillez entrer une adresse email valide.",
 
   "popular_movies": "Films populaires",
-  "loading": "Chargement..."
+  "loading": "Chargement...",
+
+  "downloading": "Téléchargement...",
+  "stream_error": "Une erreur est survenue lors du chargement du flux.",
+  "quality": "Qualité",
+  "seeds": "sources",
+  "comments": "Commentaires",
+  "add_comment": "Ajouter un commentaire...",
+  "submit_comment": "Envoyer",
+  "send": "Envoyer",
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "director": "Réalisateur",
+  "cast": "Casting"
 }

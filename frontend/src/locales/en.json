@@ -68,5 +68,18 @@
   "error_invalid_email": "Please enter a valid email address.",
 
   "popular_movies": "Popular movies",
-  "loading": "Loading..."
+  "loading": "Loading...",
+
+  "downloading": "Downloading...",
+  "stream_error": "An error occurred while loading the stream.",
+  "quality": "Quality",
+  "seeds": "seeds",
+  "comments": "Comments",
+  "add_comment": "Add a comment...",
+  "submit_comment": "Send",
+  "send": "Send",
+  "save": "Save",
+  "cancel": "Cancel",
+  "director": "Director",
+  "cast": "Cast"
 }

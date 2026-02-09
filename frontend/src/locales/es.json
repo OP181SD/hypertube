@@ -68,5 +68,18 @@
   "error_invalid_email": "Por favor, ingresa una dirección de correo válida.",
 
   "popular_movies": "Películas populares",
-  "loading": "Cargando..."
+  "loading": "Cargando...",
+
+  "downloading": "Descargando...",
+  "stream_error": "Se produjo un error al cargar la transmisión.",
+  "quality": "Calidad",
+  "seeds": "fuentes",
+  "comments": "Comentarios",
+  "add_comment": "Añadir un comentario...",
+  "submit_comment": "Enviar",
+  "send": "Enviar",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "director": "Director",
+  "cast": "Reparto"
 }

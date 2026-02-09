@@ -14,7 +14,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly authService: AuthService,
   ) {
     const opts: StrategyOptionsWithRequest = {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ExtractJwt.fromUrlQueryParameter("access_token"),
+      ]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>("JWT_ACCESS_SECRET")!,
       passReqToCallback: true,
@@ -23,10 +26,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: FastifyRequest, payload: { sub: string }) {
-    // Check if token is blacklisted
+    // Extract token from header or query param for blacklist check
     const authHeader = req.headers.authorization;
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
+    const token = authHeader
+      ? authHeader.replace("Bearer ", "")
+      : (req.query as Record<string, string>)?.access_token;
+
+    if (token) {
       const isBlacklisted = await this.authService.isAccessTokenBlacklisted(token);
       if (isBlacklisted) {
         throw new UnauthorizedException("Token has been revoked");
