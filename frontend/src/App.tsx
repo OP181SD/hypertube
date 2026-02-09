@@ -22,8 +22,9 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div>
-      <main>{children}</main>
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-1 flex flex-col">{children}</main>
+      <Footer />
     </div>
   );
 }

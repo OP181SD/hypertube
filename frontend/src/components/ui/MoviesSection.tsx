@@ -1,14 +1,21 @@
 import { FC, useRef, useEffect } from "react";
-import { Movies } from "@/types/Movies";
+import { useTranslation } from "react-i18next";
+import type { MovieListItem } from "@/types/api";
 
 interface MoviesSectionProps {
-  movies: Movies[];
+  movies: MovieListItem[];
   loading?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
 }
 
-export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore, onLoadMore }) => {
+export const MoviesSection: FC<MoviesSectionProps> = ({
+  movies,
+  loading,
+  hasMore,
+  onLoadMore,
+}) => {
+  const { t } = useTranslation();
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,7 +29,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore
           onLoadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(sentinel);
@@ -32,7 +39,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore
   return (
     <section className="w-full max-w-400 mt-6 px-4 sm:px-6">
       <h2 className="text-xl font-semibold text-white mb-4">
-        Films populaires
+        {t("popular_movies")}
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -41,15 +48,33 @@ export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore
             key={`${m.id}-${index}`}
             className="group relative rounded-lg overflow-hidden bg-gray-900 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
           >
-            {m.coverUrl ? (
+            {m.posterUrl ? (
               <img
-                src={m.coverUrl}
+                src={m.posterUrl}
                 alt={m.title}
                 className="w-full h-87.5 object-cover"
               />
             ) : (
               <div className="w-full h-87.5 bg-gray-800 flex items-center justify-center text-white/40 text-sm">
                 No image
+              </div>
+            )}
+
+            {m.watched && (
+              <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+                <svg
+                  className="w-3 h-3 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
               </div>
             )}
 
@@ -63,7 +88,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore
               </h3>
 
               <div className="flex justify-between items-center text-[11px] text-white/90 mt-1 drop-shadow-md">
-                <span>{m.releaseYear}</span>
+                <span>{m.year}</span>
                 <span>{m.imdbRating?.toFixed(1)}</span>
               </div>
             </div>
@@ -75,7 +100,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({ movies, loading, hasMore
         {loading && (
           <div className="flex items-center gap-2 text-white/60 text-sm">
             <div className="w-5 h-5 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
-            Chargement...
+            {t("loading")}
           </div>
         )}
       </div>

@@ -31,7 +31,7 @@ export default function Dashboard() {
       />
 
       <main className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pt-16 md:pt-20 max-w-full">
-        {activeTab === "home" && <Mockup />}
+        {activeTab === "home" && <Mockup search={search} />}
         {activeTab === "profile" && (
           <div className="text-white text-center mt-10">
             <Profile />
