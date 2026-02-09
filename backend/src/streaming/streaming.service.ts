@@ -125,6 +125,50 @@ export class StreamingService {
     return this.subtitleService.getAvailableSubtitles(imdbId);
   }
 
+  async getSubtitlesByMovieId(movieId: string): Promise<SubtitleEntry[]> {
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+
+    if (!movie) {
+      throw new NotFoundException("Movie not found");
+    }
+
+    return this.subtitleService.getAvailableSubtitles(movie.imdbId);
+  }
+
+  async getSubtitleFileByMovieId(
+    movieId: string,
+    lang: string,
+  ): Promise<{ content: string }> {
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+
+    if (!movie) {
+      throw new NotFoundException("Movie not found");
+    }
+
+    const subtitles = await this.subtitleService.getAvailableSubtitles(movie.imdbId);
+    const entry = subtitles.find((s) => s.lang === lang);
+
+    if (!entry) {
+      throw new NotFoundException(`Subtitle for language '${lang}' not found`);
+    }
+
+    const vttContent = await this.subtitleService.downloadSubtitle(
+      entry.fileId,
+      movieId,
+      lang,
+    );
+
+    if (!vttContent) {
+      throw new NotFoundException("Failed to download subtitle");
+    }
+
+    return { content: vttContent };
+  }
+
   async getSubtitleFile(
     fileId: string,
     movieId: string,

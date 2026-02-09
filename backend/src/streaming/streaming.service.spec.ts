@@ -34,6 +34,9 @@ const mockPrisma = {
   watchHistory: {
     upsert: vi.fn(),
   },
+  movie: {
+    findUnique: vi.fn(),
+  },
 };
 
 describe("StreamingService", () => {
@@ -286,6 +289,90 @@ describe("StreamingService", () => {
         start: 0,
         end: 999,
       });
+    });
+  });
+
+  describe("getSubtitlesByMovieId", () => {
+    it("should throw NotFoundException for unknown movie", async () => {
+      mockPrisma.movie.findUnique.mockResolvedValue(null);
+
+      await expect(service.getSubtitlesByMovieId("nonexistent")).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it("should return subtitles for existing movie", async () => {
+      mockPrisma.movie.findUnique.mockResolvedValue({
+        id: "m1",
+        imdbId: "tt0133093",
+      });
+      mockSubtitleService.getAvailableSubtitles.mockResolvedValue([
+        { lang: "en", label: "English", fileId: "100" },
+      ]);
+
+      const result = await service.getSubtitlesByMovieId("m1");
+
+      expect(mockPrisma.movie.findUnique).toHaveBeenCalledWith({
+        where: { id: "m1" },
+      });
+      expect(mockSubtitleService.getAvailableSubtitles).toHaveBeenCalledWith("tt0133093");
+      expect(result).toHaveLength(1);
+      expect(result[0].lang).toBe("en");
+    });
+  });
+
+  describe("getSubtitleFileByMovieId", () => {
+    it("should throw NotFoundException for unknown movie", async () => {
+      mockPrisma.movie.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.getSubtitleFileByMovieId("nonexistent", "en"),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw NotFoundException when language not available", async () => {
+      mockPrisma.movie.findUnique.mockResolvedValue({
+        id: "m1",
+        imdbId: "tt0133093",
+      });
+      mockSubtitleService.getAvailableSubtitles.mockResolvedValue([]);
+
+      await expect(
+        service.getSubtitleFileByMovieId("m1", "en"),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw NotFoundException when download fails", async () => {
+      mockPrisma.movie.findUnique.mockResolvedValue({
+        id: "m1",
+        imdbId: "tt0133093",
+      });
+      mockSubtitleService.getAvailableSubtitles.mockResolvedValue([
+        { lang: "en", label: "English", fileId: "100" },
+      ]);
+      mockSubtitleService.downloadSubtitle.mockResolvedValue(null);
+
+      await expect(
+        service.getSubtitleFileByMovieId("m1", "en"),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should return VTT content for valid subtitle", async () => {
+      mockPrisma.movie.findUnique.mockResolvedValue({
+        id: "m1",
+        imdbId: "tt0133093",
+      });
+      mockSubtitleService.getAvailableSubtitles.mockResolvedValue([
+        { lang: "en", label: "English", fileId: "100" },
+      ]);
+      mockSubtitleService.downloadSubtitle.mockResolvedValue(
+        "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHello",
+      );
+
+      const result = await service.getSubtitleFileByMovieId("m1", "en");
+
+      expect(result.content).toContain("WEBVTT");
+      expect(mockSubtitleService.downloadSubtitle).toHaveBeenCalledWith("100", "m1", "en");
     });
   });
 });

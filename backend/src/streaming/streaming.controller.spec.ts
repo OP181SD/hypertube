@@ -4,21 +4,14 @@ import { NotFoundException } from "@nestjs/common";
 import { PassThrough } from "node:stream";
 import { StreamingController } from "./streaming.controller";
 import { StreamingService } from "./streaming.service";
-import { PrismaService } from "../prisma/prisma.service";
 import { mockDbUser } from "../../test/fixtures/users.fixture";
 
 const mockStreamingService = {
   initiateStream: vi.fn(),
   getStreamStatus: vi.fn(),
   getVideoStream: vi.fn(),
-  getSubtitles: vi.fn(),
-  getSubtitleFile: vi.fn(),
-};
-
-const mockPrisma = {
-  movie: {
-    findUnique: vi.fn(),
-  },
+  getSubtitlesByMovieId: vi.fn(),
+  getSubtitleFileByMovieId: vi.fn(),
 };
 
 describe("StreamingController", () => {
@@ -31,7 +24,6 @@ describe("StreamingController", () => {
       controllers: [StreamingController],
       providers: [
         { provide: StreamingService, useValue: mockStreamingService },
-        { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
 
@@ -165,22 +157,21 @@ describe("StreamingController", () => {
 
   describe("GET /subtitles/:movieId", () => {
     it("should return available subtitles", async () => {
-      mockPrisma.movie.findUnique.mockResolvedValue({
-        id: "m1",
-        imdbId: "tt0133093",
-      });
-      mockStreamingService.getSubtitles.mockResolvedValue([
+      mockStreamingService.getSubtitlesByMovieId.mockResolvedValue([
         { lang: "en", label: "English", fileId: "100" },
       ]);
 
       const result = await controller.getSubtitles("m1");
 
+      expect(mockStreamingService.getSubtitlesByMovieId).toHaveBeenCalledWith("m1");
       expect(result).toHaveLength(1);
       expect(result[0].lang).toBe("en");
     });
 
-    it("should throw NotFoundException for unknown movie", async () => {
-      mockPrisma.movie.findUnique.mockResolvedValue(null);
+    it("should propagate NotFoundException for unknown movie", async () => {
+      mockStreamingService.getSubtitlesByMovieId.mockRejectedValue(
+        new NotFoundException("Movie not found"),
+      );
 
       await expect(controller.getSubtitles("nonexistent")).rejects.toThrow(
         NotFoundException,
@@ -190,16 +181,9 @@ describe("StreamingController", () => {
 
   describe("GET /subtitles/:movieId/:lang", () => {
     it("should return VTT content", async () => {
-      mockPrisma.movie.findUnique.mockResolvedValue({
-        id: "m1",
-        imdbId: "tt0133093",
+      mockStreamingService.getSubtitleFileByMovieId.mockResolvedValue({
+        content: "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHello",
       });
-      mockStreamingService.getSubtitles.mockResolvedValue([
-        { lang: "en", label: "English", fileId: "100" },
-      ]);
-      mockStreamingService.getSubtitleFile.mockResolvedValue(
-        "WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHello",
-      );
 
       const mockReply = {
         header: vi.fn().mockReturnThis(),
@@ -208,18 +192,17 @@ describe("StreamingController", () => {
 
       await controller.getSubtitleFile("m1", "en", mockReply as any);
 
+      expect(mockStreamingService.getSubtitleFileByMovieId).toHaveBeenCalledWith("m1", "en");
       expect(mockReply.header).toHaveBeenCalledWith(
         "Content-Type",
         "text/vtt; charset=utf-8",
       );
     });
 
-    it("should throw NotFoundException when subtitle not available", async () => {
-      mockPrisma.movie.findUnique.mockResolvedValue({
-        id: "m1",
-        imdbId: "tt0133093",
-      });
-      mockStreamingService.getSubtitles.mockResolvedValue([]);
+    it("should propagate NotFoundException when subtitle not available", async () => {
+      mockStreamingService.getSubtitleFileByMovieId.mockRejectedValue(
+        new NotFoundException("Subtitle for language 'en' not found"),
+      );
 
       const mockReply = {
         header: vi.fn().mockReturnThis(),

@@ -4,21 +4,16 @@ import {
   Param,
   Headers,
   ParseUUIDPipe,
-  NotFoundException,
 } from "@nestjs/common";
 import type { FastifyReply } from "fastify";
 import { User } from "@prisma/client";
 import { Res } from "@nestjs/common";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { StreamingService } from "./streaming.service";
-import { PrismaService } from "../prisma/prisma.service";
 
 @Controller()
 export class StreamingController {
-  constructor(
-    private readonly streamingService: StreamingService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly streamingService: StreamingService) {}
 
   @Get("stream/:torrentId")
   async stream(
@@ -79,15 +74,7 @@ export class StreamingController {
   async getSubtitles(
     @Param("movieId", ParseUUIDPipe) movieId: string,
   ) {
-    const movie = await this.prisma.movie.findUnique({
-      where: { id: movieId },
-    });
-
-    if (!movie) {
-      throw new NotFoundException("Movie not found");
-    }
-
-    return this.streamingService.getSubtitles(movie.imdbId);
+    return this.streamingService.getSubtitlesByMovieId(movieId);
   }
 
   @Get("subtitles/:movieId/:lang")
@@ -96,34 +83,13 @@ export class StreamingController {
     @Param("lang") lang: string,
     @Res() reply: FastifyReply,
   ): Promise<void> {
-    const movie = await this.prisma.movie.findUnique({
-      where: { id: movieId },
-    });
-
-    if (!movie) {
-      throw new NotFoundException("Movie not found");
-    }
-
-    // Find the file ID for this language
-    const subtitles = await this.streamingService.getSubtitles(movie.imdbId);
-    const entry = subtitles.find((s) => s.lang === lang);
-
-    if (!entry) {
-      throw new NotFoundException(`Subtitle for language '${lang}' not found`);
-    }
-
-    const vttContent = await this.streamingService.getSubtitleFile(
-      entry.fileId,
+    const { content } = await this.streamingService.getSubtitleFileByMovieId(
       movieId,
       lang,
     );
 
-    if (!vttContent) {
-      throw new NotFoundException("Failed to download subtitle");
-    }
-
     reply
       .header("Content-Type", "text/vtt; charset=utf-8")
-      .send(vttContent);
+      .send(content);
   }
 }
