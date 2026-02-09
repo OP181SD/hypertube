@@ -110,6 +110,8 @@ export function DashboardNavbar({
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleLogout={handleLogout}
+        search={search}
+        setSearch={setSearch}
       />
     </header>
   );

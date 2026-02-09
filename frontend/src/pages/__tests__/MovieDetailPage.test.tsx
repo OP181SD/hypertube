@@ -6,6 +6,11 @@ import type { MovieDetail, Comment } from "@/types/api";
 
 vi.mock("@/api/movies.api");
 vi.mock("@/api/comments.api");
+vi.mock("@/api/stream.api", () => ({
+  getStreamUrl: (id: string) => `http://localhost:3000/stream/${id}`,
+  getStreamStatus: vi.fn().mockResolvedValue({ status: "ready", progress: 100 }),
+  getSubtitleUrl: (movieId: string, lang: string) => `http://localhost:3000/subtitles/${movieId}/${lang}`,
+}));
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
     user: { id: "user-1", username: "alice" },
@@ -13,7 +18,7 @@ vi.mock("@/contexts/AuthContext", () => ({
   }),
 }));
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({ t: (k: string) => k, i18n: { language: "en" } }),
 }));
 
 const mockMovie: MovieDetail = {
@@ -26,6 +31,7 @@ const mockMovie: MovieDetail = {
   summary: "A great test movie.",
   posterUrl: "https://example.com/poster.jpg",
   genres: ["Action", "Drama"],
+  producer: null,
   director: "John Director",
   cast: ["Actor One", "Actor Two"],
   torrents: [

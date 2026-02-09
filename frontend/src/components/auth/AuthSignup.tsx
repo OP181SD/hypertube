@@ -39,6 +39,22 @@ export const AuthSignup: React.FC<Props> = ({ dispatch }) => {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setLocalError(t("error_invalid_email"));
+      return;
+    }
+
+    if (username.length < 3 || username.length > 30) {
+      setLocalError(t("error_username_length"));
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      setLocalError(t("error_username_format"));
+      return;
+    }
+
     if (password.length < 8) {
       setLocalError(t("error_password_too_short"));
       return;

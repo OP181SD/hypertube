@@ -23,13 +23,21 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
   const debouncedSearch = useDebounce(search || "", 300);
   const [selectedGenre, setSelectedGenre] = useState("");
   const [sortBy, setSortBy] = useState<SearchMoviesParams["sortBy"]>();
+  const [minRating, setMinRating] = useState<number>();
+  const [yearRange, setYearRange] = useState<[number?, number?]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  // Spec: search results must be sorted by name
+  const effectiveSortBy = debouncedSearch ? "title" : sortBy;
 
   const hero = useHeroMovies();
   const { movies, loading, loadMore, hasMore } = useMovies({
     genre: selectedGenre || undefined,
-    sortBy,
+    sortBy: effectiveSortBy,
     query: debouncedSearch || undefined,
+    minRating,
+    minYear: yearRange[0],
+    maxYear: yearRange[1],
   });
 
   const handleSort = (type: SortTypes) => {
@@ -49,6 +57,8 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
       <NavigationGender
         onSelectGenre={setSelectedGenre}
         onSelectSort={handleSort}
+        onSelectMinRating={setMinRating}
+        onSelectYearRange={setYearRange}
       />
 
       <MoviesSection

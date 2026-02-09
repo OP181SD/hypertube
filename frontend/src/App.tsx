@@ -4,8 +4,10 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import MovieDetailPage from "@/pages/MovieDetailPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import OAuthCallback from "@/pages/OAuthCallback";
 import Navbar from "@/components/layout/home/Navbar";
+import AuthNavbar from "@/components/layout/AuthNavbar";
 import Footer from "@/components/layout/Footer";
 import NotFound from "@/components/layout/NotFound";
 
@@ -30,6 +32,16 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AuthPageLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <AuthNavbar />
+      <main className="flex-1 flex flex-col pt-14 md:pt-16">{children}</main>
+      <Footer />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -45,6 +57,14 @@ export default function App() {
           />
           <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route
+            path="/reset-password"
+            element={
+              <MainLayout>
+                <ResetPasswordPage />
+              </MainLayout>
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
@@ -58,13 +78,20 @@ export default function App() {
             path="/movies/:id"
             element={
               <ProtectedRoute>
-                <DashboardLayout>
+                <AuthPageLayout>
                   <MovieDetailPage />
-                </DashboardLayout>
+                </AuthPageLayout>
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<NotFound />} />
+          <Route
+            path="*"
+            element={
+              <MainLayout>
+                <NotFound />
+              </MainLayout>
+            }
+          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

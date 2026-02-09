@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { getStreamUrl, getStreamStatus, getSubtitleUrl } from "@/api/stream.api";
 import type { SubtitleInfo, StreamStatus } from "@/types/api";
@@ -14,7 +14,7 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({
   movieId,
   subtitles,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [status, setStatus] = useState<StreamStatus | null>(null);
 
   useEffect(() => {
@@ -43,6 +43,13 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({
       clearTimeout(timer);
     };
   }, [torrentId]);
+
+  const defaultLang = useMemo(() => {
+    const userLang = i18n.language?.split("-")[0] || "en";
+    if (subtitles.some((s) => s.lang === userLang)) return userLang;
+    if (subtitles.some((s) => s.lang === "en")) return "en";
+    return subtitles[0]?.lang;
+  }, [i18n.language, subtitles]);
 
   if (!status || status.status === "idle") {
     return (
@@ -99,6 +106,7 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({
           src={getSubtitleUrl(movieId, sub.lang)}
           srcLang={sub.lang}
           label={sub.label}
+          default={sub.lang === defaultLang}
         />
       ))}
     </video>

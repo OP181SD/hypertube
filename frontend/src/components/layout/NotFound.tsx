@@ -6,7 +6,7 @@ export function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-black text-center px-4">
+    <div className="flex flex-col items-center justify-center flex-1 bg-black text-center px-4">
       <h1
         className="
           font-extrabold

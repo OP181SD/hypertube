@@ -5,7 +5,7 @@ import type { SubtitleInfo } from "@/types/api";
 
 vi.mock("@/api/stream.api");
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({ t: (k: string) => k, i18n: { language: "en" } }),
 }));
 
 const subtitles: SubtitleInfo[] = [

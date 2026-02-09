@@ -89,6 +89,7 @@ describe("movies.api", () => {
         summary: "A great movie",
         posterUrl: "https://poster.jpg",
         genres: ["Action"],
+        producer: "Emma Thomas",
         director: "Christopher Nolan",
         cast: ["Christian Bale"],
         torrents: [],

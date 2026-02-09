@@ -81,5 +81,16 @@
   "save": "Enregistrer",
   "cancel": "Annuler",
   "director": "Réalisateur",
-  "cast": "Casting"
+  "producer": "Producteur",
+  "cast": "Casting",
+  "min_rating": "Note min",
+  "year": "Année",
+  "all": "Tous",
+  "error_username_length": "Le nom d'utilisateur doit contenir entre 3 et 30 caractères.",
+  "error_username_format": "Le nom d'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores.",
+  "error_invalid_token": "Lien de réinitialisation invalide ou expiré.",
+  "error_reset_failed": "Échec de la réinitialisation. Le lien a peut-être expiré.",
+  "password_reset_success": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
+  "reset_new_password_description": "Entrez votre nouveau mot de passe ci-dessous.",
+  "reset_password_button": "Réinitialiser le mot de passe"
 }

@@ -90,6 +90,7 @@ export interface MovieDetail {
   summary: string | null;
   posterUrl: string | null;
   genres: string[];
+  producer: string | null;
   director: string | null;
   cast: string[];
   torrents: TorrentItem[];
@@ -131,6 +132,8 @@ export interface SearchMoviesParams {
   sortBy?: "title" | "year" | "rating" | "seeds";
   order?: "asc" | "desc";
   minRating?: number;
+  minYear?: number;
+  maxYear?: number;
   page?: number;
   limit?: number;
 }

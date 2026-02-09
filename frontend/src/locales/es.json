@@ -81,5 +81,16 @@
   "save": "Guardar",
   "cancel": "Cancelar",
   "director": "Director",
-  "cast": "Reparto"
+  "producer": "Productor",
+  "cast": "Reparto",
+  "min_rating": "Nota mín",
+  "year": "Año",
+  "all": "Todos",
+  "error_username_length": "El nombre de usuario debe tener entre 3 y 30 caracteres.",
+  "error_username_format": "El nombre de usuario solo puede contener letras, números, guiones y guiones bajos.",
+  "error_invalid_token": "Enlace de restablecimiento inválido o expirado.",
+  "error_reset_failed": "Error al restablecer la contraseña. El enlace puede haber expirado.",
+  "password_reset_success": "Tu contraseña se ha restablecido correctamente. Ya puedes iniciar sesión.",
+  "reset_new_password_description": "Introduce tu nueva contraseña a continuación.",
+  "reset_password_button": "Restablecer contraseña"
 }

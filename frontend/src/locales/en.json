@@ -81,5 +81,16 @@
   "save": "Save",
   "cancel": "Cancel",
   "director": "Director",
-  "cast": "Cast"
+  "producer": "Producer",
+  "cast": "Cast",
+  "min_rating": "Min rating",
+  "year": "Year",
+  "all": "All",
+  "error_username_length": "Username must be between 3 and 30 characters.",
+  "error_username_format": "Username can only contain letters, numbers, hyphens and underscores.",
+  "error_invalid_token": "Invalid or expired reset token.",
+  "error_reset_failed": "Failed to reset password. The link may have expired.",
+  "password_reset_success": "Your password has been reset successfully. You can now sign in.",
+  "reset_new_password_description": "Enter your new password below.",
+  "reset_password_button": "Reset password"
 }

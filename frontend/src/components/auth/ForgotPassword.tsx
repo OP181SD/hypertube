@@ -14,8 +14,19 @@ export const AuthForgotPassword: React.FC<Props> = ({ dispatch }) => {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState("");
+
   const handleResetPassword = async () => {
-    if (!email) return;
+    setError("");
+    if (!email) {
+      setError(t("enter_your_email"));
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError(t("error_invalid_email"));
+      return;
+    }
     setLoading(true);
     try {
       await forgotPassword(email);
@@ -59,6 +70,12 @@ export const AuthForgotPassword: React.FC<Props> = ({ dispatch }) => {
                 onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
               />
             </div>
+
+            {error && (
+              <p className="text-red-400 text-sm text-center w-full bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">
+                {error}
+              </p>
+            )}
 
             <button
               onClick={handleResetPassword}

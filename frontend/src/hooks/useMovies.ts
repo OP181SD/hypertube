@@ -6,10 +6,13 @@ interface UseMoviesParams {
   genre?: string;
   sortBy?: SearchMoviesParams["sortBy"];
   query?: string;
+  minRating?: number;
+  minYear?: number;
+  maxYear?: number;
 }
 
 export function useMovies(params: UseMoviesParams = {}) {
-  const { genre, sortBy, query } = params;
+  const { genre, sortBy, query, minRating, minYear, maxYear } = params;
   const [movies, setMovies] = useState<MovieListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -17,7 +20,7 @@ export function useMovies(params: UseMoviesParams = {}) {
 
   useEffect(() => {
     setPage(1);
-  }, [genre, sortBy, query]);
+  }, [genre, sortBy, query, minRating, minYear, maxYear]);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,6 +30,9 @@ export function useMovies(params: UseMoviesParams = {}) {
     if (genre) apiParams.genre = genre;
     if (query) apiParams.query = query;
     if (sortBy) apiParams.sortBy = sortBy;
+    if (minRating !== undefined) apiParams.minRating = minRating;
+    if (minYear !== undefined) apiParams.minYear = minYear;
+    if (maxYear !== undefined) apiParams.maxYear = maxYear;
 
     searchMovies(apiParams)
       .then((res) => {
@@ -43,7 +49,7 @@ export function useMovies(params: UseMoviesParams = {}) {
     return () => {
       cancelled = true;
     };
-  }, [page, genre, query, sortBy]);
+  }, [page, genre, query, sortBy, minRating, minYear, maxYear]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {

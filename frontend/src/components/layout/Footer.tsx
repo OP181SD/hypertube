@@ -16,6 +16,7 @@ export default function Footer() {
         <a
           href="https://github.com/OP181SD/hypertube"
           target="_blank"
+          rel="noopener noreferrer"
           className="hover:text-white/90 transition-colors duration-200"
         >
           {t("project_github")}
@@ -28,6 +29,7 @@ export default function Footer() {
             key={index}
             href={contributor.link}
             target="_blank"
+          rel="noopener noreferrer"
             className="hover:text-[#38BDF8] transition-colors duration-200"
           >
             {contributor.name}

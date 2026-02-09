@@ -119,6 +119,12 @@ export default function MovieDetailPage() {
                 <p className="text-sm text-white/70 leading-relaxed">{movie.summary}</p>
               )}
 
+              {movie.producer && (
+                <p className="text-sm text-white/50">
+                  <span className="text-white/70">{t("producer")}:</span> {movie.producer}
+                </p>
+              )}
+
               {movie.director && (
                 <p className="text-sm text-white/50">
                   <span className="text-white/70">{t("director")}:</span> {movie.director}
