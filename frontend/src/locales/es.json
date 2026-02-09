@@ -36,7 +36,8 @@
 
   "stream_without_limits": "Streaming sin límites",
   "continue_with_email": "Continúa con tu correo",
-  "identify_description": "Ingresa tu correo para iniciar sesión en HyperTube. Si aún no tienes una cuenta, te ayudaremos a crear una en pocos pasos.",
+  "username_placeholder": "Nombre de usuario",
+  "identify_description": "Inicia sesión en HyperTube o crea una cuenta para empezar a ver.",
   "email_placeholder": "Dirección de correo",
   "continue": "Continuar",
   "terms_full_notice": "Al continuar, aceptas los Términos de Servicio y la Política de Privacidad de HyperTube.",
@@ -61,7 +62,7 @@
   "enter_your_email": "Por favor, ingresa tu correo",
   "reset_link_sent": "Enlace de restablecimiento enviado a {{email}}",
 
-  "error_invalid_credentials": "El correo o la contraseña ingresados son incorrectos. Por favor, inténtalo de nuevo.",
+  "error_invalid_credentials": "El nombre de usuario o la contraseña ingresados son incorrectos. Por favor, inténtalo de nuevo.",
   "error_password_too_short": "La contraseña debe tener al menos 8 caracteres.",
   "error_passwords_not_match": "Las contraseñas no coinciden.",
   "error_invalid_email": "Por favor, ingresa una dirección de correo válida.",

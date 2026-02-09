@@ -1,16 +1,21 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Mockup } from "@/components/ui/Mockup";
 import { DashboardNavbar } from "@/components/dashboard/DashboardNavbar";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Tab } from "@/types/ui/Tabs";
-import { Profile } from "@/pages/Profile"
+import { Profile } from "@/pages/Profile";
 
 export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    console.log("Déconnecté !");
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
   };
 
   return (
@@ -29,10 +34,9 @@ export default function Dashboard() {
         {activeTab === "home" && <Mockup />}
         {activeTab === "profile" && (
           <div className="text-white text-center mt-10">
-            <Profile></Profile>
+            <Profile />
           </div>
         )}
-       
       </main>
     </div>
   );

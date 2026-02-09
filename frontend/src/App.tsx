@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Home from "@/pages/Home";
-import Dashboard from "@/pages/Dashboard"; 
+import Dashboard from "@/pages/Dashboard";
+import OAuthCallback from "@/pages/OAuthCallback";
 import Navbar from "@/components/layout/home/Navbar";
 import Footer from "@/components/layout/Footer";
 import NotFound from "@/components/layout/NotFound";
@@ -25,31 +28,33 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-
-
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <MainLayout>
-              <Home />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <DashboardLayout>
-              <Dashboard />
-            </DashboardLayout>
-          }
-        />
-        {/* Full-page 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <MainLayout>
+                <Home />
+              </MainLayout>
+            }
+          />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
