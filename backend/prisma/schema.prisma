@@ -10,6 +10,7 @@ enum AuthProvider {
   LOCAL
   FORTY_TWO
   GOOGLE
+  GITHUB
 }
 
 enum Language {

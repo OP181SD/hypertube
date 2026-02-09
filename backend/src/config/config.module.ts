@@ -42,6 +42,11 @@ import Joi from "joi";
         GOOGLE_CLIENT_SECRET: Joi.string().required(),
         GOOGLE_CALLBACK_URL: Joi.string().uri().required(),
 
+        // OAuth - GitHub
+        GITHUB_CLIENT_ID: Joi.string().required(),
+        GITHUB_CLIENT_SECRET: Joi.string().required(),
+        GITHUB_CALLBACK_URL: Joi.string().uri().required(),
+
         // SMTP
         SMTP_HOST: Joi.string().required(),
         SMTP_PORT: Joi.number().default(587),

@@ -19,6 +19,7 @@ import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { FtAuthGuard } from "./guards/ft-auth.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
+import { GithubAuthGuard } from "./guards/github-auth.guard";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { User } from "@prisma/client";
@@ -72,7 +73,7 @@ export class AuthController {
         }
         // The code exchange is handled by the OAuth callback
         throw new BadRequestException(
-          "Use /auth/42/callback or /auth/google/callback for authorization code exchange",
+          "Use /auth/42/callback, /auth/google/callback or /auth/github/callback for authorization code exchange",
         );
       }
 
@@ -148,6 +149,28 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get("auth/google/callback")
   async googleCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    const user = req.user as User;
+    const tokens = await this.authService.generateTokens(user.id);
+    const frontendUrl =
+      process.env.FRONTEND_URL || "http://localhost:5173";
+
+    res.redirect(
+      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
+    );
+  }
+
+  // OAuth - GitHub
+  @Public()
+  @UseGuards(GithubAuthGuard)
+  @Get("auth/github")
+  async githubLogin() {
+    // Passport redirects to GitHub
+  }
+
+  @Public()
+  @UseGuards(GithubAuthGuard)
+  @Get("auth/github/callback")
+  async githubCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     const user = req.user as User;
     const tokens = await this.authService.generateTokens(user.id);
     const frontendUrl =
