@@ -30,6 +30,7 @@ const mockMovie: MovieDetail = {
   runtime: 120,
   summary: "A great test movie.",
   posterUrl: "https://example.com/poster.jpg",
+  backdropUrl: null,
   genres: ["Action", "Drama"],
   producer: null,
   director: "John Director",

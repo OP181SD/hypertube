@@ -26,6 +26,8 @@ export interface YtsMovie {
   synopsis: string;
   medium_cover_image: string;
   large_cover_image: string;
+  background_image: string;
+  background_image_original: string;
   torrents: YtsTorrent[];
 }
 
@@ -114,6 +116,7 @@ export interface TmdbMovieDetail {
   title: string;
   overview: string;
   poster_path: string | null;
+  backdrop_path: string | null;
   release_date: string;
   runtime: number | null;
   vote_average: number;
@@ -145,6 +148,7 @@ export interface MovieListItem {
   year: number | null;
   imdbRating: number | null;
   posterUrl: string | null;
+  backdropUrl: string | null;
   genres: string[];
   watched: boolean;
 }
@@ -163,6 +167,7 @@ export interface MovieDetail {
   runtime: number | null;
   summary: string | null;
   posterUrl: string | null;
+  backdropUrl: string | null;
   genres: string[];
   director: string | null;
   producer: string | null;

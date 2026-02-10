@@ -124,4 +124,12 @@ export class TmdbService {
     if (!posterPath) return null;
     return `https://image.tmdb.org/t/p/${size}${posterPath}`;
   }
+
+  getBackdropUrl(
+    backdropPath: string | null,
+    size: string = "w1280",
+  ): string | null {
+    if (!backdropPath) return null;
+    return `https://image.tmdb.org/t/p/${size}${backdropPath}`;
+  }
 }

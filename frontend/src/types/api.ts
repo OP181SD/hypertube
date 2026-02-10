@@ -53,6 +53,7 @@ export interface MovieListItem {
   year: number | null;
   imdbRating: number | null;
   posterUrl: string | null;
+  backdropUrl: string | null;
   genres: string[];
   watched: boolean;
 }
@@ -89,6 +90,7 @@ export interface MovieDetail {
   runtime: number | null;
   summary: string | null;
   posterUrl: string | null;
+  backdropUrl: string | null;
   genres: string[];
   producer: string | null;
   director: string | null;

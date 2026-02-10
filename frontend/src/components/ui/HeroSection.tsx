@@ -16,6 +16,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
   const movie = movies[activeIndex];
   const rating = movie.imdbRating?.toFixed(1) ?? "N/A";
+  const heroImage = movie.backdropUrl ?? movie.posterUrl;
 
   const renderIndicators = () =>
     movies.map((_, index) => (
@@ -33,9 +34,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
   return (
     <section className="relative w-full">
       <div className="relative w-full group">
-        {movie.posterUrl ? (
+        {heroImage ? (
           <img
-            src={movie.posterUrl}
+            src={heroImage}
             alt={movie.title}
             className="w-full h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[65vh] xl:h-[70vh] 2xl:h-[75vh] object-cover"
           />

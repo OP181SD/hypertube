@@ -23,6 +23,8 @@ export const ytsMovie: YtsMovie = {
   synopsis: "A computer hacker learns about the true nature of reality.",
   medium_cover_image: "https://yts.mx/assets/images/movies/the_matrix_1999/medium-cover.jpg",
   large_cover_image: "https://yts.mx/assets/images/movies/the_matrix_1999/large-cover.jpg",
+  background_image: "https://yts.mx/assets/images/movies/the_matrix_1999/background.jpg",
+  background_image_original: "https://yts.mx/assets/images/movies/the_matrix_1999/background.jpg",
   torrents: [
     {
       url: "https://yts.mx/torrent/download/abc123",
@@ -62,6 +64,8 @@ export const ytsMovie2: YtsMovie = {
   synopsis: "A thief who steals corporate secrets through dream-sharing technology.",
   medium_cover_image: "https://yts.mx/assets/images/movies/inception_2010/medium-cover.jpg",
   large_cover_image: "https://yts.mx/assets/images/movies/inception_2010/large-cover.jpg",
+  background_image: "https://yts.mx/assets/images/movies/inception_2010/background.jpg",
+  background_image_original: "https://yts.mx/assets/images/movies/inception_2010/background.jpg",
   torrents: [
     {
       url: "https://yts.mx/torrent/download/inc1080",
@@ -136,6 +140,7 @@ export const tmdbMovieDetail: TmdbMovieDetail = {
   title: "The Matrix",
   overview: "Set in the 22nd century, The Matrix tells the story of a computer hacker.",
   poster_path: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+  backdrop_path: "/fNG7i7RqMErkcqhohV2a6cV1Ehy.jpg",
   release_date: "1999-03-30",
   runtime: 136,
   vote_average: 8.2,
@@ -204,6 +209,7 @@ export const mockDbMovie = {
   imdbRating: 8.7,
   runtime: 136,
   posterUrl: "https://yts.mx/assets/images/movies/the_matrix_1999/medium-cover.jpg",
+  backdropUrl: "https://yts.mx/assets/images/movies/the_matrix_1999/background.jpg",
   summary: "A computer hacker learns about the true nature of reality.",
   tmdbId: 603,
   genres: ["Action", "Sci-Fi"],
@@ -222,6 +228,7 @@ export const mockDbMovie2 = {
   imdbRating: 8.8,
   runtime: 148,
   posterUrl: "https://yts.mx/assets/images/movies/inception_2010/medium-cover.jpg",
+  backdropUrl: "https://yts.mx/assets/images/movies/inception_2010/background.jpg",
   summary: "A thief who steals corporate secrets through dream-sharing technology.",
   tmdbId: null,
   genres: ["Action", "Adventure", "Sci-Fi"],

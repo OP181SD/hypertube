@@ -31,6 +31,9 @@ const mockTmdbService = {
   getPosterUrl: vi.fn((path: string | null) =>
     path ? `https://image.tmdb.org/t/p/w500${path}` : null,
   ),
+  getBackdropUrl: vi.fn((path: string | null) =>
+    path ? `https://image.tmdb.org/t/p/w1280${path}` : null,
+  ),
 };
 
 const mockSubtitleService = {
@@ -341,6 +344,7 @@ describe("MoviesService", () => {
         summary: tmdbMovieDetail.overview,
         runtime: 136,
         posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+        backdropUrl: "https://image.tmdb.org/t/p/w1280/fNG7i7RqMErkcqhohV2a6cV1Ehy.jpg",
         genres: ["Action", "Science Fiction"],
         torrents: [],
       });

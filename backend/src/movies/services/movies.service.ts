@@ -159,6 +159,7 @@ export class MoviesService {
           .map((c) => c.name) ?? [];
       const genres = tmdbData.genres.map((g) => g.name);
       const posterUrl = this.tmdbService.getPosterUrl(tmdbData.poster_path);
+      const backdropUrl = this.tmdbService.getBackdropUrl(tmdbData.backdrop_path);
 
       const updated = await this.prisma.movie.update({
         where: { id: movie.id },
@@ -171,6 +172,7 @@ export class MoviesService {
           cast,
           genres: genres.length > 0 ? genres : movie.genres,
           posterUrl: posterUrl || movie.posterUrl,
+          backdropUrl: backdropUrl || movie.backdropUrl,
         },
         include: { torrents: true },
       });
@@ -194,12 +196,14 @@ export class MoviesService {
             imdbRating: yts.rating,
             runtime: yts.runtime,
             posterUrl: yts.medium_cover_image,
+            backdropUrl: yts.background_image || null,
             summary: yts.summary || null,
             genres: yts.genres ?? [],
           },
           update: {
             imdbRating: yts.rating,
             posterUrl: yts.medium_cover_image,
+            backdropUrl: yts.background_image || undefined,
           },
         });
 
@@ -360,6 +364,7 @@ export class MoviesService {
       year: movie.year,
       imdbRating: movie.imdbRating,
       posterUrl: movie.posterUrl,
+      backdropUrl: movie.backdropUrl,
       genres: movie.genres,
       watched: watchedIds.has(movie.id),
     };
@@ -391,6 +396,7 @@ export class MoviesService {
       runtime: movie.runtime,
       summary: movie.summary,
       posterUrl: movie.posterUrl,
+      backdropUrl: movie.backdropUrl,
       genres: movie.genres,
       director: movie.director,
       producer: movie.producer,

@@ -104,8 +104,9 @@ model Movie {
   year       Int?
   imdbRating Float?   @map("imdb_rating")
   runtime    Int?
-  posterUrl  String?  @map("poster_url")
-  summary    String?
+  posterUrl   String?  @map("poster_url")
+  backdropUrl String?  @map("backdrop_url")
+  summary     String?
   tmdbId     Int?     @map("tmdb_id")
   genres     String[] @default([])
   director   String?

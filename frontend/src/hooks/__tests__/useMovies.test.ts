@@ -18,6 +18,7 @@ const RESPONSE = {
       year: 2022,
       imdbRating: 8.0,
       posterUrl: "url",
+      backdropUrl: null,
       genres: ["Action"],
       watched: false,
     },

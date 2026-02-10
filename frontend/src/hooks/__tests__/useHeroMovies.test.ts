@@ -21,6 +21,7 @@ describe("useHeroMovies", () => {
           year: 2023,
           imdbRating: 9.0,
           posterUrl: "url",
+          backdropUrl: null,
           genres: [],
           watched: false,
         },
