@@ -131,6 +131,24 @@ export interface TmdbFindResponse {
   movie_results: TmdbSearchResult[];
 }
 
+export interface TmdbPopularResponse {
+  page: number;
+  results: TmdbSearchResult[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface HeroMovie {
+  tmdbId: number;
+  title: string;
+  year: number | null;
+  rating: number;
+  genres: string[];
+  posterUrl: string | null;
+  backdropUrl: string;
+  overview: string;
+}
+
 // Internal paginated result
 
 export interface PaginatedMovies {

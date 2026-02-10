@@ -12,6 +12,7 @@ import type {
   MovieListItem,
   TorrentItem,
   SubtitleInfo,
+  HeroMovie,
 } from "../interfaces";
 import type { Movie, Torrent, Prisma } from "@prisma/client";
 
@@ -51,6 +52,11 @@ export class MoviesService {
     private readonly tmdbService: TmdbService,
     private readonly subtitleService: SubtitleService,
   ) {}
+
+  async getPopular(): Promise<HeroMovie[]> {
+    const page = Math.floor(Math.random() * 5) + 1;
+    return this.tmdbService.getPopularMovies(page);
+  }
 
   async search(params: SearchParams, userId?: string): Promise<PaginatedMovies> {
     const page = params.page ?? 1;

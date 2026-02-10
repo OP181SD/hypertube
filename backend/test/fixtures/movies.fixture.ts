@@ -6,6 +6,7 @@ import type {
   TmdbMovieDetail,
   TmdbSearchResponse,
   TmdbFindResponse,
+  TmdbPopularResponse,
 } from "../../src/movies/interfaces";
 
 export const ytsMovie: YtsMovie = {
@@ -199,6 +200,53 @@ export const tmdbFindResponse: TmdbFindResponse = {
       popularity: 79.309,
     },
   ],
+};
+
+export const tmdbPopularResponse: TmdbPopularResponse = {
+  page: 1,
+  results: [
+    {
+      id: 603,
+      title: "The Matrix",
+      original_title: "The Matrix",
+      overview: "Set in the 22nd century, The Matrix tells the story of a computer hacker.",
+      poster_path: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+      backdrop_path: "/fNG7i7RqMErkcqhohV2a6cV1Ehy.jpg",
+      release_date: "1999-03-30",
+      vote_average: 8.2,
+      vote_count: 23104,
+      genre_ids: [28, 878],
+      popularity: 79.309,
+    },
+    {
+      id: 27205,
+      title: "Inception",
+      original_title: "Inception",
+      overview: "A thief who steals corporate secrets through dream-sharing technology.",
+      poster_path: "/9gk7adHYeDvHkCSEhniVolaAcKp.jpg",
+      backdrop_path: "/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
+      release_date: "2010-07-15",
+      vote_average: 8.4,
+      vote_count: 35000,
+      genre_ids: [28, 12, 878],
+      popularity: 100.5,
+    },
+    {
+      id: 999,
+      title: "No Backdrop Movie",
+      original_title: "No Backdrop Movie",
+      overview: "A movie without a backdrop image.",
+      poster_path: "/poster.jpg",
+      backdrop_path: null,
+      release_date: "2020-01-01",
+      vote_average: 5.0,
+      vote_count: 100,
+      genre_ids: [18],
+      popularity: 10.0,
+    },
+  ],
+  total_pages: 500,
+  total_results: 10000,
 };
 
 export const mockDbMovie = {

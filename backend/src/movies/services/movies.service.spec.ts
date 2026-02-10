@@ -28,6 +28,7 @@ const mockEztvService = {
 const mockTmdbService = {
   findByImdbId: vi.fn(),
   getMovieDetails: vi.fn(),
+  getPopularMovies: vi.fn(),
   getPosterUrl: vi.fn((path: string | null) =>
     path ? `https://image.tmdb.org/t/p/w500${path}` : null,
   ),
@@ -78,6 +79,37 @@ describe("MoviesService", () => {
     }).compile();
 
     service = module.get<MoviesService>(MoviesService);
+  });
+
+  describe("getPopular", () => {
+    it("should delegate to tmdbService.getPopularMovies", async () => {
+      const heroMovies = [
+        {
+          tmdbId: 603,
+          title: "The Matrix",
+          year: 1999,
+          rating: 8.2,
+          genres: ["Action", "Sci-Fi"],
+          posterUrl: "https://image.tmdb.org/t/p/w500/poster.jpg",
+          backdropUrl: "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+          overview: "A hacker discovers reality.",
+        },
+      ];
+      mockTmdbService.getPopularMovies.mockResolvedValue(heroMovies);
+
+      const result = await service.getPopular();
+
+      expect(result).toEqual(heroMovies);
+      expect(mockTmdbService.getPopularMovies).toHaveBeenCalled();
+    });
+
+    it("should return empty array when TMDb fails", async () => {
+      mockTmdbService.getPopularMovies.mockResolvedValue([]);
+
+      const result = await service.getPopular();
+
+      expect(result).toEqual([]);
+    });
   });
 
   describe("search", () => {

@@ -5,11 +5,12 @@ import { MoviesController } from "./movies.controller";
 import { MoviesService } from "./services/movies.service";
 import { mockDbMovie, mockDbTorrent } from "../../test/fixtures/movies.fixture";
 import { mockDbUser } from "../../test/fixtures/users.fixture";
-import type { PaginatedMovies, MovieDetail } from "./interfaces";
+import type { PaginatedMovies, MovieDetail, HeroMovie } from "./interfaces";
 
 const mockMoviesService = {
   search: vi.fn(),
   findById: vi.fn(),
+  getPopular: vi.fn(),
 };
 
 describe("MoviesController", () => {
@@ -107,6 +108,37 @@ describe("MoviesController", () => {
       await controller.searchMovies(dto, mockDbUser as any);
 
       expect(mockMoviesService.search).toHaveBeenCalledWith(dto, mockDbUser.id);
+    });
+  });
+
+  describe("GET /movies/popular", () => {
+    it("should return popular movies for hero section", async () => {
+      const popularMovies: HeroMovie[] = [
+        {
+          tmdbId: 603,
+          title: "The Matrix",
+          year: 1999,
+          rating: 8.2,
+          genres: ["Action", "Sci-Fi"],
+          posterUrl: "https://image.tmdb.org/t/p/w500/poster.jpg",
+          backdropUrl: "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+          overview: "A computer hacker learns about reality.",
+        },
+      ];
+      mockMoviesService.getPopular.mockResolvedValue(popularMovies);
+
+      const result = await controller.getPopularMovies();
+
+      expect(result).toEqual(popularMovies);
+      expect(mockMoviesService.getPopular).toHaveBeenCalled();
+    });
+
+    it("should return empty array when no popular movies", async () => {
+      mockMoviesService.getPopular.mockResolvedValue([]);
+
+      const result = await controller.getPopularMovies();
+
+      expect(result).toEqual([]);
     });
   });
 

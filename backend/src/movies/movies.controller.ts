@@ -4,7 +4,7 @@ import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { Public } from "../common/decorators/public.decorator";
 import { MoviesService } from "./services/movies.service";
 import { SearchMoviesDto } from "./dto/search-movies.dto";
-import type { PaginatedMovies, MovieDetail } from "./interfaces";
+import type { PaginatedMovies, MovieDetail, HeroMovie } from "./interfaces";
 
 @Controller("movies")
 export class MoviesController {
@@ -17,6 +17,12 @@ export class MoviesController {
     @CurrentUser() user?: User,
   ): Promise<PaginatedMovies> {
     return this.moviesService.search(dto, user?.id);
+  }
+
+  @Public()
+  @Get("popular")
+  async getPopularMovies(): Promise<HeroMovie[]> {
+    return this.moviesService.getPopular();
   }
 
   @Get(":id")

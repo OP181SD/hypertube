@@ -1,8 +1,8 @@
 import { FC } from "react";
-import type { MovieListItem } from "@/types/api";
+import type { HeroMovie } from "@/types/api";
 
 interface HeroSectionProps {
-  movies: MovieListItem[];
+  movies: HeroMovie[];
   activeIndex: number;
   setActiveIndex: (index: number) => void;
 }
@@ -15,7 +15,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
   if (!movies.length) return null;
 
   const movie = movies[activeIndex];
-  const rating = movie.imdbRating?.toFixed(1) ?? "N/A";
+  const rating = movie.rating?.toFixed(1) ?? "N/A";
   const heroImage = movie.backdropUrl ?? movie.posterUrl;
 
   const renderIndicators = () =>

@@ -6,6 +6,7 @@ import {
   tmdbSearchResponse,
   tmdbMovieDetail,
   tmdbFindResponse,
+  tmdbPopularResponse,
 } from "../../../test/fixtures/movies.fixture";
 
 describe("TmdbService", () => {
@@ -166,6 +167,69 @@ describe("TmdbService", () => {
 
       const result = await service.findByImdbId("tt9999999");
       expect(result).toBeNull();
+    });
+  });
+
+  describe("getPopularMovies", () => {
+    it("should return popular movies with backdrop images", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => tmdbPopularResponse,
+      });
+
+      const results = await service.getPopularMovies();
+
+      // Should filter out the movie without backdrop_path
+      expect(results).toHaveLength(2);
+      expect(results[0].title).toBe("The Matrix");
+      expect(results[0].backdropUrl).toBe(
+        "https://image.tmdb.org/t/p/w1280/fNG7i7RqMErkcqhohV2a6cV1Ehy.jpg",
+      );
+      expect(results[0].year).toBe(1999);
+      expect(results[0].rating).toBe(8.2);
+      expect(results[0].genres).toEqual(["Action", "Sci-Fi"]);
+
+      const url = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as string;
+      expect(url).toContain("movie/popular");
+    });
+
+    it("should pass page parameter", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ...tmdbPopularResponse, results: [] }),
+      });
+
+      await service.getPopularMovies(3);
+
+      const url = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as string;
+      expect(url).toContain("page=3");
+    });
+
+    it("should return empty array on API error", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      const results = await service.getPopularMovies();
+      expect(results).toEqual([]);
+    });
+
+    it("should limit results to 7 movies", async () => {
+      const manyMovies = Array.from({ length: 20 }, (_, i) => ({
+        ...tmdbPopularResponse.results[0],
+        id: i + 1,
+        title: `Movie ${i + 1}`,
+      }));
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ...tmdbPopularResponse, results: manyMovies }),
+      });
+
+      const results = await service.getPopularMovies();
+      expect(results).toHaveLength(7);
     });
   });
 

@@ -126,6 +126,19 @@ export interface StreamStatus {
   fileSize?: number;
 }
 
+// ── Hero ──
+
+export interface HeroMovie {
+  tmdbId: number;
+  title: string;
+  year: number | null;
+  rating: number;
+  genres: string[];
+  posterUrl: string | null;
+  backdropUrl: string;
+  overview: string;
+}
+
 // ── Search params ──
 
 export interface SearchMoviesParams {

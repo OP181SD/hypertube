@@ -5,7 +5,16 @@ import type {
   TmdbSearchResult,
   TmdbMovieDetail,
   TmdbFindResponse,
+  TmdbPopularResponse,
+  HeroMovie,
 } from "../interfaces";
+
+const TMDB_GENRE_MAP: Record<number, string> = {
+  28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+  99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+  27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance",
+  878: "Sci-Fi", 10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western",
+};
 
 @Injectable()
 export class TmdbService {
@@ -114,6 +123,47 @@ export class TmdbService {
     } catch (error) {
       this.logger.error("TMDb find failed", (error as Error).message);
       return null;
+    }
+  }
+
+  async getPopularMovies(page: number = 1): Promise<HeroMovie[]> {
+    const url = new URL(`${this.baseUrl}/movie/popular`);
+    url.searchParams.set("language", "en-US");
+    url.searchParams.set("page", String(page));
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(url.toString(), {
+        headers: this.headers,
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        this.logger.warn(`TMDb popular returned ${response.status}`);
+        return [];
+      }
+
+      const data: TmdbPopularResponse = await response.json();
+
+      return data.results
+        .filter((m) => m.backdrop_path)
+        .slice(0, 7)
+        .map((m) => ({
+          tmdbId: m.id,
+          title: m.title,
+          year: m.release_date ? parseInt(m.release_date.substring(0, 4), 10) : null,
+          rating: m.vote_average,
+          genres: m.genre_ids.map((id) => TMDB_GENRE_MAP[id]).filter(Boolean),
+          posterUrl: this.getPosterUrl(m.poster_path),
+          backdropUrl: this.getBackdropUrl(m.backdrop_path)!,
+          overview: m.overview,
+        }));
+    } catch (error) {
+      this.logger.error("TMDb popular failed", (error as Error).message);
+      return [];
     }
   }
 
