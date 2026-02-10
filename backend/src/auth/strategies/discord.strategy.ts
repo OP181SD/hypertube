@@ -23,32 +23,25 @@ export class DiscordStrategy extends PassportStrategy(Strategy, "discord") {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any, // Change en 'any' pour faciliter l'accès aux props dynamiques
+    profile: Record<string, unknown>,
   ) {
-    const { username, discriminator, id, avatar, email } = profile;
-
-    // 1. Sécurité : Discord ne renvoie pas toujours l'email (si non vérifié)
-    if (!email) {
-      throw new Error("No email provided from Discord. Please verify your email on Discord.");
-    }
+    const email = profile.email as string | undefined;
+    const username = profile.username as string;
+    const discriminator = profile.discriminator as string;
+    const avatar = profile.avatar as string | undefined;
+    const id = String(profile.id);
 
     const avatarUrl = avatar
       ? `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`
-      : null; // Null est mieux que undefined pour Prisma
-
-    // 2. Gestion des nouveaux pseudos Discord (discriminator "0")
-    // Si pas de discriminator, on met un nom par défaut pour ne pas crash la DB
-    const safeLastName = (discriminator && discriminator !== "0") 
-      ? `#${discriminator}` 
-      : "Discord"; 
+      : undefined;
 
     const oauthProfile: OAuthProfile = {
       id,
-      username: username,
-      email: email,
-      firstName: username, // On utilise le pseudo comme prénom
-      lastName: safeLastName, // "Discord" ou "#1234"
-      profilePictureUrl: avatarUrl || undefined,
+      username: username || `discord_${id}`,
+      email: email || "",
+      firstName: username || "",
+      lastName: discriminator !== "0" ? `#${discriminator}` : "",
+      profilePictureUrl: avatarUrl,
     };
 
     return this.authService.validateOAuthUser(
