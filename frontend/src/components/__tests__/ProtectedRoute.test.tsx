@@ -8,6 +8,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 
 import { useAuth } from "@/contexts/AuthContext";
+import { updateUser } from "@/api/users.api";
 
 const mockUseAuth = vi.mocked(useAuth);
 
@@ -18,6 +19,8 @@ const AUTH_BASE = {
   forgotPassword: vi.fn(),
   resetPassword: vi.fn(),
   restoreSession: vi.fn(),
+  updateUser: vi.fn(),
+  refreshUser: vi.fn(),
 };
 
 describe("ProtectedRoute", () => {
