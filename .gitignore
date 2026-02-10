@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+pnpm-lock.yaml
 
 # Build
 dist/
@@ -45,7 +46,3 @@ lerna-debug.log*
 
 # Misc
 *.tsbuildinfo
-
-AUDIT.md
-
-pnpm-lock.yaml
