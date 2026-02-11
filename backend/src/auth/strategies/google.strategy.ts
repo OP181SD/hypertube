@@ -15,10 +15,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
     configService: ConfigService,
     private readonly authService: AuthService,
   ) {
+    const googleId = configService.get<string>("GOOGLE_CLIENT_ID");
+    const callback = configService.get<string>("GOOGLE_CALLBACK_URL");
+    
+    console.log("--- DEBUG [GoogleStrategy] --- ID:", googleId ? "OK" : "MISSING");
+    console.log("--- DEBUG [GoogleStrategy] --- Callback URL:", callback);
+
     const opts: StrategyOptions = {
-      clientID: configService.get<string>("GOOGLE_CLIENT_ID")!,
+      clientID: googleId!,
       clientSecret: configService.get<string>("GOOGLE_CLIENT_SECRET")!,
-      callbackURL: configService.get<string>("GOOGLE_CALLBACK_URL")!,
+      callbackURL: callback!,
       scope: ["email", "profile"],
     };
     super(opts);
@@ -27,9 +33,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: Record<string, unknown>,
+    profile: any, // On met any temporairement pour le log complet
     done: VerifyCallback,
   ) {
+    console.log("--- DEBUG [GoogleStrategy] --- profile reçu:", JSON.stringify(profile, null, 2));
+    
     const emails = profile.emails as Array<{ value: string }>;
     const name = profile.name as { givenName: string; familyName: string };
     const photos = profile.photos as Array<{ value: string }>;
@@ -46,11 +54,15 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
       profilePictureUrl: photos?.[0]?.value,
     };
 
-    const user = await this.authService.validateOAuthUser(
-      oauthProfile,
-      AuthProvider.GOOGLE,
-    );
-
-    done(null, user);
+    try {
+      const user = await this.authService.validateOAuthUser(
+        oauthProfile,
+        AuthProvider.GOOGLE,
+      );
+      done(null, user);
+    } catch (error) {
+      console.error("--- ERROR [GoogleStrategy] ---", error);
+      done(error, undefined);
+    }
   }
 }

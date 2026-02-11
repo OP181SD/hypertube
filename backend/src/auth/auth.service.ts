@@ -122,41 +122,47 @@ export class AuthService {
     profile: OAuthProfile,
     provider: AuthProvider,
   ): Promise<User> {
-    // Check if user already exists with this provider
-    let user = await this.usersService.findByProviderId(provider, profile.id);
+    console.log(`--- DEBUG [AuthService] --- Debut validation pour ${profile.email} (${provider})`);
+    
+    try {
+      let user = await this.usersService.findByProviderId(provider, profile.id);
+      if (user) {
+        console.log("--- DEBUG [AuthService] --- Utilisateur trouvé par ProviderID");
+        return user;
+      }
 
-    if (user) {
-      return user;
+      user = await this.usersService.findByEmail(profile.email);
+      if (user) {
+        console.log("--- DEBUG [AuthService] --- Email existant, link du provider...");
+        return await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            authProvider: provider,
+            providerId: profile.id,
+            profilePictureUrl: user.profilePictureUrl || profile.profilePictureUrl,
+          },
+        });
+      }
+
+      console.log("--- DEBUG [AuthService] --- Création nouvel utilisateur...");
+      const createData: CreateUserData = {
+        email: profile.email,
+        username: profile.username,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        authProvider: provider,
+        providerId: profile.id,
+        profilePictureUrl: profile.profilePictureUrl,
+        emailVerified: true,
+      };
+
+      const newUser = await this.usersService.create(createData);
+      console.log("--- DEBUG [AuthService] --- Utilisateur créé avec succès");
+      return newUser;
+    } catch (error) {
+      console.error("--- ERROR [AuthService] --- Echec validateOAuthUser:", error);
+      throw error;
     }
-
-    // Check if user exists with same email
-    user = await this.usersService.findByEmail(profile.email);
-    if (user) {
-      // Link the OAuth provider to existing account
-      return this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          authProvider: provider,
-          providerId: profile.id,
-          profilePictureUrl:
-            user.profilePictureUrl || profile.profilePictureUrl,
-        },
-      });
-    }
-
-    // Create new user
-    const createData: CreateUserData = {
-      email: profile.email,
-      username: profile.username,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      authProvider: provider,
-      providerId: profile.id,
-      profilePictureUrl: profile.profilePictureUrl,
-      emailVerified: true,
-    };
-
-    return this.usersService.create(createData);
   }
 
   async validateOAuthClient(
