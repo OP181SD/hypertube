@@ -35,7 +35,6 @@ export class AuthController {
   @Post("oauth/token")
   @HttpCode(HttpStatus.OK)
   async token(@Body() dto: OAuthTokenDto) {
-    // Validate OAuth client
     const isValidClient = await this.authService.validateOAuthClient(
       dto.client_id,
       dto.client_secret,
@@ -66,18 +65,6 @@ export class AuthController {
           );
         }
         return this.authService.refreshTokens(dto.refresh_token);
-      }
-
-      case GrantType.AUTHORIZATION_CODE: {
-        if (!dto.code) {
-          throw new BadRequestException(
-            "code is required for authorization_code grant",
-          );
-        }
-        // The code exchange is handled by the OAuth callback
-        throw new BadRequestException(
-          "Use the appropriate /auth/{provider}/callback for authorization code exchange",
-        );
       }
 
       default:
@@ -118,135 +105,103 @@ export class AuthController {
     return { message: "Logged out successfully" };
   }
 
+  // --- HELPER REDIRECTION ---
+  private async handleOAuthRedirect(req: FastifyRequest, res: FastifyReply, provider: string) {
+    const user = req.user as User;
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+    if (!user) {
+      console.error(`--- 🚀 [AuthController] --- Erreur ${provider}: Pas d'utilisateur`);
+      return res.status(302).redirect(`${frontendUrl}/login?error=auth_failed`);
+    }
+
+    try {
+      const tokens = await this.authService.generateTokens(user.id);
+      const redirectUrl = `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`;
+      
+      console.log(`--- 🚀 [AuthController] --- Redirection ${provider} vers:`, redirectUrl);
+      return res.status(302).redirect(redirectUrl);
+    } catch (error) {
+      console.error(`--- 🚀 [AuthController] --- Erreur tokens ${provider}:`, error);
+      return res.status(500).send({ message: "Internal server error during redirection" });
+    }
+  }
+
   // OAuth - 42
   @Public()
   @UseGuards(FtAuthGuard)
   @Get("auth/42")
-  async ft42Login() {
-    // Passport redirects to 42
-  }
+  async ft42Login() {}
 
   @Public()
   @UseGuards(FtAuthGuard)
   @Get("auth/42/callback")
   async ft42Callback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    const user = req.user as User;
-    const tokens = await this.authService.generateTokens(user.id);
-    const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173";
-
-    res.redirect(
-      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
-    );
+    return this.handleOAuthRedirect(req, res, "42");
   }
 
   // OAuth - Google
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get("auth/google")
-  async googleLogin() {
-    // Passport redirects to Google
-  }
+  async googleLogin() {}
 
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get("auth/google/callback")
   async googleCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    const user = req.user as User;
-    const tokens = await this.authService.generateTokens(user.id);
-    const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173";
-
-    res.redirect(
-      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
-    );
+    return this.handleOAuthRedirect(req, res, "Google");
   }
 
   // OAuth - GitHub
   @Public()
   @UseGuards(GithubAuthGuard)
   @Get("auth/github")
-  async githubLogin() {
-    // Passport redirects to GitHub
-  }
+  async githubLogin() {}
 
   @Public()
   @UseGuards(GithubAuthGuard)
   @Get("auth/github/callback")
   async githubCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    const user = req.user as User;
-    const tokens = await this.authService.generateTokens(user.id);
-    const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173";
-
-    res.redirect(
-      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
-    );
+    return this.handleOAuthRedirect(req, res, "GitHub");
   }
 
   // OAuth - Facebook
   @Public()
   @UseGuards(FacebookAuthGuard)
   @Get("auth/facebook")
-  async facebookLogin() {
-    // Passport redirects to Facebook
-  }
+  async facebookLogin() {}
 
   @Public()
   @UseGuards(FacebookAuthGuard)
   @Get("auth/facebook/callback")
   async facebookCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    const user = req.user as User;
-    const tokens = await this.authService.generateTokens(user.id);
-    const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173";
-
-    res.redirect(
-      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
-    );
+    return this.handleOAuthRedirect(req, res, "Facebook");
   }
 
   // OAuth - Twitter/X
   @Public()
   @UseGuards(TwitterAuthGuard)
   @Get("auth/twitter")
-  async twitterLogin() {
-    // Passport redirects to Twitter/X
-  }
+  async twitterLogin() {}
 
   @Public()
   @UseGuards(TwitterAuthGuard)
   @Get("auth/twitter/callback")
   async twitterCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    const user = req.user as User;
-    const tokens = await this.authService.generateTokens(user.id);
-    const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173";
-
-    res.redirect(
-      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
-    );
+    return this.handleOAuthRedirect(req, res, "Twitter");
   }
 
   // OAuth - Discord
   @Public()
   @UseGuards(DiscordAuthGuard)
   @Get("auth/discord")
-  async discordLogin() {
-    // Passport redirects to Discord
-  }
+  async discordLogin() {}
 
   @Public()
   @UseGuards(DiscordAuthGuard)
   @Get("auth/discord/callback")
   async discordCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    const user = req.user as User;
-    const tokens = await this.authService.generateTokens(user.id);
-    const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173";
-
-    res.redirect(
-      `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`,
-    );
+    return this.handleOAuthRedirect(req, res, "Discord");
   }
 }
