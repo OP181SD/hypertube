@@ -62,11 +62,13 @@ export class MoviesService {
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
 
+    const genreParam = params.genre === "Science Fiction" ? "Sci-Fi" : params.genre;
+
     // Fetch from external APIs in parallel
     const [ytsResult, eztvResult] = await Promise.all([
       this.ytsService.searchMovies({
         query: params.query,
-        genre: params.genre?.toLowerCase().replace(" ", "-"),
+        genre: genreParam?.toLowerCase().replace(" ", "-"),
         sortBy: this.mapSortField(params.sortBy),
         order: params.order,
         minRating: params.minRating,
