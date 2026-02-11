@@ -66,7 +66,7 @@ export class MoviesService {
     const [ytsResult, eztvResult] = await Promise.all([
       this.ytsService.searchMovies({
         query: params.query,
-        genre: params.genre,
+        genre: params.genre?.toLowerCase().replace(" ", "-"),
         sortBy: this.mapSortField(params.sortBy),
         order: params.order,
         minRating: params.minRating,
@@ -295,7 +295,12 @@ export class MoviesService {
     const where: Prisma.MovieWhereInput = {};
 
     if (params.query) {
-      where.title = { contains: params.query, mode: "insensitive" };
+      where.OR = [
+        { title: { contains: params.query, mode: "insensitive" } },
+        { summary: { contains: params.query, mode: "insensitive" } },
+        { cast: { has: params.query } },
+        { director: { contains: params.query, mode: "insensitive" } },
+      ];
     }
 
     if (params.genre) {
