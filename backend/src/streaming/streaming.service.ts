@@ -35,13 +35,19 @@ export class StreamingService {
     }
 
     // Record watch history
-    await this.prisma.watchHistory.upsert({
-      where: {
-        userId_movieId: { userId, movieId: torrent.movieId },
-      },
-      create: { userId, movieId: torrent.movieId },
-      update: { watchedAt: new Date() },
-    });
+    if (userId && userId !== "anonymous") {
+      try {
+        await this.prisma.watchHistory.upsert({
+          where: {
+            userId_movieId: { userId, movieId: torrent.movieId },
+          },
+          create: { userId, movieId: torrent.movieId },
+          update: { watchedAt: new Date() },
+        });
+      } catch (e: any) {
+        this.logger.warn(`Could not update watch history: ${e.message}`);
+      }
+    }
 
     // Update lastAccessedAt
     await this.prisma.torrent.update({

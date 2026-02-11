@@ -4,79 +4,100 @@ import {
   Param,
   Headers,
   ParseUUIDPipe,
+  Res,
+  Logger,
+  NotFoundException,
 } from "@nestjs/common";
 import type { FastifyReply } from "fastify";
-import { User } from "@prisma/client";
-import { Res } from "@nestjs/common";
-import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { StreamingService } from "./streaming.service";
+import { Public } from "../common/decorators/public.decorator";
 
 @Controller()
 export class StreamingController {
+  private readonly logger = new Logger(StreamingController.name);
+
   constructor(private readonly streamingService: StreamingService) {}
 
+  @Public()
   @Get("stream/:torrentId")
   async stream(
     @Param("torrentId", ParseUUIDPipe) torrentId: string,
-    @CurrentUser() user: User,
     @Headers("range") range: string | undefined,
     @Res() reply: FastifyReply,
   ): Promise<void> {
-    const progress = await this.streamingService.initiateStream(
-      torrentId,
-      user.id,
-    );
-
-    // If not ready yet, return status as JSON
-    if (progress.status !== "ready" && !progress.filePath) {
-      reply.status(202).send(progress);
-      return;
+    
+    let progress;
+    try {
+      progress = await this.streamingService.getStreamStatus(torrentId);
+    } catch (e) {
+      throw new NotFoundException("Torrent not found in database");
     }
 
-    // Get video stream
-    const result = await this.streamingService.getVideoStream(
-      torrentId,
-      range,
-    );
-
-    if (result.start != null && result.end != null && result.totalSize != null) {
-      // Partial content (range request)
-      reply
-        .status(206)
-        .header("Content-Range", `bytes ${result.start}-${result.end}/${result.totalSize}`)
-        .header("Accept-Ranges", "bytes")
-        .header("Content-Length", result.fileSize ?? 0)
-        .header("Content-Type", result.mimeType)
-        .send(result.stream);
-    } else {
-      // Full content
-      reply
-        .status(200)
-        .header("Accept-Ranges", "bytes")
-        .header("Content-Type", result.mimeType);
-
-      if (result.fileSize != null) {
-        reply.header("Content-Length", result.fileSize);
+    if (progress.status === "idle") {
+      try {
+        this.logger.log(`[CONTROLLER] Waking up idle torrent ${torrentId}`);
+        await this.streamingService.initiateStream(torrentId, "anonymous");
+        
+        // On attend un peu pour les métadonnées
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        progress = await this.streamingService.getStreamStatus(torrentId);
+      } catch (error: any) {
+        this.logger.error(`[CONTROLLER] Failed to initiate stream: ${error.message}`);
+        return reply.status(500).send({ message: "Failed to start torrent engine" });
       }
+    }
 
-      reply.send(result.stream);
+    // 3. LA SÉCURITÉ : Si on n'a toujours pas de fichier identifié
+    if (!progress.filePath) {
+      this.logger.log(`[HTTP] Metadata still pending for ${torrentId}. Returning 202.`);
+      return reply
+        .status(202)
+        .send({ 
+          ...progress, 
+          message: "Fetching torrent metadata, please wait..." 
+        });
+    }
+
+    // 4. On tente de servir le flux vidéo
+    try {
+      const result = await this.streamingService.getVideoStream(torrentId, range);
+
+      if (result.start != null && result.end != null && result.totalSize != null) {
+        // Flux partiel (Range Request)
+        return reply
+          .status(206)
+          .header("Content-Range", `bytes ${result.start}-${result.end}/${result.totalSize}`)
+          .header("Accept-Ranges", "bytes")
+          .header("Content-Length", result.fileSize ?? 0)
+          .header("Content-Type", result.mimeType)
+          .send(result.stream);
+      } else {
+        // Flux complet ou Transcodage
+        return reply
+          .status(200)
+          .header("Accept-Ranges", "bytes")
+          .header("Content-Type", result.mimeType)
+          .send(result.stream);
+      }
+    } catch (error: any) { // On ajoute ": any" ici
+      this.logger.error(`[HTTP] Stream error: ${error?.message || error}`);
+      return reply.status(503).send({ message: "Stream temporarily unavailable" });
     }
   }
 
+  @Public()
   @Get("stream/:torrentId/status")
-  async getStatus(
-    @Param("torrentId", ParseUUIDPipe) torrentId: string,
-  ) {
+  async getStatus(@Param("torrentId", ParseUUIDPipe) torrentId: string) {
     return this.streamingService.getStreamStatus(torrentId);
   }
 
+  @Public()
   @Get("subtitles/:movieId")
-  async getSubtitles(
-    @Param("movieId", ParseUUIDPipe) movieId: string,
-  ) {
+  async getSubtitles(@Param("movieId", ParseUUIDPipe) movieId: string) {
     return this.streamingService.getSubtitlesByMovieId(movieId);
   }
 
+  @Public()
   @Get("subtitles/:movieId/:lang")
   async getSubtitleFile(
     @Param("movieId", ParseUUIDPipe) movieId: string,
@@ -88,7 +109,7 @@ export class StreamingController {
       lang,
     );
 
-    reply
+    return reply
       .header("Content-Type", "text/vtt; charset=utf-8")
       .send(content);
   }
