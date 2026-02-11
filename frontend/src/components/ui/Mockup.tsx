@@ -44,9 +44,17 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
     setSortBy(sortMap[type]);
   };
 
+  const hasHero = hero.movies.length > 0;
+
   return (
-    <section className="flex flex-col items-center w-full">
-      {hero.movies.length > 0 && (
+    <section className="flex flex-col w-full">
+      {/* Hero loading skeleton */}
+      {hero.loading && (
+        <div className="w-full h-[55vh] md:h-[60vh] lg:h-[65vh] bg-gray-900/50 animate-pulse" />
+      )}
+
+      {/* Hero carousel - full width, behind the fixed navbar */}
+      {!hero.loading && hasHero && (
         <HeroSection
           movies={hero.movies}
           activeIndex={activeIndex}
@@ -54,19 +62,26 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
         />
       )}
 
-      <NavigationGender
-        onSelectGenre={setSelectedGenre}
-        onSelectSort={handleSort}
-        onSelectMinRating={setMinRating}
-        onSelectYearRange={setYearRange}
-      />
+      {/* Content below hero */}
+      <div
+        className={`flex flex-col items-center w-full px-3 sm:px-4 md:px-6 lg:px-8 ${
+          !hasHero && !hero.loading ? "pt-16 md:pt-20" : ""
+        }`}
+      >
+        <NavigationGender
+          onSelectGenre={setSelectedGenre}
+          onSelectSort={handleSort}
+          onSelectMinRating={setMinRating}
+          onSelectYearRange={setYearRange}
+        />
 
-      <MoviesSection
-        movies={movies}
-        loading={loading}
-        hasMore={hasMore}
-        onLoadMore={loadMore}
-      />
+        <MoviesSection
+          movies={movies}
+          loading={loading}
+          hasMore={hasMore}
+          onLoadMore={loadMore}
+        />
+      </div>
     </section>
   );
 };

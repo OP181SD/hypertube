@@ -29,18 +29,17 @@ export class TmdbService {
       "https://api.themoviedb.org/3";
   }
 
-  private get headers(): Record<string, string> {
-    return {
-      Authorization: `Bearer ${this.apiKey}`,
-      Accept: "application/json",
-    };
+  private buildUrl(path: string): URL {
+    const url = new URL(`${this.baseUrl}${path}`);
+    url.searchParams.set("api_key", this.apiKey);
+    return url;
   }
 
   async searchMovie(
     query: string,
     year?: number,
   ): Promise<TmdbSearchResult[]> {
-    const url = new URL(`${this.baseUrl}/search/movie`);
+    const url = this.buildUrl("/search/movie");
     url.searchParams.set("query", query);
     url.searchParams.set("language", "en-US");
     if (year) url.searchParams.set("year", String(year));
@@ -50,7 +49,6 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.headers,
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -69,7 +67,7 @@ export class TmdbService {
   }
 
   async getMovieDetails(tmdbId: number): Promise<TmdbMovieDetail | null> {
-    const url = new URL(`${this.baseUrl}/movie/${tmdbId}`);
+    const url = this.buildUrl(`/movie/${tmdbId}`);
     url.searchParams.set("language", "en-US");
     url.searchParams.set("append_to_response", "credits");
 
@@ -78,7 +76,6 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.headers,
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -96,7 +93,7 @@ export class TmdbService {
   }
 
   async findByImdbId(imdbId: string): Promise<TmdbMovieDetail | null> {
-    const url = new URL(`${this.baseUrl}/find/${imdbId}`);
+    const url = this.buildUrl(`/find/${imdbId}`);
     url.searchParams.set("external_source", "imdb_id");
 
     try {
@@ -104,7 +101,6 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.headers,
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -127,7 +123,7 @@ export class TmdbService {
   }
 
   async getPopularMovies(page: number = 1): Promise<HeroMovie[]> {
-    const url = new URL(`${this.baseUrl}/movie/popular`);
+    const url = this.buildUrl("/movie/popular");
     url.searchParams.set("language", "en-US");
     url.searchParams.set("page", String(page));
 
@@ -136,7 +132,6 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.headers,
         signal: controller.signal,
       });
       clearTimeout(timeout);

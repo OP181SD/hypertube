@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useRef, useCallback } from "react";
 import type { HeroMovie } from "@/types/api";
 
 interface HeroSectionProps {
@@ -7,54 +7,107 @@ interface HeroSectionProps {
   setActiveIndex: (index: number) => void;
 }
 
+const AUTOPLAY_INTERVAL = 6000;
+
 export const HeroSection: FC<HeroSectionProps> = ({
   movies,
   activeIndex,
   setActiveIndex,
 }) => {
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pausedRef = useRef(false);
+
+  const goNext = useCallback(() => {
+    setActiveIndex((activeIndex + 1) % movies.length);
+  }, [activeIndex, movies.length, setActiveIndex]);
+
+  const goPrev = useCallback(() => {
+    setActiveIndex((activeIndex - 1 + movies.length) % movies.length);
+  }, [activeIndex, movies.length, setActiveIndex]);
+
+  // Auto-rotation
+  useEffect(() => {
+    if (movies.length <= 1) return;
+
+    const start = () => {
+      timerRef.current = setInterval(() => {
+        if (!pausedRef.current) goNext();
+      }, AUTOPLAY_INTERVAL);
+    };
+
+    start();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [goNext, movies.length]);
+
+  const handleMouseEnter = () => {
+    pausedRef.current = true;
+  };
+
+  const handleMouseLeave = () => {
+    pausedRef.current = false;
+  };
+
+  const handleSelect = (index: number) => {
+    setActiveIndex(index);
+    // Reset timer on manual navigation
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      if (!pausedRef.current) goNext();
+    }, AUTOPLAY_INTERVAL);
+  };
+
   if (!movies.length) return null;
 
   const movie = movies[activeIndex];
   const rating = movie.rating?.toFixed(1) ?? "N/A";
-  const heroImage = movie.backdropUrl ?? movie.posterUrl;
-
-  const renderIndicators = () =>
-    movies.map((_, index) => (
-      <li
-        key={index}
-        onClick={() => setActiveIndex(index)}
-        className={`${
-          index === activeIndex
-            ? "w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white"
-            : "w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white/40 hover:bg-white/60 cursor-pointer"
-        } rounded-full transition-all duration-300 ease-out`}
-      />
-    ));
 
   return (
-    <section className="relative w-full">
-      <div className="relative w-full group">
-        {heroImage ? (
-          <img
-            src={heroImage}
-            alt={movie.title}
-            className="w-full h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[65vh] xl:h-[70vh] 2xl:h-[75vh] object-cover"
-          />
-        ) : (
-          <div className="w-full h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[65vh] xl:h-[70vh] 2xl:h-[75vh] bg-gray-900" />
-        )}
+    <section
+      className="relative w-full overflow-hidden group"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className="relative w-full h-[55vh] sm:h-[55vh] md:h-[60vh] lg:h-[65vh] xl:h-[70vh] 2xl:h-[75vh]">
+        {/* Stacked images with crossfade */}
+        {movies.map((m, index) => {
+          const img = m.backdropUrl ?? m.posterUrl;
+          return (
+            <div
+              key={m.tmdbId}
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                index === activeIndex ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {img ? (
+                <img
+                  src={img}
+                  alt={m.title}
+                  className="w-full h-full object-cover"
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-900" />
+              )}
+            </div>
+          );
+        })}
 
-        <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
 
-        <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10 text-white">
-          <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl font-semibold mb-2 drop-shadow-lg">
+        {/* Movie info */}
+        <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-14 pb-14 sm:pb-16 text-white">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 drop-shadow-lg max-w-2xl">
             {movie.title}
           </h1>
 
-          <div className="flex items-center gap-2 text-[9px] sm:text-[10px] md:text-sm text-white/70 mb-2">
-            <span>{movie.year}</span>
+          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base text-white/70 mb-3">
+            {movie.year && <span>{movie.year}</span>}
             <span>·</span>
-            <span className="text-white/80 font-medium">{rating}</span>
+            <span className="text-yellow-400 font-semibold">{rating}</span>
             {movie.genres.length > 0 && (
               <>
                 <span>·</span>
@@ -62,13 +115,58 @@ export const HeroSection: FC<HeroSectionProps> = ({
               </>
             )}
           </div>
+
+          {movie.overview && (
+            <p className="hidden sm:block text-sm md:text-base text-white/60 max-w-xl line-clamp-3 leading-relaxed">
+              {movie.overview}
+            </p>
+          )}
         </div>
 
-        <div className="absolute hidden xl:flex justify-center bottom-4 inset-x-0">
-          <ul className="flex gap-2 backdrop-blur-md items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
-            {renderIndicators()}
-          </ul>
-        </div>
+        {/* Left arrow */}
+        {movies.length > 1 && (
+          <button
+            onClick={goPrev}
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity duration-300 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white"
+            aria-label="Previous movie"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+        )}
+
+        {/* Right arrow */}
+        {movies.length > 1 && (
+          <button
+            onClick={goNext}
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity duration-300 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white"
+            aria-label="Next movie"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        )}
+
+        {/* Dots indicator */}
+        {movies.length > 1 && (
+          <div className="absolute bottom-4 sm:bottom-6 inset-x-0 flex justify-center">
+            <ul className="flex gap-1.5 sm:gap-2 items-center px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-sm">
+              {movies.map((_, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleSelect(index)}
+                  className={`rounded-full cursor-pointer transition-all duration-300 ${
+                    index === activeIndex
+                      ? "w-6 sm:w-8 h-1.5 sm:h-2 bg-white"
+                      : "w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 hover:bg-white/70"
+                  }`}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </section>
   );
