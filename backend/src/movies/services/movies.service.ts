@@ -292,14 +292,25 @@ export class MoviesService {
   }
 
   private buildWhereClause(params: SearchParams): Prisma.MovieWhereInput {
-    const where: Prisma.MovieWhereInput = {};
+    const where: Prisma.MovieWhereInput = {
+      NOT: [
+        { posterUrl: null },
+        { posterUrl: "" }
+      ]
+    };
 
     if (params.query) {
-      where.OR = [
-        { title: { contains: params.query, mode: "insensitive" } },
-        { summary: { contains: params.query, mode: "insensitive" } },
-        { cast: { has: params.query } },
-        { director: { contains: params.query, mode: "insensitive" } },
+      // On wrap l'ancien contenu dans un AND pour ne pas casser le filtre d'image
+      where.AND = [
+        ...(where.AND as any),
+        {
+          OR: [
+            { title: { contains: params.query, mode: "insensitive" } },
+            { summary: { contains: params.query, mode: "insensitive" } },
+            { cast: { has: params.query } },
+            { director: { contains: params.query, mode: "insensitive" } },
+          ]
+        }
       ];
     }
 

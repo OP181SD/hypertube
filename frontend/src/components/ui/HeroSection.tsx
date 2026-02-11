@@ -95,8 +95,8 @@ export const HeroSection: FC<HeroSectionProps> = ({
         })}
 
         {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/60 via-transparent to-transparent" />
 
         {/* Movie info */}
         <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-14 pb-14 sm:pb-16 text-white">
