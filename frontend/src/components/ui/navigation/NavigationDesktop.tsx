@@ -43,17 +43,10 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
     genreLabels[genre] = t(`genres.${genre}`);
   });
 
-  const sortTypeLabels: Record<SortTypes, string> = {
-    Popular: t("sort.Popular"),
-    Name: t("sort.Name"),
-    Year: t("sort.Year"),
-    Rating: t("sort.Rating"),
-  };
 
   return (
     <div className="hidden lg:flex relative justify-center flex-nowrap items-center gap-2 px-4 sm:px-6 md:px-8 lg:px-10 overflow-x-auto no-scrollbar">
 
-      {/* Bouton All */}
       <button
         className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-300 whitespace-nowrap ${
           activeGenre === "" ? "bg-white text-black shadow-md" : "bg-white/10 text-white"
@@ -65,7 +58,6 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
 
       <div className="w-px h-5 sm:h-6 bg-white/10" />
 
-      {/* Toggle Genres */}
       <div className="relative flex justify-center" onClick={() => setOpenGenres(!openGenres)}>
         <button className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium bg-white/10 text-white shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer whitespace-nowrap">
           {t("genres_title")}

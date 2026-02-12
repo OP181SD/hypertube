@@ -52,12 +52,10 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
     <div className="lg:hidden px-4 sm:px-6">
       <div className="space-y-4">
 
-        {/* Bouton All */}
         <div className="flex justify-center">
           {renderButton("All", activeGenre === "", () => handleClickGenre(""))}
         </div>
 
-        {/* Genres */}
         <div>
           <button
             onClick={() => setOpenGenres(!openGenres)}
@@ -85,7 +83,6 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
           </div>
         </div>
 
-        {/* Category / Sort */}
         <div>
           <button
             onClick={() => setOpenCategory(!openCategory)}
