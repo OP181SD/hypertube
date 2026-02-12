@@ -105,5 +105,7 @@
   },
   "profile_updated": "Perfil actualizado",
   "avatar_update_error": "No se pudo actualizar el avatar. Por favor, inténtalo de nuevo.",
-  "avatar_updated": "Avatar actualizado correctamente."
+  "avatar_updated": "Avatar actualizado correctamente.",
+  "signin_with_social": "Iniciar sesión con OmniAuth",
+  "signin_manually": "Registrarse manualmente"
 }

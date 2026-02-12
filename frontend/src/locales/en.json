@@ -103,8 +103,9 @@
     "Year": "Year",
     "Rating": "Rating"
   },
-
   "profile_updated": "Profile updated",
   "avatar_update_error": "Failed to update avatar. Please try again.",
-  "avatar_updated": "Avatar updated successfully."
+  "avatar_updated": "Avatar updated successfully.",
+  "signin_with_social": "Sign in with OmniAuth",
+  "signin_manually": "Sign up manually"
 }
