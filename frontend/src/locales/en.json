@@ -86,7 +86,6 @@
   "password_reset_success": "Your password has been reset successfully. You can now sign in.",
   "reset_new_password_description": "Enter your new password below.",
   "reset_password_button": "Reset password",
-  
   "genres": {
     "Action": "Action",
     "Comedy": "Comedy",
@@ -96,7 +95,6 @@
     "Thriller": "Thriller",
     "Romance": "Romance"
   },
-
   "genres_title": "Genres",
   "category_title": "Category",
   "sort": {
@@ -104,5 +102,9 @@
     "Name": "Name",
     "Year": "Year",
     "Rating": "Rating"
-  }
+  },
+
+  "profile_updated": "Profile updated",
+  "avatar_update_error": "Failed to update avatar. Please try again.",
+  "avatar_updated": "Avatar updated successfully."
 }

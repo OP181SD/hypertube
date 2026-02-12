@@ -86,7 +86,6 @@
   "password_reset_success": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
   "reset_new_password_description": "Entrez votre nouveau mot de passe ci-dessous.",
   "reset_password_button": "Réinitialiser le mot de passe",
-
   "genres": {
     "Action": "Action",
     "Comedy": "Comédie",
@@ -103,6 +102,8 @@
     "Name": "Nom",
     "Year": "Année",
     "Rating": "Note"
-  }
-  
+  },
+  "profile_updated": "Perfil actualizado",
+  "avatar_update_error": "No se pudo actualizar el avatar. Por favor, inténtalo de nuevo.",
+  "avatar_updated": "Avatar actualizado correctamente."
 }

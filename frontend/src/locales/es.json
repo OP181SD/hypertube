@@ -86,8 +86,7 @@
   "password_reset_success": "Tu contraseña se ha restablecido correctamente. Ya puedes iniciar sesión.",
   "reset_new_password_description": "Introduce tu nueva contraseña a continuación.",
   "reset_password_button": "Restablecer contraseña",
-
-   "genres": {
+  "genres": {
     "Action": "Acción",
     "Comedy": "Comedia",
     "Drama": "Drama",
@@ -96,15 +95,15 @@
     "Thriller": "Suspenso",
     "Romance": "Romance"
   },
-
   "category_title": "Categoría",
   "genres_title": "Géneros",
-
   "sort": {
     "Popular": "Popular",
     "Name": "Nombre",
     "Year": "Año",
     "Rating": "Calificación"
-  }
-
+  },
+  "profile_updated": "Perfil actualizado",
+  "avatar_update_error": "No se pudo actualizar el avatar. Por favor, inténtalo de nuevo.",
+  "avatar_updated": "Avatar actualizado correctamente."
 }
