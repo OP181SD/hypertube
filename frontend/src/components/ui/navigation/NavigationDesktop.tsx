@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SortTypes } from "./types/filters";
 
 interface NavigationDesktopProps {
@@ -22,6 +23,8 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
   onSelectGenre,
   onSelectSort,
 }) => {
+  const { t } = useTranslation(); 
+
   const [activeGenre, setActiveGenre] = useState<string>("");
   const [activeSort, setActiveSort] = useState<SortTypes>("Popular");
 
@@ -35,23 +38,37 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
     onSelectSort?.(type);
   };
 
+  const genreLabels: Record<string, string> = {};
+  genres.forEach((genre) => {
+    genreLabels[genre] = t(`genres.${genre}`);
+  });
+
+  const sortTypeLabels: Record<SortTypes, string> = {
+    Popular: t("sort.Popular"),
+    Name: t("sort.Name"),
+    Year: t("sort.Year"),
+    Rating: t("sort.Rating"),
+  };
+
   return (
     <div className="hidden lg:flex relative justify-center flex-nowrap items-center gap-2 px-4 sm:px-6 md:px-8 lg:px-10 overflow-x-auto no-scrollbar">
 
+      {/* Bouton All */}
       <button
         className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-300 whitespace-nowrap ${
           activeGenre === "" ? "bg-white text-black shadow-md" : "bg-white/10 text-white"
         }`}
         onClick={() => handleClickGenre("")}
       >
-        All
+        {t("all")}
       </button>
 
       <div className="w-px h-5 sm:h-6 bg-white/10" />
 
+      {/* Toggle Genres */}
       <div className="relative flex justify-center" onClick={() => setOpenGenres(!openGenres)}>
         <button className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium bg-white/10 text-white shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer whitespace-nowrap">
-          Genres
+          {t("genres_title")}
         </button>
       </div>
 
@@ -68,7 +85,7 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
               activeGenre === genre ? "bg-white text-black shadow-md" : "bg-white/10 text-white"
             }`}
           >
-            {genre}
+           {genre}
           </button>
         ))}
       </div>
@@ -77,7 +94,7 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
 
       <div className="relative flex justify-center" onClick={() => setOpenCategory(!openCategory)}>
         <button className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium bg-white/10 text-white shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer whitespace-nowrap">
-          Category
+          {t("category_title")}
         </button>
       </div>
 
@@ -94,7 +111,7 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
               activeSort === type ? "bg-white text-black shadow-md" : "bg-white/10 text-white"
             }`}
           >
-            {type}
+                {t(`sort.${type}`)}
           </button>
         ))}
       </div>
