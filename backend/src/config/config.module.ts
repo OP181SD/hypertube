@@ -53,9 +53,9 @@ import Joi from "joi";
         FACEBOOK_CALLBACK_URL: Joi.string().uri().required(),
 
         // OAuth - Twitter/X
-        TWITTER_CONSUMER_KEY: Joi.string().required(),
-        TWITTER_CONSUMER_SECRET: Joi.string().required(),
-        TWITTER_CALLBACK_URL: Joi.string().uri().required(),
+        X_CLIENT_ID: Joi.string().required(),
+        X_CLIENT_SECRET: Joi.string().required(),
+        X_CALLBACK_URL: Joi.string().uri().required(),
 
         // OAuth - Discord
         DISCORD_CLIENT_ID: Joi.string().required(),

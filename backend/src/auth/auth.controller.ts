@@ -187,7 +187,7 @@ export class AuthController {
 
   @Public()
   @UseGuards(TwitterAuthGuard)
-  @Get("auth/twitter/callback")
+  @Get("auth/x/callback") // <--- REMPLACE "auth/twitter/callback" par "auth/x/callback"
   async twitterCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     return this.handleOAuthRedirect(req, res, "Twitter");
   }
