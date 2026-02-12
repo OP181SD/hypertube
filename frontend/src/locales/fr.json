@@ -103,9 +103,9 @@
     "Year": "Année",
     "Rating": "Note"
   },
-  "profile_updated": "Perfil actualizado",
-  "avatar_update_error": "No se pudo actualizar el avatar. Por favor, inténtalo de nuevo.",
-  "avatar_updated": "Avatar actualizado correctamente.",
+  "profile_updated": "Profil mis à jour",
+  "avatar_update_error": "Impossible de mettre à jour l'avatar. Veuillez réessayer.",
+  "avatar_updated": "Avatar mis à jour avec succès.",
   "signin_with_social": "Se connecter avec OmniAuth",
   "signin_manually": "S'inscrire manuellement"
 }

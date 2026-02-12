@@ -8,8 +8,6 @@ type Props = {
   dispatch: (action: Action) => void;
 };
 
-
-
 export const AuthSignup: React.FC<Props> = ({ dispatch }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -73,7 +71,6 @@ export const AuthSignup: React.FC<Props> = ({ dispatch }) => {
       await register({ email, username, firstName, lastName, password });
       navigate("/dashboard");
     } catch {
-      // authError is set by AuthContext
     } finally {
       setLoading(false);
     }
