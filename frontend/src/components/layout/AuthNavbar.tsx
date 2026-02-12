@@ -46,7 +46,8 @@ export default function AuthNavbar() {
 
             {user?.profilePictureUrl && (
               <img
-                src={user.profilePictureUrl}
+                // src={user.profilePictureUrl}
+                src={`http://localhost:3000${user.profilePictureUrl}`}
                 alt={user.username}
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-white/20"
               />

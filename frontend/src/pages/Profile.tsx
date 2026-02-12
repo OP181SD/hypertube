@@ -95,7 +95,8 @@ export function Profile() {
           >
             {user.profilePictureUrl ? (
               <img
-                src={user.profilePictureUrl}
+                // src={user.profilePictureUrl}
+                src={`http://localhost:3000${user.profilePictureUrl}`}
                 alt={user.username}
                 className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20 transition-transform duration-300 hover:scale-105"
               />
