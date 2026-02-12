@@ -133,11 +133,10 @@ export function Profile() {
 
       {message && (
         <div
-          className={`mb-6 px-4 py-3 rounded-xl text-sm w-full max-w-md text-center ${
-            message.type === "success"
+          className={`mb-6 px-4 py-3 rounded-xl text-sm w-full max-w-md text-center ${message.type === "success"
               ? "bg-green-500/10 border border-green-500/20 text-green-400"
               : "bg-red-400/10 border border-red-400/20 text-red-400"
-          }`}
+            }`}
         >
           {message.text}
         </div>
@@ -193,8 +192,8 @@ export function Profile() {
             className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:border-blue-500 focus:outline-none"
           >
             <option value="en">English</option>
-            <option value="fr">Fran\u00e7ais</option>
-            <option value="es">Espa\u00f1ol</option>
+            <option value="fr">Fran&ccedil;ais</option>
+            <option value="es">Espa&ntilde;ol</option>
           </select>
         </div>
 
