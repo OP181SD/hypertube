@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth, I18N_TO_LANG } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { uploadProfilePicture } from "@/api/users.api";
-import i18n from "@/i18n";
 
 export function Profile() {
   const { t } = useTranslation();
@@ -37,44 +36,40 @@ export function Profile() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setSaving(true);
-  setMessage(null);
+    e.preventDefault();
+    setSaving(true);
+    setMessage(null);
 
-  try {
-    // On crée un objet contenant uniquement les champs qui diffèrent de l'original
-    const updatedFields: Partial<typeof form> = {};
-    
-    if (form.username !== user.username) updatedFields.username = form.username;
-    if (form.firstName !== user.firstName) updatedFields.firstName = form.firstName;
-    if (form.lastName !== user.lastName) updatedFields.lastName = form.lastName;
-    if (form.email !== user.email) updatedFields.email = form.email;
+    try {
+      const updatedFields: Partial<typeof form> = {};
+      
+      if (form.username !== user.username) updatedFields.username = form.username;
+      if (form.firstName !== user.firstName) updatedFields.firstName = form.firstName;
+      if (form.lastName !== user.lastName) updatedFields.lastName = form.lastName;
+      if (form.email !== user.email) updatedFields.email = form.email;
 
-    // Si aucun champ n'a changé, on ne fait pas de requête
-    if (Object.keys(updatedFields).length === 0) {
+      if (Object.keys(updatedFields).length === 0) {
+        setSaving(false);
+        return;
+      }
+
+      await updateUser(updatedFields);
+      setMessage({ type: "success", text: t("profile_updated") });
+      await refreshUser();
+    } catch (err: unknown) {
+      const errorData = err as { response?: { data?: { message?: string | string[] } } };
+      const backendMessage = Array.isArray(errorData.response?.data?.message)
+        ? errorData.response?.data?.message[0]
+        : errorData.response?.data?.message;
+
+      setMessage({ 
+        type: "error", 
+        text: backendMessage || t("profile_update_error") 
+      });
+    } finally {
       setSaving(false);
-      return;
     }
-
-    await updateUser(updatedFields);
-    setMessage({ type: "success", text: t("profile_updated") });
-    await refreshUser(); // Force le rafraîchissement des données locales
-  } catch (err: unknown) {
-    // On vérifie si l'erreur vient d'Axios/Serveur pour extraire le message
-    const errorData = err as { response?: { data?: { message?: string | string[] } } };
-    
-    const backendMessage = Array.isArray(errorData.response?.data?.message)
-      ? errorData.response?.data?.message[0]
-      : errorData.response?.data?.message;
-
-    setMessage({ 
-      type: "error", 
-      text: backendMessage || t("profile_update_error") 
-    });
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -96,18 +91,6 @@ export function Profile() {
     }
   };
 
-  const handleLanguageChange = async (lng: string) => {
-    i18n.changeLanguage(lng);
-    const backendLang = I18N_TO_LANG[lng];
-    if (backendLang) {
-      try {
-        await updateUser({ language: backendLang });
-      } catch {
-        // Language still changed locally
-      }
-    }
-  };
-
   const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
 
   return (
@@ -121,7 +104,6 @@ export function Profile() {
           >
             {user.profilePictureUrl ? (
               <img
-                // src={user.profilePictureUrl}
                 src={`http://localhost:3000${user.profilePictureUrl}`}
                 alt={user.username}
                 className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20 transition-transform duration-300 hover:scale-105"
@@ -144,11 +126,6 @@ export function Profile() {
             onChange={handleAvatarChange}
             className="hidden"
           />
-          <div className="absolute bottom-2 right-2 w-8 h-8 bg-white text-black rounded-full flex items-center justify-center shadow-lg pointer-events-none">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 4a4 4 0 00-4 4v1H6a2 2 0 00-2 2v9a2 2 0 002 2h12a2 2 0 002-2v-9a2 2 0 00-2-2h-2V8a4 4 0 00-4-4zm-2 5V8a2 2 0 114 0v1h-4z" />
-            </svg>
-          </div>
         </div>
 
         <h1 className="mt-5 text-3xl sm:text-4xl font-semibold tracking-wide text-white">
@@ -158,12 +135,9 @@ export function Profile() {
       </div>
 
       {message && (
-        <div
-          className={`mb-6 px-4 py-3 rounded-xl text-sm w-full max-w-md text-center ${message.type === "success"
-              ? "bg-green-500/10 border border-green-500/20 text-green-400"
-              : "bg-red-400/10 border border-red-400/20 text-red-400"
-            }`}
-        >
+        <div className={`mb-6 px-4 py-3 rounded-xl text-sm w-full max-w-md text-center ${
+          message.type === "success" ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-400/10 border border-red-400/20 text-red-400"
+        }`}>
           {message.text}
         </div>
       )}
@@ -208,19 +182,6 @@ export function Profile() {
             onChange={handleChange("email")}
             className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:border-blue-500 focus:outline-none"
           />
-        </div>
-
-        <div>
-          <label className="text-white/50 text-xs mb-1 block">{t("language")}</label>
-          <select
-            value={i18n.language?.split("-")[0] ?? "en"}
-            onChange={(e) => handleLanguageChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:border-blue-500 focus:outline-none"
-          >
-            <option value="en">English</option>
-            <option value="fr">Fran&ccedil;ais</option>
-            <option value="es">Espa&ntilde;ol</option>
-          </select>
         </div>
 
         <button

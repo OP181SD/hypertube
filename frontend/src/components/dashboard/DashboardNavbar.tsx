@@ -6,7 +6,6 @@ import { Hamburger } from "./Hamburger";
 import { MobileMenu } from "./MobileMenu";
 import type { Tab } from "@/types/ui/Tabs";
 
-
 interface Props {
   search: string;
   setSearch: (value: string) => void;
@@ -15,25 +14,6 @@ interface Props {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   handleLogout: () => void;
-}
-
-function renderNavButtons(
-  activeTab: Tab,
-  setActiveTab: (tab: Tab) => void,
-  t: (key: string) => string
-) {
-  const tabs: Tab[] = ["home", "profile"];
-
-  return tabs.map((tab) => (
-    <button
-      key={tab}
-      onClick={() => setActiveTab(tab)}
-      className={`px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all duration-200 ${activeTab === tab ? "bg-white/10 text-white" : "text-white/50 hover:text-white hover:bg-white/5"
-        }`}
-    >
-      {t(tab)}
-    </button>
-  ));
 }
 
 export function DashboardNavbar({
@@ -49,13 +29,15 @@ export function DashboardNavbar({
   const { updateUser } = useAuth();
 
   const changeLanguage = async (lng: string) => {
-    i18n.changeLanguage(lng);
+    await i18n.changeLanguage(lng);
     const backendLang = I18N_TO_LANG[lng];
+    
     if (backendLang) {
       try {
-        await updateUser({ language: backendLang });
-      } catch {
-        // Language still changed locally
+        // On précise que backendLang est une des valeurs autorisées pour 'language'
+        await updateUser({ language: backendLang as "EN" | "FR" | "ES" });
+      } catch (error) {
+        console.error("Failed to sync language with backend", error);
       }
     }
   };
@@ -71,44 +53,52 @@ export function DashboardNavbar({
             </span>
           </div>
 
-          <div className="hidden lg:flex flex-1 items-center space-x-1 md:space-x-2 lg:space-x-4 shrink-0">
-            {renderNavButtons(activeTab, setActiveTab, t)}
+          <div className="hidden lg:flex flex-1 items-center space-x-1 md:space-x-2 lg:space-x-4">
+            <button
+              onClick={() => setActiveTab("home")}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === "home" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
+              }`}
+            >
+              {t("home")}
+            </button>
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === "profile" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
+              }`}
+            >
+              {t("profile")}
+            </button>
           </div>
 
           <div className="hidden lg:flex flex-1 max-w-md xl:max-w-lg">
-            <SearchBar
-              search={search}
-              setSearch={setSearch}
-            />
+            <SearchBar search={search} setSearch={setSearch} />
           </div>
 
-
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 shrink-0 ml-auto">
-
             <select
-              value={i18n.language}
+              value={i18n.language.split("-")[0]}
               onChange={(e) => changeLanguage(e.target.value)}
-              className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm"
+              className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all text-xs sm:text-sm cursor-pointer outline-none"
             >
-              <option value="fr">FR</option>
               <option value="en">EN</option>
+              <option value="fr">FR</option>
               <option value="es">ES</option>
             </select>
 
-
             <ProfileIcon onClick={() => setActiveTab("profile")} />
-
 
             <button
               onClick={handleLogout}
-              className="hidden lg:block px-3 lg:px-4 xl:px-5 py-1.5 rounded-full border border-white/20 hover:bg-white/10 hover:border-white/40 text-white/90 text-xs lg:text-sm font-medium transition-all duration-300 whitespace-nowrap"
+              className="hidden lg:block px-4 py-1.5 rounded-full border border-white/20 hover:bg-white/10 text-white/90 text-sm font-medium transition-all"
             >
               {t("logout")}
             </button>
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors duration-300"
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10"
             >
               <Hamburger menuOpen={menuOpen} />
             </button>
