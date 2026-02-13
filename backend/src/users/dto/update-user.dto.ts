@@ -24,11 +24,15 @@ export class UpdateUserDto {
   })
   username?: string;
 
-  @IsOptional()
-  @IsString()
-  @MinLength(1)
-  @MaxLength(50)
-  firstName?: string;
+@IsOptional()
+@IsString()
+@MinLength(1)
+@MaxLength(50)
+// Cette regex autorise les lettres (y compris accentuées) et les tirets/espaces
+@Matches(/^[\p{L}\p{M} -]+$/u, {
+  message: "First name contains invalid characters",
+})
+firstName?: string;
 
   @IsOptional()
   @IsString()

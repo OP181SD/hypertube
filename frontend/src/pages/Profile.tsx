@@ -37,18 +37,44 @@ export function Profile() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
-    try {
-      await updateUser(form);
-      setMessage({ type: "success", text: t("profile_updated") });
-    } catch {
-      setMessage({ type: "error", text: t("profile_update_error") });
-    } finally {
+  e.preventDefault();
+  setSaving(true);
+  setMessage(null);
+
+  try {
+    // On crée un objet contenant uniquement les champs qui diffèrent de l'original
+    const updatedFields: Partial<typeof form> = {};
+    
+    if (form.username !== user.username) updatedFields.username = form.username;
+    if (form.firstName !== user.firstName) updatedFields.firstName = form.firstName;
+    if (form.lastName !== user.lastName) updatedFields.lastName = form.lastName;
+    if (form.email !== user.email) updatedFields.email = form.email;
+
+    // Si aucun champ n'a changé, on ne fait pas de requête
+    if (Object.keys(updatedFields).length === 0) {
       setSaving(false);
+      return;
     }
-  };
+
+    await updateUser(updatedFields);
+    setMessage({ type: "success", text: t("profile_updated") });
+    await refreshUser(); // Force le rafraîchissement des données locales
+  } catch (err: unknown) {
+    // On vérifie si l'erreur vient d'Axios/Serveur pour extraire le message
+    const errorData = err as { response?: { data?: { message?: string | string[] } } };
+    
+    const backendMessage = Array.isArray(errorData.response?.data?.message)
+      ? errorData.response?.data?.message[0]
+      : errorData.response?.data?.message;
+
+    setMessage({ 
+      type: "error", 
+      text: backendMessage || t("profile_update_error") 
+    });
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
