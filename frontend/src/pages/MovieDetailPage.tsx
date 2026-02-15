@@ -1,19 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getMovie } from "@/api/movies.api";
-import { getComments } from "@/api/comments.api";
 import { VideoPlayer } from "@/components/player/VideoPlayer";
 import { QualitySelector } from "@/components/player/QualitySelector";
-import { CommentsSection } from "@/components/comments/CommentsSection";
-import type { MovieDetail, Comment } from "@/types/api";
+import type { MovieDetail } from "@/types/api";
 
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [movie, setMovie] = useState<MovieDetail | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTorrentId, setSelectedTorrentId] = useState<string | null>(null);
 
@@ -21,11 +18,10 @@ export default function MovieDetailPage() {
     if (!id) return;
     let cancelled = false;
 
-    Promise.all([getMovie(id), getComments(id)])
-      .then(([movieData, commentsData]) => {
+    getMovie(id)
+      .then((movieData) => {
         if (!cancelled) {
           setMovie(movieData);
-          setComments(commentsData);
           if (movieData.torrents.length > 0) {
             const best = [...movieData.torrents].sort((a, b) => b.seeds - a.seeds)[0];
             setSelectedTorrentId(best.id);
@@ -42,17 +38,13 @@ export default function MovieDetailPage() {
     return () => { cancelled = true; };
   }, [id, navigate]);
 
-  const refreshComments = useCallback(() => {
-    if (!id) return;
-    getComments(id).then(setComments).catch(() => {});
-  }, [id]);
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-2 text-white/60 text-sm">
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
-          {t("loading")}
+      <div className="min-h-screen bg-linear-to-b from-black via-zinc-950 to-black flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+          <div className="w-2 h-2 bg-white/80 rounded-full animate-pulse [animation-delay:0.2s]" />
+          <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse [animation-delay:0.4s]" />
         </div>
       </div>
     );
@@ -63,104 +55,105 @@ export default function MovieDetailPage() {
   const rating = movie.imdbRating?.toFixed(1) ?? "N/A";
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black">
       <div className="relative">
-        {movie.posterUrl && (
-          <div className="absolute inset-0 h-96">
+        {movie.backdropUrl && (
+          <div className="absolute inset-0 h-32 overflow-hidden">
             <img
-              src={movie.posterUrl}
+              src={movie.backdropUrl}
               alt=""
-              className="w-full h-full object-cover opacity-20 blur-xl"
+              className="w-full h-full object-cover opacity-20 blur-2xl"
             />
-            <div className="absolute inset-0 bg-linear-to-b from-transparent to-black" />
+            <div className="absolute inset-0 bg-linear-to-b from-black/60 to-black" />
           </div>
         )}
 
-        <div className="relative max-w-5xl mx-auto px-4 pt-8 pb-12">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pt-6 pb-4">
           <button
             onClick={() => navigate(-1)}
-            className="mb-6 text-white/60 hover:text-white text-sm flex items-center gap-1 transition-colors"
+            className="group flex items-center gap-2 text-white/60 hover:text-white transition-all duration-200"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            {t("back")}
+            <span className="text-sm font-medium">{t("back")}</span>
           </button>
+        </div>
+      </div>
 
-          <div className="flex flex-col md:flex-row gap-6">
-            {movie.posterUrl && (
-              <img
-                src={movie.posterUrl}
-                alt={movie.title}
-                className="w-48 md:w-56 rounded-lg shadow-2xl self-start"
-              />
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pb-12">
+        {selectedTorrentId && (
+          <VideoPlayer
+            torrentId={selectedTorrentId}
+            movieId={movie.id}
+            subtitles={movie.subtitles}
+          />
+        )}
+
+        <div className="mt-8 flex flex-col lg:flex-row gap-6 lg:gap-12">
+
+          <div className="flex-1">
+            <h1 className="text-2xl lg:text-3xl font-bold text-white mb-3">
+              {movie.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-3 text-sm text-white/60 mb-4">
+              <span>{movie.year}</span>
+              <span className="w-1 h-1 bg-white/40 rounded-full" />
+              <div className="flex items-center gap-1.5">
+                {movie.imdbRating && (
+                  <p className="flex items-center gap-1 bg-linear-to-r from-[#795EF0] via-[#C270ED] to-[#38BDF8] bg-clip-text text-transparent font-semibold">
+                    ★ {movie.imdbRating}
+                  </p>
+                )}
+              </div>
+              {movie.runtime && (
+                <>
+                  <span className="w-1 h-1 bg-white/40 rounded-full" />
+                  <span>{movie.runtime} min</span>
+                </>
+              )}
+            </div>
+
+            {movie.genres.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {movie.genres.map((g) => (
+                  <span
+                    key={g}
+                    className="px-3 py-1 bg-white/10 rounded-full text-xs text-white/80"
+                  >
+                    {g}
+                  </span>
+                ))}
+              </div>
             )}
 
-            <div className="flex-1 flex flex-col gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold">{movie.title}</h1>
-
-              <div className="flex items-center gap-3 text-sm text-white/70">
-                <span>{movie.year}</span>
-                <span className="text-white/80 font-medium">{rating}</span>
-                {movie.runtime && <span>{movie.runtime} min</span>}
-              </div>
-
-              {movie.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {movie.genres.map((g) => (
-                    <span key={g} className="px-2 py-0.5 bg-white/10 rounded text-xs text-white/70">
-                      {g}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {movie.summary && (
-                <p className="text-sm text-white/70 leading-relaxed">{movie.summary}</p>
-              )}
-
-              {movie.producer && (
-                <p className="text-sm text-white/50">
-                  <span className="text-white/70">{t("producer")}:</span> {movie.producer}
-                </p>
-              )}
-
-              {movie.director && (
-                <p className="text-sm text-white/50">
-                  <span className="text-white/70">{t("director")}:</span> {movie.director}
-                </p>
-              )}
-
-              {movie.cast.length > 0 && (
-                <p className="text-sm text-white/50">
-                  <span className="text-white/70">{t("cast")}:</span> {movie.cast.join(", ")}
-                </p>
-              )}
-
-              <QualitySelector
-                torrents={movie.torrents}
-                selectedId={selectedTorrentId}
-                onSelect={setSelectedTorrentId}
-              />
-            </div>
+            <QualitySelector
+              torrents={movie.torrents}
+              selectedId={selectedTorrentId}
+              onSelect={setSelectedTorrentId}
+            />
           </div>
 
-          {selectedTorrentId && (
-            <div className="mt-8">
-              <VideoPlayer
-                torrentId={selectedTorrentId}
-                movieId={movie.id}
-                subtitles={movie.subtitles}
-              />
-            </div>
-          )}
+          <div className="lg:w-80 space-y-3 text-sm text-white/70">
+            {movie.director && (
+              <div>
+                <span className="text-white/50">{t("director")}</span>
+                <p className="text-white mt-0.5">{movie.director}</p>
+              </div>
+            )}
 
-          <div className="mt-8">
-            <CommentsSection
-              movieId={movie.id}
-              comments={comments}
-              onCommentChange={refreshComments}
-            />
+            {movie.cast.length > 0 && (
+              <div>
+                <span className="text-white/50">{t("cast")}</span>
+                <p className="text-white mt-0.5">{movie.cast.slice(0, 3).join(", ")}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
