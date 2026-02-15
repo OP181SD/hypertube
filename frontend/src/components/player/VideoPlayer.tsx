@@ -1,5 +1,7 @@
 import { FC, useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { Plyr } from "plyr-react";
+import "plyr-react/plyr.css";
 import { getStreamUrl, getStreamStatus, getSubtitleUrl } from "@/api/stream.api";
 import type { SubtitleInfo, StreamStatus } from "@/types/api";
 
@@ -54,35 +56,42 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({
   const token = localStorage.getItem("access_token");
   const streamSrc = `${getStreamUrl(torrentId)}${token ? `?access_token=${token}` : ""}`;
 
-  // Détermine si on doit afficher l'interface de chargement par-dessus la vidéo
   const isLoading = !status || status.status === "idle" || (status.status === "downloading" && status.progress < 1);
 
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
-      {/* 1. La vidéo est TOUJOURS rendue : c'est elle qui réveille le backend via l'URL src */}
-      <video
+      <Plyr
         key={torrentId}
-        data-testid="video-player"
-        className="w-full h-full"
-        controls
-        autoPlay
-        src={streamSrc}
-      >
-        {subtitles.map((sub) => (
-          <track
-            key={sub.lang}
-            kind="subtitles"
-            src={getSubtitleUrl(movieId, sub.lang)}
-            srcLang={sub.lang}
-            label={sub.label}
-            default={sub.lang === defaultLang}
-          />
-        ))}
-      </video>
+        source={{
+          type: "video",
+          title: movieId,
+          sources: [
+            { src: streamSrc, type: "video/mp4" },
+          ],
+          tracks: subtitles.map((sub) => ({
+            kind: "subtitles",
+            src: getSubtitleUrl(movieId, sub.lang),
+            srclang: sub.lang,
+            label: sub.label,
+            default: sub.lang === defaultLang,
+          })),
+        }}
+        options={{
+          controls: [
+            "play",
+            "progress",
+            "current-time",
+            "mute",
+            "volume",
+            "settings",
+            "fullscreen",
+          ],
+          settings: ["quality", "captions"],
+        }}
+      />
 
-      {/* 2. Overlay de chargement / progression */}
       {isLoading && status?.status !== "error" && (
-        <div className="absolute inset-0 z-10 bg-black flex flex-col items-center justify-center gap-4">
+        <div className="absolute inset-0 z-10 bg-black flex flex-col items-center justify-center gap-4 pointer-events-none">
           <div className="flex items-center gap-2 text-white/60 text-sm">
             <div className="w-5 h-5 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
             {status?.status === "downloading" ? t("downloading") : t("loading")}
@@ -101,7 +110,6 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* 3. Gestion d'erreur */}
       {status?.status === "error" && (
         <div className="absolute inset-0 z-10 bg-black flex items-center justify-center">
           <span className="text-red-400 text-sm">{t("stream_error")}</span>
