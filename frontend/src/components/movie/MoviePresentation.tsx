@@ -60,7 +60,6 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
 
   return (
     <div className="bg-black min-h-screen">
-      {/* NAVBAR */}
       <nav className="h-14 md:h-16 px-3 sm:px-4 md:px-6 xl:px-8 bg-black/80 backdrop-blur-xl fixed w-full top-0 z-50 border-b border-white/10 shadow-2xl">
         <div className="flex items-center justify-between h-full max-w-full mx-auto w-full gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
           <div className="flex items-center gap-3 shrink-0">
@@ -167,7 +166,6 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
         </div>
       </div>
 
-      {/* COMMENTS */}
       <div className="mt-8">
         <CommentsSection
           movieId={movie.id}
