@@ -46,7 +46,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {movies.map((m, index) => (
           <Link
-            to={`/movies/${m.id}`}
+            to={`/movies/preview/${m.id}`} 
             key={`${m.id}-${index}`}
             className="group relative rounded-lg overflow-hidden bg-gray-900 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
           >
@@ -96,6 +96,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
             </div>
           </Link>
         ))}
+
       </div>
 
       <div ref={sentinelRef} className="w-full py-8 flex justify-center">
