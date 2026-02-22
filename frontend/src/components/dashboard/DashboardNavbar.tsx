@@ -35,7 +35,7 @@ export function DashboardNavbar({
     if (backendLang) {
       try {
         // On précise que backendLang est une des valeurs autorisées pour 'language'
-        await updateUser({ language: backendLang as "EN" | "FR" | "ES" });
+        await updateUser({ language: backendLang as "EN" | "FR" | "ES" | "IT" | "PT" });
       } catch (error) {
         console.error("Failed to sync language with backend", error);
       }
@@ -85,6 +85,8 @@ export function DashboardNavbar({
               <option value="en">EN</option>
               <option value="fr">FR</option>
               <option value="es">ES</option>
+              <option value="it">IT</option>
+              <option value="pt">PT</option>
             </select>
 
             <ProfileIcon onClick={() => setActiveTab("profile")} />

@@ -33,6 +33,8 @@ export default function Navbar() {
               <option value="en">EN</option>
               <option value="fr">FR</option>
               <option value="es">ES</option>
+              <option value="it">IT</option>
+              <option value="pt">PT</option>
             </select>
 
             <button className="px-4 md:px-5 xl:px-6 py-1 rounded-md border border-white/30 hover:bg-white/10 transition">

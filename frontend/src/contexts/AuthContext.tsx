@@ -23,8 +23,8 @@ import type {
   MessageResponse,
 } from "@/types/api";
 
-const LANG_TO_I18N: Record<string, string> = { EN: "en", FR: "fr", ES: "es" };
-const I18N_TO_LANG: Record<string, string> = { en: "EN", fr: "FR", es: "ES" };
+const LANG_TO_I18N: Record<string, string> = { EN: "en", FR: "fr", ES: "es", IT: "it", PT: "pt" };
+const I18N_TO_LANG: Record<string, string> = { en: "EN", fr: "FR", es: "ES", it: "IT", pt: "PT" };
 
 interface AuthContextValue {
   user: UserPublic | null;
