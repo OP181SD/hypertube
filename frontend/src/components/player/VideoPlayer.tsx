@@ -78,15 +78,21 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({
         }}
         options={{
           controls: [
+            "rewind",
             "play",
+            "fast-forward",
             "progress",
             "current-time",
+            "duration",
             "mute",
             "volume",
+            "captions",
+            "pip",
             "settings",
             "fullscreen",
           ],
           settings: ["quality", "captions"],
+          seekTime: 10,
         }}
       />
 
