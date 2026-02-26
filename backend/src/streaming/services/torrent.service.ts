@@ -49,7 +49,7 @@ export class TorrentService implements OnModuleDestroy {
     const logPeers = setInterval(() => {
       const swarm = (engine as any).swarm;
       if (swarm) {
-        this.logger.debug(`[STATUS] ${torrentId} - Peers: ${swarm.connections.length} - Wired: ${swarm.wired.length}`);
+        this.logger.debug(`[STATUS] ${torrentId} - Peers: ${swarm?.connections?.length ?? 0} - Wired: ${swarm?.wired?.length ?? 0}`);
       }
     }, 5000);
 
