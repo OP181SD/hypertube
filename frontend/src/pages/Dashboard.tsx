@@ -5,6 +5,7 @@ import { DashboardNavbar } from "@/components/dashboard/DashboardNavbar";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tab } from "@/types/ui/Tabs";
 import { Profile } from "@/pages/Profile";
+import { WatchlistPage } from "@/pages/WatchlistPage";
 
 export default function Dashboard() {
   const [search, setSearch] = useState("");
@@ -32,6 +33,11 @@ export default function Dashboard() {
 
       <main className="flex-1 max-w-full">
         {activeTab === "home" && <Mockup search={search} />}
+        {activeTab === "watchlist" && (
+          <div className="flex flex-col items-center w-full px-3 sm:px-4 md:px-6 lg:px-8 pt-16 md:pt-20">
+            <WatchlistPage />
+          </div>
+        )}
         {activeTab === "profile" && (
           <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-16 md:pt-20 text-white text-center mt-10">
             <Profile />

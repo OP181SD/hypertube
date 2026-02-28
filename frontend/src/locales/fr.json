@@ -107,5 +107,12 @@
   "avatar_update_error": "Impossible de mettre à jour l'avatar. Veuillez réessayer.",
   "avatar_updated": "Avatar mis à jour avec succès.",
   "signin_with_social": "Se connecter avec OmniAuth",
-  "signin_manually": "S'inscrire manuellement"
+  "signin_manually": "S'inscrire manuellement",
+  "watchlist": "Ma liste",
+  "my_watchlist": "Ma liste",
+  "add_to_watchlist": "Ajouter à ma liste",
+  "remove_from_watchlist": "Retirer de ma liste",
+  "in_watchlist": "Dans ma liste",
+  "watchlist_empty": "Votre liste est vide",
+  "watchlist_empty_detail": "Ajoutez des films à votre liste pour les regarder plus tard"
 }

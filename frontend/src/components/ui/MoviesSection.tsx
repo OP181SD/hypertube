@@ -62,23 +62,36 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
               </div>
             )}
 
-            {m.watched && (
-              <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                <svg
-                  className="w-3 h-3 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={3}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-            )}
+            <div className="absolute top-2 right-2 flex flex-col gap-1">
+              {m.watched && (
+                <div className="bg-green-500 rounded-full p-1">
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+              )}
+              {m.inWatchlist && (
+                <div className="bg-blue-500 rounded-full p-1">
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M6 2a1 1 0 00-1 1v18l7-3 7 3V3a1 1 0 00-1-1H6z" />
+                  </svg>
+                </div>
+              )}
+            </div>
 
             <div className="absolute bottom-0 left-0 w-full h-2/5 bg-linear-to-t from-black via-black/60 to-transparent pointer-events-none" />
 

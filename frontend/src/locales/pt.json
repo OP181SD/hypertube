@@ -107,5 +107,12 @@
   "avatar_update_error": "Falha ao atualizar o avatar. Tente novamente.",
   "avatar_updated": "Avatar atualizado com sucesso.",
   "signin_with_social": "Entrar com OmniAuth",
-  "signin_manually": "Inscrever-se manualmente"
+  "signin_manually": "Inscrever-se manualmente",
+  "watchlist": "Minha lista",
+  "my_watchlist": "Minha lista",
+  "add_to_watchlist": "Adicionar à lista",
+  "remove_from_watchlist": "Remover da lista",
+  "in_watchlist": "Na minha lista",
+  "watchlist_empty": "Sua lista está vazia",
+  "watchlist_empty_detail": "Adicione filmes à sua lista para assistir mais tarde"
 }

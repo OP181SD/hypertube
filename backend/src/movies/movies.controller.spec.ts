@@ -40,6 +40,7 @@ describe("MoviesController", () => {
             backdropUrl: mockDbMovie.backdropUrl,
             genres: ["Action", "Sci-Fi"],
             watched: false,
+            inWatchlist: false,
           },
         ],
         page: 1,
@@ -171,6 +172,7 @@ describe("MoviesController", () => {
         subtitles: [{ lang: "en", label: "English" }],
         commentsCount: 5,
         watched: false,
+        inWatchlist: false,
       };
       mockMoviesService.findById.mockResolvedValue(detail);
 

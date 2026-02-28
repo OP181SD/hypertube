@@ -59,6 +59,7 @@ const mockMovie: MovieDetail = {
   ],
   commentsCount: 2,
   watched: false,
+  inWatchlist: false,
 };
 
 const mockComments: Comment[] = [

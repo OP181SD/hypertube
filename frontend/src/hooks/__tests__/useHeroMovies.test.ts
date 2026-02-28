@@ -24,6 +24,7 @@ describe("useHeroMovies", () => {
           backdropUrl: null,
           genres: [],
           watched: false,
+          inWatchlist: false,
         },
       ],
       page: 1,

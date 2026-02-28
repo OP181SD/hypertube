@@ -21,6 +21,7 @@ const RESPONSE = {
       backdropUrl: null,
       genres: ["Action"],
       watched: false,
+      inWatchlist: false,
     },
   ],
   page: 1,

@@ -56,6 +56,7 @@ export interface MovieListItem {
   backdropUrl: string | null;
   genres: string[];
   watched: boolean;
+  inWatchlist: boolean;
 }
 
 export interface PaginatedMovies {
@@ -99,6 +100,7 @@ export interface MovieDetail {
   subtitles: SubtitleInfo[];
   commentsCount: number;
   watched: boolean;
+  inWatchlist: boolean;
 }
 
 // ── Comments ──

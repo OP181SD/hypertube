@@ -20,7 +20,7 @@ export function MobileMenu({ menuOpen, setMenuOpen, activeTab, setActiveTab, han
       <div className={`lg:hidden fixed top-14 left-0 right-0 w-full bg-black/95 backdrop-blur-lg border-b border-white/10 shadow-2xl transition-all duration-300 z-40 ${menuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-full">
           <div className="flex flex-col space-y-1.5 sm:space-y-2">
-            {(["home", "profile"] as Tab[]).map((tab) => (
+            {(["home", "watchlist", "profile"] as Tab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => {

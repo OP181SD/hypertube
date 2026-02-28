@@ -9,6 +9,7 @@ import { UsersModule } from "./users/users.module";
 import { MoviesModule } from "./movies/movies.module";
 import { CommentsModule } from "./comments/comments.module";
 import { StreamingModule } from "./streaming/streaming.module";
+import { WatchlistModule } from "./watchlist/watchlist.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 
 @Module({
@@ -22,6 +23,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
     MoviesModule,
     CommentsModule,
     StreamingModule,
+    WatchlistModule,
   ],
   providers: [
     {

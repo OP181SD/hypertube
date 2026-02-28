@@ -27,6 +27,7 @@ describe("movies.api", () => {
             backdropUrl: null,
             genres: ["Action"],
             watched: false,
+            inWatchlist: false,
           },
         ],
         page: 1,
@@ -98,6 +99,7 @@ describe("movies.api", () => {
         subtitles: [],
         commentsCount: 3,
         watched: false,
+        inWatchlist: false,
       };
       mockGet.mockResolvedValueOnce({ data: movie });
 

@@ -63,6 +63,14 @@ export function DashboardNavbar({
               {t("home")}
             </button>
             <button
+              onClick={() => setActiveTab("watchlist")}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === "watchlist" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
+              }`}
+            >
+              {t("watchlist")}
+            </button>
+            <button
               onClick={() => setActiveTab("profile")}
               className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
                 activeTab === "profile" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"

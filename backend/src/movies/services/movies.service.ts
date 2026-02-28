@@ -102,15 +102,19 @@ export class MoviesService {
       this.prisma.movie.count({ where }),
     ]);
 
-    // Get watched movie IDs for this user (if authenticated)
-    const watchedMovieIds = userId
-      ? await this.getWatchedMovieIds(userId, movies.map((m) => m.id))
-      : new Set<string>();
+    // Get watched and watchlist movie IDs for this user (if authenticated)
+    const movieIds = movies.map((m) => m.id);
+    const [watchedMovieIds, watchlistMovieIds] = userId
+      ? await Promise.all([
+          this.getWatchedMovieIds(userId, movieIds),
+          this.getWatchlistMovieIds(userId, movieIds),
+        ])
+      : [new Set<string>(), new Set<string>()];
 
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: movies.map((movie) => this.toListItem(movie, watchedMovieIds)),
+      data: movies.map((movie) => this.toListItem(movie, watchedMovieIds, watchlistMovieIds)),
       page,
       limit,
       total,
@@ -135,9 +139,12 @@ export class MoviesService {
       enrichedMovie = await this.enrichWithTmdb(movie);
     }
 
-    const [commentsCount, watchEntry, subtitleEntries] = await Promise.all([
+    const [commentsCount, watchEntry, watchlistEntry, subtitleEntries] = await Promise.all([
       this.prisma.comment.count({ where: { movieId: id } }),
       this.prisma.watchHistory.findUnique({
+        where: { userId_movieId: { userId, movieId: id } },
+      }),
+      this.prisma.watchlist.findUnique({
         where: { userId_movieId: { userId, movieId: id } },
       }),
       this.subtitleService.getAvailableSubtitles(enrichedMovie.imdbId),
@@ -148,7 +155,7 @@ export class MoviesService {
       label: s.label,
     }));
 
-    return this.toDetail(enrichedMovie, commentsCount, !!watchEntry, subtitles);
+    return this.toDetail(enrichedMovie, commentsCount, !!watchEntry, !!watchlistEntry, subtitles);
   }
 
   private async enrichWithTmdb(
@@ -383,7 +390,25 @@ export class MoviesService {
     return new Set(watched.map((w) => w.movieId));
   }
 
-  private toListItem(movie: Movie, watchedIds: Set<string>): MovieListItem {
+  private async getWatchlistMovieIds(
+    userId: string,
+    movieIds: string[],
+  ): Promise<Set<string>> {
+    if (movieIds.length === 0) return new Set();
+
+    const watchlisted = await this.prisma.watchlist.findMany({
+      where: { userId, movieId: { in: movieIds } },
+      select: { movieId: true },
+    });
+
+    return new Set(watchlisted.map((w) => w.movieId));
+  }
+
+  private toListItem(
+    movie: Movie,
+    watchedIds: Set<string>,
+    watchlistIds: Set<string>,
+  ): MovieListItem {
     return {
       id: movie.id,
       title: movie.title,
@@ -393,6 +418,7 @@ export class MoviesService {
       backdropUrl: movie.backdropUrl,
       genres: movie.genres,
       watched: watchedIds.has(movie.id),
+      inWatchlist: watchlistIds.has(movie.id),
     };
   }
 
@@ -400,6 +426,7 @@ export class MoviesService {
     movie: MovieWithTorrents,
     commentsCount: number,
     watched: boolean,
+    inWatchlist: boolean,
     subtitles: SubtitleInfo[] = [],
   ): MovieDetail {
     const torrents = movie.torrents.map(
@@ -431,6 +458,7 @@ export class MoviesService {
       subtitles,
       commentsCount,
       watched,
+      inWatchlist,
     };
   }
 

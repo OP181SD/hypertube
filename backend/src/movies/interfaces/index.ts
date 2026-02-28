@@ -169,6 +169,7 @@ export interface MovieListItem {
   backdropUrl: string | null;
   genres: string[];
   watched: boolean;
+  inWatchlist: boolean;
 }
 
 export interface SubtitleInfo {
@@ -194,6 +195,7 @@ export interface MovieDetail {
   subtitles: SubtitleInfo[];
   commentsCount: number;
   watched: boolean;
+  inWatchlist: boolean;
 }
 
 export interface TorrentItem {

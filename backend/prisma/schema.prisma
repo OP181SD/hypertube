@@ -43,6 +43,7 @@ model User {
   refreshTokens  RefreshToken[]
   comments       Comment[]
   watchHistory   WatchHistory[]
+  watchlist      Watchlist[]
 
   @@map("users")
 }
@@ -120,6 +121,7 @@ model Movie {
 
   comments     Comment[]
   watchHistory WatchHistory[]
+  watchlist    Watchlist[]
   torrents     Torrent[]
 
   @@index([title])
@@ -150,6 +152,19 @@ model Torrent {
   @@index([movieId])
   @@index([downloadStatus, lastAccessedAt])
   @@map("torrents")
+}
+
+model Watchlist {
+  id      String   @id @default(uuid())
+  userId  String   @map("user_id")
+  movieId String   @map("movie_id")
+  addedAt DateTime @default(now()) @map("added_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@map("watchlist")
 }
 
 model WatchHistory {
