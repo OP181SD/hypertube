@@ -81,7 +81,18 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
   const isError = status?.status === "error";
   const isDownloading = status?.status === "downloading";
 
-  console.log("[VideoPlayer]", { status: status?.status, isReady, torrentId, subtitles });
+  // Diagnostic: fetch first subtitle and log content so we can verify the VTT
+  useEffect(() => {
+    if (!isReady || !subtitles?.length) return;
+    const sub = subtitles[0];
+    fetch(getSubtitleUrl(movieId, sub.lang))
+      .then((r) => r.text())
+      .then((text) => {
+        const hasCues = /-->/.test(text);
+        console.log(`[Subtitle ${sub.lang}] OK=${hasCues} length=${text.length}`, text.slice(0, 300));
+      })
+      .catch((err) => console.error(`[Subtitle ${sub.lang}] fetch error`, err));
+  }, [isReady, movieId, subtitles]);
 
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
@@ -92,6 +103,7 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
         <PlyrErrorBoundary>
         <Plyr
           key={torrentId}
+          crossOrigin="anonymous"
           source={{
             type: "video",
             title: movieId,

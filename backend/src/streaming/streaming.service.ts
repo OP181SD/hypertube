@@ -90,6 +90,10 @@ export class StreamingService {
     const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
     if (!movie) throw new NotFoundException("Movie not found");
 
+    // Fast path: serve from disk cache without hitting the API
+    const cached = await this.subtitleService.getCachedSubtitle(movieId, lang);
+    if (cached) return { content: cached };
+
     const subtitles = await this.subtitleService.getAvailableSubtitles(movie.imdbId);
     const entry = subtitles.find((s) => s.lang === lang);
     if (!entry) throw new NotFoundException(`Subtitle '${lang}' not found`);
