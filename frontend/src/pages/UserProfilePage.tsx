@@ -29,11 +29,38 @@ export default function UserProfilePage() {
       return;
     }
 
-    setLoading(true);
-    getUser(id)
-      .then(setProfile)
-      .catch(() => setError(t("user_not_found")))
-      .finally(() => setLoading(false));
+    let ignore = false; // Flag to prevent race conditions
+
+    const fetchUserProfile = async () => {
+      // 1. Reset state before fetching (wrapped in the async function)
+      setLoading(true);
+      setError(null);
+
+      try {
+        // 2. Await the API call
+        const data = await getUser(id);
+        
+        // 3. Only update state if the component hasn't unmounted or id hasn't changed
+        if (!ignore) {
+          setProfile(data);
+        }
+      } catch {
+        if (!ignore) {
+          setError(t("user_not_found"));
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserProfile();
+
+    // Cleanup function runs when the component unmounts or when the dependencies (like `id`) change
+    return () => {
+      ignore = true; 
+    };
   }, [id, t, currentUser, navigate]);
 
   if (loading) {
