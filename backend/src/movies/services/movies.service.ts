@@ -55,7 +55,42 @@ export class MoviesService {
 
   async getPopular(): Promise<HeroMovie[]> {
     const page = Math.floor(Math.random() * 5) + 1;
-    return this.tmdbService.getPopularMovies(page);
+    const tmdbMovies = await this.tmdbService.getPopularMovies(page);
+
+    const result: HeroMovie[] = [];
+    for (const m of tmdbMovies) {
+      // Fast path: movie already in DB (identified by tmdbId)
+      let movie = await this.prisma.movie.findFirst({ where: { tmdbId: m.tmdbId } });
+
+      if (!movie) {
+        // Fetch real imdbId so the record links to YTS data when searched later
+        const details = await this.tmdbService.getMovieDetails(m.tmdbId);
+        const realImdbId = details?.imdb_id ?? `tmdb-${m.tmdbId}`;
+
+        movie = await this.prisma.movie.upsert({
+          where: { imdbId: realImdbId },
+          create: {
+            imdbId: realImdbId,
+            title: m.title,
+            year: m.year,
+            imdbRating: m.rating,
+            posterUrl: m.posterUrl,
+            backdropUrl: m.backdropUrl,
+            summary: m.overview,
+            genres: m.genres,
+            tmdbId: m.tmdbId,
+          },
+          update: {
+            backdropUrl: m.backdropUrl,
+            posterUrl: m.posterUrl,
+            imdbRating: m.rating,
+          },
+        });
+      }
+
+      result.push({ ...m, id: movie.id });
+    }
+    return result;
   }
 
   async search(params: SearchParams, userId?: string): Promise<PaginatedMovies> {
@@ -124,13 +159,23 @@ export class MoviesService {
   }
 
   async findById(id: string, userId: string): Promise<MovieDetail> {
-    const movie = await this.prisma.movie.findUnique({
+    const found = await this.prisma.movie.findUnique({
       where: { id },
       include: { torrents: true },
     });
 
-    if (!movie) {
+    if (!found) {
       throw new NotFoundException("Movie not found");
+    }
+
+    // Lazy-load torrents from YTS when none exist and we have a real imdbId
+    let movie = found;
+    if (found.torrents.length === 0 && found.imdbId && !found.imdbId.startsWith("tmdb-")) {
+      const ytsResult = await this.ytsService.searchMovies({ query: found.imdbId, limit: 1 });
+      if (ytsResult.movies.length > 0) {
+        await this.cacheYtsMovies(ytsResult.movies);
+        movie = (await this.prisma.movie.findUnique({ where: { id }, include: { torrents: true } })) ?? found;
+      }
     }
 
     // Lazy-enrich with TMDb data if missing

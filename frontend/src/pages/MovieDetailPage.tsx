@@ -87,12 +87,16 @@ export default function MovieDetailPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 pb-12">
-        {selectedTorrentId && (
+        {selectedTorrentId ? (
           <VideoPlayer
             torrentId={selectedTorrentId}
             movieId={movie.id}
             subtitles={movie.subtitles}
           />
+        ) : (
+          <div className="flex items-center justify-center h-48 rounded-xl bg-white/5 border border-white/10 text-white/50 text-sm">
+            Aucun flux disponible pour ce film
+          </div>
         )}
 
         <div className="mt-8 flex flex-col lg:flex-row gap-6 lg:gap-12">

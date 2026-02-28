@@ -131,6 +131,7 @@ export interface StreamStatus {
 // ── Hero ──
 
 export interface HeroMovie {
+  id: string;
   tmdbId: number;
   title: string;
   year: number | null;

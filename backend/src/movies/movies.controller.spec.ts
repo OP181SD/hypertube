@@ -116,6 +116,7 @@ describe("MoviesController", () => {
     it("should return popular movies for hero section", async () => {
       const popularMovies: HeroMovie[] = [
         {
+          id: "00000000-0000-0000-0000-000000000001",
           tmdbId: 603,
           title: "The Matrix",
           year: 1999,

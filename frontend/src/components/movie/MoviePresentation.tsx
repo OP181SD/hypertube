@@ -38,7 +38,6 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
   }, [movie.id]);
 
   const handlePlay = () => {
-    if (!movie.torrents.length) return;
     navigate(`/movies/${movie.id}`);
   };
 

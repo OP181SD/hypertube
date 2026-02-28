@@ -139,6 +139,7 @@ export interface TmdbPopularResponse {
 }
 
 export interface HeroMovie {
+  id: string;
   tmdbId: number;
   title: string;
   year: number | null;

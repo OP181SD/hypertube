@@ -1,4 +1,6 @@
 import { FC, useEffect, useRef, useCallback } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import type { HeroMovie } from "@/types/api";
 
 interface HeroSectionProps {
@@ -14,6 +16,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
   activeIndex,
   setActiveIndex,
 }) => {
+  const navigate = useNavigate();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pausedRef = useRef(false);
 
@@ -99,8 +102,11 @@ export const HeroSection: FC<HeroSectionProps> = ({
         <div className="absolute inset-0 bg-linear-to-r from-black/60 via-transparent to-transparent" />
 
         {/* Movie info */}
-        <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-14 pb-14 sm:pb-16 text-white">
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 drop-shadow-lg max-w-2xl">
+        <div
+          className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-14 pb-14 sm:pb-16 text-white cursor-pointer"
+          onClick={() => navigate(`/movies/preview/${movie.id}`)}
+        >
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-3 drop-shadow-lg max-w-2xl hover:underline">
             {movie.title}
           </h1>
 
@@ -126,7 +132,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
         {/* Left arrow */}
         {movies.length > 1 && (
           <button
-            onClick={goPrev}
+            onClick={(e: React.MouseEvent) => { e.stopPropagation(); goPrev(); }}
             className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity duration-300 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white"
             aria-label="Previous movie"
           >
@@ -139,7 +145,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
         {/* Right arrow */}
         {movies.length > 1 && (
           <button
-            onClick={goNext}
+            onClick={(e: React.MouseEvent) => { e.stopPropagation(); goNext(); }}
             className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity duration-300 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white"
             aria-label="Next movie"
           >

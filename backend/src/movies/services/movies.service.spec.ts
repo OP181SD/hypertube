@@ -45,6 +45,7 @@ const mockPrisma = {
   movie: {
     upsert: vi.fn(),
     findUnique: vi.fn(),
+    findFirst: vi.fn(),
     findMany: vi.fn(),
     count: vi.fn(),
     update: vi.fn(),
@@ -56,6 +57,10 @@ const mockPrisma = {
     count: vi.fn(),
   },
   watchHistory: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+  },
+  watchlist: {
     findUnique: vi.fn(),
     findMany: vi.fn(),
   },
@@ -82,8 +87,8 @@ describe("MoviesService", () => {
   });
 
   describe("getPopular", () => {
-    it("should delegate to tmdbService.getPopularMovies", async () => {
-      const heroMovies = [
+    it("should return popular movies with database IDs (cache hit)", async () => {
+      const tmdbMovies = [
         {
           tmdbId: 603,
           title: "The Matrix",
@@ -95,12 +100,45 @@ describe("MoviesService", () => {
           overview: "A hacker discovers reality.",
         },
       ];
-      mockTmdbService.getPopularMovies.mockResolvedValue(heroMovies);
+      const dbId = "00000000-0000-0000-0000-000000000001";
+      mockTmdbService.getPopularMovies.mockResolvedValue(tmdbMovies);
+      // Movie already in DB by tmdbId → skip extra TMDb call
+      mockPrisma.movie.findFirst.mockResolvedValue({ id: dbId, tmdbId: 603 });
 
       const result = await service.getPopular();
 
-      expect(result).toEqual(heroMovies);
+      expect(result).toEqual([{ ...tmdbMovies[0], id: dbId }]);
       expect(mockTmdbService.getPopularMovies).toHaveBeenCalled();
+      expect(mockTmdbService.getMovieDetails).not.toHaveBeenCalled();
+      expect(mockPrisma.movie.upsert).not.toHaveBeenCalled();
+    });
+
+    it("should fetch real imdbId and upsert when movie not in DB", async () => {
+      const tmdbMovies = [
+        {
+          tmdbId: 603,
+          title: "The Matrix",
+          year: 1999,
+          rating: 8.2,
+          genres: ["Action", "Sci-Fi"],
+          posterUrl: "https://image.tmdb.org/t/p/w500/poster.jpg",
+          backdropUrl: "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+          overview: "A hacker discovers reality.",
+        },
+      ];
+      const dbId = "00000000-0000-0000-0000-000000000001";
+      mockTmdbService.getPopularMovies.mockResolvedValue(tmdbMovies);
+      mockPrisma.movie.findFirst.mockResolvedValue(null); // not in DB
+      mockTmdbService.getMovieDetails.mockResolvedValue({ imdb_id: "tt0133093" });
+      mockPrisma.movie.upsert.mockResolvedValue({ id: dbId, imdbId: "tt0133093" });
+
+      const result = await service.getPopular();
+
+      expect(result).toEqual([{ ...tmdbMovies[0], id: dbId }]);
+      expect(mockTmdbService.getMovieDetails).toHaveBeenCalledWith(603);
+      expect(mockPrisma.movie.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { imdbId: "tt0133093" } }),
+      );
     });
 
     it("should return empty array when TMDb fails", async () => {
@@ -343,6 +381,7 @@ describe("MoviesService", () => {
         ...mockDbMovie,
         torrents: [],
       });
+      mockYtsService.searchMovies.mockResolvedValue({ movies: [], movieCount: 0 });
       mockPrisma.comment.count.mockResolvedValue(0);
       mockPrisma.watchHistory.findUnique.mockResolvedValue({
         id: "wh-1",
@@ -353,6 +392,28 @@ describe("MoviesService", () => {
       const result = await service.findById(mockDbMovie.id, "user-id");
 
       expect(result.watched).toBe(true);
+    });
+
+    it("should lazy-load torrents from YTS when none exist", async () => {
+      const movieNoTorrents = { ...mockDbMovie, torrents: [] };
+      const movieWithTorrents = { ...mockDbMovie, torrents: [mockDbTorrent] };
+      mockPrisma.movie.findUnique
+        .mockResolvedValueOnce(movieNoTorrents)
+        .mockResolvedValueOnce(movieWithTorrents);
+      mockYtsService.searchMovies.mockResolvedValue({
+        movies: [{ imdb_code: "tt0133093", title: "The Matrix", torrents: [{ hash: mockDbTorrent.hash, quality: "1080p", seeds: 150, peers: 25, size_bytes: 2684354560 }], year: 1999, rating: 8.7, genres: ["Action"], medium_cover_image: null, background_image: null, summary: "" }],
+        movieCount: 1,
+      });
+      mockPrisma.torrent.upsert.mockResolvedValue(mockDbTorrent);
+      mockPrisma.comment.count.mockResolvedValue(0);
+      mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
+
+      const result = await service.findById(mockDbMovie.id, "user-id");
+
+      expect(mockYtsService.searchMovies).toHaveBeenCalledWith(
+        expect.objectContaining({ query: "tt0133093" }),
+      );
+      expect(result.torrents).toHaveLength(1);
     });
 
     it("should enrich movie with TMDb data when missing", async () => {
@@ -366,6 +427,7 @@ describe("MoviesService", () => {
         torrents: [],
       };
       mockPrisma.movie.findUnique.mockResolvedValue(movieWithoutTmdb);
+      mockYtsService.searchMovies.mockResolvedValue({ movies: [], movieCount: 0 });
       mockTmdbService.findByImdbId.mockResolvedValue(tmdbMovieDetail);
       mockPrisma.movie.update.mockResolvedValue({
         ...movieWithoutTmdb,
@@ -399,6 +461,7 @@ describe("MoviesService", () => {
         torrents: [],
       };
       mockPrisma.movie.findUnique.mockResolvedValue(movieWithoutTmdb);
+      mockYtsService.searchMovies.mockResolvedValue({ movies: [], movieCount: 0 });
       mockTmdbService.findByImdbId.mockResolvedValue(null);
       mockPrisma.comment.count.mockResolvedValue(0);
       mockPrisma.watchHistory.findUnique.mockResolvedValue(null);

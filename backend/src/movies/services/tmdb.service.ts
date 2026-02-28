@@ -122,7 +122,7 @@ export class TmdbService {
     }
   }
 
-  async getPopularMovies(page: number = 1): Promise<HeroMovie[]> {
+  async getPopularMovies(page: number = 1): Promise<Omit<HeroMovie, "id">[]> {
     const url = this.buildUrl("/movie/popular");
     url.searchParams.set("language", "en-US");
     url.searchParams.set("page", String(page));
