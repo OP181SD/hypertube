@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { SearchBar } from "./SearchBar";
 import type { Tab } from "@/types/ui/Tabs";
 
 interface Props {
@@ -8,11 +7,9 @@ interface Props {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
   handleLogout: () => void;
-  search: string;
-  setSearch: (value: string) => void;
 }
 
-export function MobileMenu({ menuOpen, setMenuOpen, activeTab, setActiveTab, handleLogout, search, setSearch }: Props) {
+export function MobileMenu({ menuOpen, setMenuOpen, activeTab, setActiveTab, handleLogout }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -34,10 +31,6 @@ export function MobileMenu({ menuOpen, setMenuOpen, activeTab, setActiveTab, han
                 {t(tab)}
               </button>
             ))}
-          </div>
-
-          <div className="lg:hidden">
-            <SearchBar search={search} setSearch={setSearch} />
           </div>
 
           <button

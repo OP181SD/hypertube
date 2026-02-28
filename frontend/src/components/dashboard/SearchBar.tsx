@@ -1,13 +1,15 @@
-
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Props {
   search: string;
   setSearch: (value: string) => void;
+  autoFocus?: boolean;
 }
 
-export function SearchBar({ search, setSearch }: Props) {
+export function SearchBar({ search, setSearch, autoFocus }: Props) {
   const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="relative w-full group">
@@ -22,12 +24,28 @@ export function SearchBar({ search, setSearch }: Props) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
+          ref={inputRef}
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("search")} 
+          placeholder={t("search")}
+          autoFocus={autoFocus}
           className="w-full bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 focus:outline-none ml-2 sm:ml-3 text-xs sm:text-sm"
         />
+        {search && (
+          <button
+            onClick={() => {
+              setSearch("");
+              inputRef.current?.focus();
+            }}
+            className="ml-2 text-gray-500 hover:text-white transition-colors shrink-0"
+            aria-label="Clear search"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );

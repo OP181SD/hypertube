@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { searchMovies } from "@/api/movies.api";
 import type { MovieListItem, SearchMoviesParams } from "@/types/api";
 
@@ -18,15 +18,28 @@ export function useMovies(params: UseMoviesParams = {}) {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    setPage(1);
-  }, [genre, sortBy, query, minRating, minYear, maxYear]);
+  // Stable key representing filter params (excludes page)
+  const filterKey = JSON.stringify({ genre, sortBy, query, minRating, minYear, maxYear });
+  const prevFilterKey = useRef(filterKey);
 
   useEffect(() => {
     let cancelled = false;
+
+    const isFilterChange = prevFilterKey.current !== filterKey;
+
+    if (isFilterChange) {
+      prevFilterKey.current = filterKey;
+      setMovies([]); // Clear stale results immediately so old movies don't show
+      if (page !== 1) {
+        setPage(1);
+        return;
+      }
+    }
+
+    const fetchPage = page;
     setLoading(true);
 
-    const apiParams: SearchMoviesParams = { page, limit: 20 };
+    const apiParams: SearchMoviesParams = { page: fetchPage, limit: 20 };
     if (genre) apiParams.genre = genre;
     if (query) apiParams.query = query;
     if (sortBy) apiParams.sortBy = sortBy;
@@ -37,7 +50,7 @@ export function useMovies(params: UseMoviesParams = {}) {
     searchMovies(apiParams)
       .then((res) => {
         if (!cancelled) {
-          setMovies((prev) => (page === 1 ? res.data : [...prev, ...res.data]));
+          setMovies((prev) => (fetchPage === 1 ? res.data : [...prev, ...res.data]));
           setHasMore(res.hasMore);
         }
       })
@@ -49,7 +62,7 @@ export function useMovies(params: UseMoviesParams = {}) {
     return () => {
       cancelled = true;
     };
-  }, [page, genre, query, sortBy, minRating, minYear, maxYear]);
+  }, [page, filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {

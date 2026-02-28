@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth, I18N_TO_LANG } from "@/contexts/AuthContext";
 import { SearchBar } from "./SearchBar";
@@ -27,6 +28,12 @@ export function DashboardNavbar({
 }: Props) {
   const { t, i18n } = useTranslation();
   const { updateUser } = useAuth();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
+  // Auto-close mobile search bar when search is cleared
+  useEffect(() => {
+    if (!search) setMobileSearchOpen(false);
+  }, [search]);
 
   const changeLanguage = async (lng: string) => {
     await i18n.changeLanguage(lng);
@@ -44,6 +51,15 @@ export function DashboardNavbar({
 
   return (
     <header>
+      {/* Mobile search bar — slides in below the navbar */}
+      <div
+        className={`lg:hidden fixed top-14 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg border-b border-white/10 px-4 py-3 transition-all duration-200 ${
+          mobileSearchOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
+        }`}
+      >
+        <SearchBar search={search} setSearch={setSearch} autoFocus={mobileSearchOpen} />
+      </div>
+
       <nav className="h-14 md:h-16 px-3 sm:px-4 md:px-6 xl:px-8 backdrop-blur-md bg-black/70 fixed w-full top-0 z-50 border-b border-white/10">
         <div className="flex items-center justify-between h-full max-w-full mx-auto w-full gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
           <div className="flex items-center shrink-0">
@@ -106,8 +122,31 @@ export function DashboardNavbar({
               {t("logout")}
             </button>
 
+            {/* Mobile search toggle */}
             <button
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => {
+                setMobileSearchOpen((prev) => !prev);
+                setMenuOpen(false);
+              }}
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+              aria-label="Toggle search"
+            >
+              {mobileSearchOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setMenuOpen(!menuOpen);
+                setMobileSearchOpen(false);
+              }}
               className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10"
             >
               <Hamburger menuOpen={menuOpen} />
@@ -122,8 +161,6 @@ export function DashboardNavbar({
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleLogout={handleLogout}
-        search={search}
-        setSearch={setSearch}
       />
     </header>
   );

@@ -8,6 +8,7 @@ interface MoviesSectionProps {
   loading?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  title?: string;
 }
 
 export const MoviesSection: FC<MoviesSectionProps> = ({
@@ -15,6 +16,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
   loading,
   hasMore,
   onLoadMore,
+  title,
 }) => {
   const { t } = useTranslation();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -40,7 +42,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
   return (
     <section className="w-full max-w-400 mt-6 px-4 sm:px-6">
       <h2 className="text-xl font-semibold text-white mb-4">
-        {t("popular_movies")}
+        {title ?? t("popular_movies")}
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

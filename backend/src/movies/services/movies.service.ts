@@ -356,14 +356,10 @@ export class MoviesService {
     };
 
     if (params.query) {
-      // On wrap l'ancien contenu dans un AND pour ne pas casser le filtre d'image
       where.AND = [
-        ...(where.AND as any),
         {
           OR: [
             { title: { contains: params.query, mode: "insensitive" } },
-            { summary: { contains: params.query, mode: "insensitive" } },
-            { cast: { has: params.query } },
             { director: { contains: params.query, mode: "insensitive" } },
           ]
         }

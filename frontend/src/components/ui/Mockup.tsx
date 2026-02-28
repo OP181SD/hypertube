@@ -45,27 +45,30 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
   };
 
   const hasHero = hero.movies.length > 0;
+  const isSearching = debouncedSearch.length > 0;
 
   return (
     <section className="flex flex-col w-full">
-      {/* Hero loading skeleton */}
-      {hero.loading && (
-        <div className="w-full h-[55vh] md:h-[60vh] lg:h-[65vh] bg-gray-900/50 animate-pulse" />
+      {/* Hero — hidden during search */}
+      {!isSearching && (
+        <>
+          {hero.loading && (
+            <div className="w-full h-[55vh] md:h-[60vh] lg:h-[65vh] bg-gray-900/50 animate-pulse" />
+          )}
+          {!hero.loading && hasHero && (
+            <HeroSection
+              movies={hero.movies}
+              activeIndex={activeIndex}
+              setActiveIndex={setActiveIndex}
+            />
+          )}
+        </>
       )}
 
-      {/* Hero carousel - full width, behind the fixed navbar */}
-      {!hero.loading && hasHero && (
-        <HeroSection
-          movies={hero.movies}
-          activeIndex={activeIndex}
-          setActiveIndex={setActiveIndex}
-        />
-      )}
-
-      {/* Content below hero */}
+      {/* Content */}
       <div
         className={`flex flex-col items-center w-full px-3 sm:px-4 md:px-6 lg:px-8 ${
-          !hasHero && !hero.loading ? "pt-16 md:pt-20" : ""
+          isSearching || (!hasHero && !hero.loading) ? "pt-16 md:pt-20" : ""
         }`}
       >
         <NavigationGender
@@ -80,6 +83,7 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
           loading={loading}
           hasMore={hasMore}
           onLoadMore={loadMore}
+          title={isSearching ? `Résultats pour « ${debouncedSearch} »` : undefined}
         />
       </div>
     </section>
