@@ -33,42 +33,68 @@ export class AuthController {
 
   @Public()
   @Post("oauth/token")
-  @HttpCode(HttpStatus.OK)
-  async token(@Body() dto: OAuthTokenDto) {
-    const isValidClient = await this.authService.validateOAuthClient(
-      dto.client_id,
-      dto.client_secret,
-    );
+  async token(@Body() dto: OAuthTokenDto, @Res() res: FastifyReply) {
+    try {
+      const isValidClient = await this.authService.validateOAuthClient(
+        dto.client_id,
+        dto.client_secret,
+      );
 
-    if (!isValidClient) {
-      throw new UnauthorizedException("Invalid client credentials");
-    }
-
-    switch (dto.grant_type) {
-      case GrantType.PASSWORD: {
-        if (!dto.username || !dto.password) {
-          throw new BadRequestException(
-            "username and password are required for password grant",
-          );
-        }
-        const user = await this.authService.validateLocalUser(
-          dto.username,
-          dto.password,
-        );
-        return this.authService.generateTokens(user.id);
+      if (!isValidClient) {
+        // Au lieu de throw une exception qui fait crasher ton filtre global,
+        // on renvoie directement une vraie réponse HTTP 401 au frontend.
+        return res.status(HttpStatus.UNAUTHORIZED).send({
+          statusCode: 401,
+          message: "Invalid client credentials",
+          error: "Unauthorized",
+        });
       }
 
-      case GrantType.REFRESH_TOKEN: {
-        if (!dto.refresh_token) {
-          throw new BadRequestException(
-            "refresh_token is required for refresh_token grant",
+      switch (dto.grant_type) {
+        case GrantType.PASSWORD: {
+          if (!dto.username || !dto.password) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+              statusCode: 400,
+              message: "username and password are required for password grant",
+              error: "Bad Request",
+            });
+          }
+          const user = await this.authService.validateLocalUser(
+            dto.username,
+            dto.password,
           );
+          const tokens = await this.authService.generateTokens(user.id);
+          return res.status(HttpStatus.OK).send(tokens);
         }
-        return this.authService.refreshTokens(dto.refresh_token);
-      }
 
-      default:
-        throw new BadRequestException("Unsupported grant type");
+        case GrantType.REFRESH_TOKEN: {
+          if (!dto.refresh_token) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+              statusCode: 400,
+              message: "refresh_token is required for refresh_token grant",
+              error: "Bad Request",
+            });
+          }
+          const tokens = await this.authService.refreshTokens(dto.refresh_token);
+          return res.status(HttpStatus.OK).send(tokens);
+        }
+
+        default:
+          return res.status(HttpStatus.BAD_REQUEST).send({
+            statusCode: 400,
+            message: "Unsupported grant type",
+            error: "Bad Request",
+          });
+      }
+    } catch (error) {
+      // On vérifie si "error" est bien une instance de la classe Error
+      const errorMessage = error instanceof Error ? error.message : "Authentication failed";
+
+      return res.status(HttpStatus.UNAUTHORIZED).send({
+        statusCode: 401,
+        message: errorMessage,
+        error: "Unauthorized",
+      });
     }
   }
 

@@ -13,18 +13,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<FastifyReply>();
 
-    console.error("--- 🔥 CRASH DETECTED ---");
-    console.error(exception); 
-    if (exception instanceof Error) {
-        console.error("Stack:", exception.stack);
-    }
-    console.error("-------------------------");
-    
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = "Internal server error";
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
+      // Only log unexpected server errors — 4xx are normal client errors
+      if (status >= 500) {
+        console.error("--- 🔥 SERVER ERROR ---");
+        console.error(exception);
+        if (exception instanceof Error) console.error("Stack:", exception.stack);
+        console.error("----------------------");
+      }
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === "string") {
