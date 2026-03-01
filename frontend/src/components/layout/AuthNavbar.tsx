@@ -39,21 +39,21 @@ export default function AuthNavbar() {
               }}
               className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm"
             >
-              <option value="fr">FR</option>
-              <option value="en">EN</option>
-              <option value="es">ES</option>
-              <option value="it">IT</option>
-              <option value="pt">PT</option>
-              <option value="de">DE</option>
-              <option value="ru">RU</option>
-              <option value="ja">JA</option>
-              <option value="ko">KO</option>
-              <option value="zh">ZH</option>
-              <option value="ar">AR</option>
-              <option value="nl">NL</option>
-              <option value="pl">PL</option>
-              <option value="sv">SV</option>
-              <option value="tr">TR</option>
+              <option value="fr">🇫🇷 Français</option>
+              <option value="en">🇬🇧 English</option>
+              <option value="es">🇪🇸 Español</option>
+              <option value="it">🇮🇹 Italiano</option>
+              <option value="pt">🇵🇹 Português</option>
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="ru">🇷🇺 Русский</option>
+              <option value="ja">🇯🇵 日本語</option>
+              <option value="ko">🇰🇷 한국어</option>
+              <option value="zh">🇨🇳 中文</option>
+              <option value="ar">🇸🇦 العربية</option>
+              <option value="nl">🇳🇱 Nederlands</option>
+              <option value="pl">🇵🇱 Polski</option>
+              <option value="sv">🇸🇪 Svenska</option>
+              <option value="tr">🇹🇷 Türkçe</option>
             </select>
 
             {user?.profilePictureUrl && (
