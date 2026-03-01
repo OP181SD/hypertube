@@ -22,6 +22,16 @@ enum Language {
   ES
   IT
   PT
+  DE
+  RU
+  JA
+  KO
+  ZH
+  AR
+  NL
+  PL
+  SV
+  TR
 }
 
 model User {
