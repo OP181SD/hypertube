@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth, I18N_TO_LANG } from "@/contexts/AuthContext";
 import { SearchBar } from "./SearchBar";
 import { ProfileIcon } from "./ProfileIcon";
 import { Hamburger } from "./Hamburger";
 import { MobileMenu } from "./MobileMenu";
+import { useChangeLanguage } from "@/hooks/useChangeLanguage";
 import type { Tab } from "@/types/ui/Tabs";
 
 interface Props {
@@ -26,28 +26,14 @@ export function DashboardNavbar({
   setMenuOpen,
   handleLogout,
 }: Props) {
-  const { t, i18n } = useTranslation();
-  const { updateUser } = useAuth();
+  const { t } = useTranslation();
+  const { changeLanguage, currentLang } = useChangeLanguage();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Auto-close mobile search bar when search is cleared
   useEffect(() => {
     if (!search) setMobileSearchOpen(false);
   }, [search]);
-
-  const changeLanguage = async (lng: string) => {
-    await i18n.changeLanguage(lng);
-    const backendLang = I18N_TO_LANG[lng];
-    
-    if (backendLang) {
-      try {
-        // On précise que backendLang est une des valeurs autorisées pour 'language'
-        await updateUser({ language: backendLang as "EN" | "FR" | "ES" | "IT" | "PT" });
-      } catch (error) {
-        console.error("Failed to sync language with backend", error);
-      }
-    }
-  };
 
   return (
     <header>
@@ -102,7 +88,7 @@ export function DashboardNavbar({
 
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 shrink-0 ml-auto">
             <select
-              value={i18n.language.split("-")[0]}
+              value={currentLang}
               onChange={(e) => changeLanguage(e.target.value)}
               className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all text-xs sm:text-sm cursor-pointer outline-none"
             >

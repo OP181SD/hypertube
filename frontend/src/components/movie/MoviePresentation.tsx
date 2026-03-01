@@ -2,11 +2,11 @@ import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PlayIcon, PlusIcon, ArrowLeftIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { useTranslation } from "react-i18next";
-import { useAuth, I18N_TO_LANG } from "@/contexts/AuthContext";
 import type { MovieDetail, Comment } from "@/types/api";
 import { getComments } from "@/api/comments.api";
 import { CommentsSection } from "@/components/comments/CommentsSection";
-import { addToWatchlist, removeFromWatchlist } from "@/api/watchlist.api";
+import { useChangeLanguage } from "@/hooks/useChangeLanguage";
+import { useWatchlist } from "@/hooks/useWatchlist";
 
 interface MoviePresentationProps {
   movie: MovieDetail;
@@ -14,12 +14,11 @@ interface MoviePresentationProps {
 
 const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const { updateUser } = useAuth();
+  const { t } = useTranslation();
+  const { changeLanguage, currentLang } = useChangeLanguage();
+  const { inWatchlist, watchlistLoading, toggleWatchlist } = useWatchlist(movie.id, movie.inWatchlist);
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [inWatchlist, setInWatchlist] = useState(movie.inWatchlist);
-  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   const synopsisLimit = 500;
   const isLongSynopsis = movie.summary && movie.summary.length > synopsisLimit;
@@ -41,38 +40,8 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
     navigate(`/movies/${movie.id}`);
   };
 
-  const handleToggleWatchlist = async () => {
-    if (watchlistLoading) return;
-    setWatchlistLoading(true);
-    try {
-      if (inWatchlist) {
-        await removeFromWatchlist(movie.id);
-        setInWatchlist(false);
-      } else {
-        await addToWatchlist(movie.id);
-        setInWatchlist(true);
-      }
-    } catch (error) {
-      console.error("Failed to update watchlist", error);
-    } finally {
-      setWatchlistLoading(false);
-    }
-  };
-
   const handleBack = () => navigate(-1);
   const handleLogout = () => navigate("/login");
-
-  const changeLanguage = async (lng: string) => {
-    await i18n.changeLanguage(lng);
-    const backendLang = I18N_TO_LANG[lng];
-    if (backendLang) {
-      try {
-        await updateUser({ language: backendLang as "EN" | "FR" | "ES" });
-      } catch (error) {
-        console.error("Failed to sync language with backend", error);
-      }
-    }
-  };
 
   return (
     <div className="bg-black min-h-screen">
@@ -93,7 +62,7 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
 
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 shrink-0 ml-auto">
             <select
-              value={i18n.language.split("-")[0]}
+              value={currentLang}
               onChange={(e) => changeLanguage(e.target.value)}
               className="bg-white/5 backdrop-blur-md text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-300 text-xs sm:text-sm cursor-pointer outline-none shadow-lg"
             >
@@ -133,7 +102,7 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
             </button>
 
             <button
-              onClick={handleToggleWatchlist}
+              onClick={toggleWatchlist}
               disabled={watchlistLoading}
               className={`flex items-center justify-center gap-2 backdrop-blur-md font-bold rounded-lg transition-all duration-300 w-full lg:w-48 h-12 text-sm sm:text-base border shadow-2xl hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed ${
                 inWatchlist

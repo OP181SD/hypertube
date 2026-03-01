@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth, I18N_TO_LANG } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useChangeLanguage } from "@/hooks/useChangeLanguage";
 
 export default function AuthNavbar() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const { logout, user, updateUser } = useAuth();
+  const { logout, user } = useAuth();
+  const { changeLanguage, currentLang } = useChangeLanguage();
 
   const handleLogout = async () => {
     await logout();
@@ -28,15 +30,8 @@ export default function AuthNavbar() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <select
-              value={i18n.language}
-              onChange={(e) => {
-                const lng = e.target.value;
-                i18n.changeLanguage(lng);
-                const backendLang = I18N_TO_LANG[lng];
-                if (backendLang) {
-                  updateUser({ language: backendLang }).catch(() => {});
-                }
-              }}
+              value={currentLang}
+              onChange={(e) => changeLanguage(e.target.value)}
               className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm"
             >
               <option value="fr">🇫🇷 Français</option>
