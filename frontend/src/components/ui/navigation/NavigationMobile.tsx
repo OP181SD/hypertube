@@ -40,8 +40,10 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
     <button
       key={label}
       onClick={onClick}
-      className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all duration-300 ${
-        isActive ? "bg-white text-black shadow-md" : "bg-white/10 text-white hover:shadow-md"
+      className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+        isActive
+          ? "bg-white text-black shadow-[0_2px_8px_rgba(255,255,255,0.15)]"
+          : "bg-white/6 backdrop-blur-sm text-white/75 border border-white/12 hover:bg-white/12 hover:text-white hover:border-white/20 hover:shadow-sm"
       }`}
     >
       {label}
@@ -49,8 +51,8 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
   );
 
   return (
-    <div className="lg:hidden px-4 sm:px-6">
-      <div className="space-y-4">
+    <div className="lg:hidden px-4 sm:px-6 py-1">
+      <div className="space-y-3">
 
         <div className="flex justify-center">
           {renderButton("All", activeGenre === "", () => handleClickGenre(""))}
@@ -59,7 +61,7 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
         <div>
           <button
             onClick={() => setOpenGenres(!openGenres)}
-            className="w-full text-left px-3 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors flex items-center justify-between"
+            className="w-full text-left px-3 py-2.5 text-[11px] sm:text-xs font-medium text-white/50 hover:text-white/90 uppercase tracking-widest transition-all duration-200 flex items-center justify-between border-b border-white/8"
           >
             <span>Genres</span>
             <svg 
@@ -86,7 +88,7 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
         <div>
           <button
             onClick={() => setOpenCategory(!openCategory)}
-            className="w-full text-left px-3 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors flex items-center justify-between"
+            className="w-full text-left px-3 py-2.5 text-[11px] sm:text-xs font-medium text-white/50 hover:text-white/90 uppercase tracking-widest transition-all duration-200 flex items-center justify-between border-b border-white/8"
           >
             <span>Category</span>
             <svg 

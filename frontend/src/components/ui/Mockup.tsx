@@ -48,7 +48,7 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
   const isSearching = debouncedSearch.length > 0;
 
   return (
-    <section className="flex flex-col w-full">
+    <section className="flex flex-col w-full pt-14 md:pt-16">
       {/* Hero — hidden during search */}
       {!isSearching && (
         <>

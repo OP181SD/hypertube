@@ -53,7 +53,7 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
 
 
   return (
-    <div className="relative border-8e py-3 w-full my-4">
+    <div className="relative w-full my-4 py-4 bg-white/3 backdrop-blur-sm border-y border-white/6">
       <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/5 to-transparent pointer-events-none" />
 
       <NavigationDesktop
@@ -80,13 +80,13 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
         onSelectSort={onSelectSort}
       />
 
-      <div className="flex flex-wrap justify-center items-center gap-3 mt-3 px-4 sm:px-6">
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] sm:text-xs text-white/50">{t("min_rating")}:</label>
+      <div className="flex flex-wrap justify-center items-center gap-4 mt-3 px-4 sm:px-6">
+        <div className="flex items-center gap-2.5">
+          <label className="text-[11px] sm:text-xs text-white/40 tracking-wide">{t("min_rating")}:</label>
           <select
             value={minRating ?? ""}
             onChange={(e) => handleRating(e.target.value)}
-            className="bg-white/10 text-white text-[11px] sm:text-xs px-2 py-1 rounded-md border border-white/10 focus:outline-none"
+            className="bg-white/6 backdrop-blur-sm text-white text-[11px] sm:text-xs px-2.5 py-1.5 rounded-lg border border-white/12 hover:border-white/25 hover:bg-white/10 focus:outline-none focus:border-white/30 transition-all duration-200 cursor-pointer"
           >
             <option value="">{t("all")}</option>
             {ratingOptions.map((r) => (
@@ -95,8 +95,8 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] sm:text-xs text-white/50">{t("year")}:</label>
+        <div className="flex items-center gap-2.5">
+          <label className="text-[11px] sm:text-xs text-white/40 tracking-wide">{t("year")}:</label>
           <input
             type="number"
             value={minYear}
@@ -104,9 +104,9 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
             placeholder="1900"
             min={1900}
             max={currentYear}
-            className="w-16 sm:w-18 bg-white/10 text-white text-[11px] sm:text-xs px-2 py-1 rounded-md border border-white/10 focus:outline-none placeholder-white/30"
+            className="w-16 sm:w-20 bg-white/6 backdrop-blur-sm text-white text-[11px] sm:text-xs px-2.5 py-1.5 rounded-lg border border-white/12 hover:border-white/25 hover:bg-white/10 focus:outline-none focus:border-white/30 placeholder-white/25 transition-all duration-200"
           />
-          <span className="text-white/30 text-xs">-</span>
+          <span className="text-white/20 text-xs">—</span>
           <input
             type="number"
             value={maxYear}
@@ -114,7 +114,7 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
             placeholder={String(currentYear)}
             min={1900}
             max={currentYear}
-            className="w-16 sm:w-18 bg-white/10 text-white text-[11px] sm:text-xs px-2 py-1 rounded-md border border-white/10 focus:outline-none placeholder-white/30"
+            className="w-16 sm:w-20 bg-white/6 backdrop-blur-sm text-white text-[11px] sm:text-xs px-2.5 py-1.5 rounded-lg border border-white/12 hover:border-white/25 hover:bg-white/10 focus:outline-none focus:border-white/30 placeholder-white/25 transition-all duration-200"
           />
         </div>
       </div>
