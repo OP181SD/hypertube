@@ -111,7 +111,9 @@ export default function App() {
             path="/movies/preview/:id"
             element={
               <ProtectedRoute>
-                <MoviePresentationWrapper />
+                <AuthPageLayout>
+                  <MoviePresentationWrapper />
+                </AuthPageLayout>
               </ProtectedRoute>
             }
           />
