@@ -53,7 +53,7 @@ export const Mockup: React.FC<MockupProps> = ({ search }) => {
       {!isSearching && (
         <>
           {hero.loading && (
-            <div className="w-full h-[55vh] md:h-[60vh] lg:h-[65vh] bg-gray-900/50 animate-pulse" />
+            <div className="w-full h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-gray-900/50 animate-pulse" />
           )}
           {!hero.loading && hasHero && (
             <HeroSection

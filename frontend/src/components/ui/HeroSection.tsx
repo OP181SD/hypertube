@@ -72,7 +72,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="relative w-full h-[55vh] sm:h-[55vh] md:h-[60vh] lg:h-[65vh] xl:h-[70vh] 2xl:h-[75vh]">
+      <div className="relative w-full h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)]">
         {/* Stacked images with crossfade */}
         {movies.map((m, index) => {
           const img = m.backdropUrl ?? m.posterUrl;
@@ -87,7 +87,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
                 <img
                   src={img}
                   alt={m.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-[center_20%]"
                   loading={index === 0 ? "eager" : "lazy"}
                 />
               ) : (
