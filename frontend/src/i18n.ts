@@ -7,6 +7,16 @@ import fr from "./locales/fr.json";
 import es from "./locales/es.json";
 import it from "./locales/it.json";
 import pt from "./locales/pt.json";
+import de from "./locales/de.json";
+import ru from "./locales/ru.json";
+import ja from "./locales/ja.json";
+import ko from "./locales/ko.json";
+import zh from "./locales/zh.json";
+import ar from "./locales/ar.json";
+import nl from "./locales/nl.json";
+import pl from "./locales/pl.json";
+import sv from "./locales/sv.json";
+import tr from "./locales/tr.json";
 
 
 i18n
@@ -19,6 +29,16 @@ i18n
       es: { translation: es },
       it: { translation: it },
       pt: { translation: pt },
+      de: { translation: de },
+      ru: { translation: ru },
+      ja: { translation: ja },
+      ko: { translation: ko },
+      zh: { translation: zh },
+      ar: { translation: ar },
+      nl: { translation: nl },
+      pl: { translation: pl },
+      sv: { translation: sv },
+      tr: { translation: tr },
     },
     fallbackLng: "en",
     detection: {

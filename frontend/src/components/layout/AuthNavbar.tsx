@@ -44,6 +44,16 @@ export default function AuthNavbar() {
               <option value="es">ES</option>
               <option value="it">IT</option>
               <option value="pt">PT</option>
+              <option value="de">DE</option>
+              <option value="ru">RU</option>
+              <option value="ja">JA</option>
+              <option value="ko">KO</option>
+              <option value="zh">ZH</option>
+              <option value="ar">AR</option>
+              <option value="nl">NL</option>
+              <option value="pl">PL</option>
+              <option value="sv">SV</option>
+              <option value="tr">TR</option>
             </select>
 
             {user?.profilePictureUrl && (
