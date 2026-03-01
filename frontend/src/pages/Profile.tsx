@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useProfileForm } from "@/hooks/useProfileForm";
+import { API_BASE_URL } from "@/constants/api";
 
 export function Profile() {
   const { t } = useTranslation();
@@ -31,7 +32,7 @@ export function Profile() {
           >
             {user.profilePictureUrl ? (
               <img
-                src={`http://localhost:3000${user.profilePictureUrl}`}
+                src={`${API_BASE_URL}${user.profilePictureUrl}`}
                 alt={user.username}
                 className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20 transition-transform duration-300 hover:scale-105"
               />

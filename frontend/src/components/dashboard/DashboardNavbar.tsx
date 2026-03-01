@@ -4,7 +4,7 @@ import { SearchBar } from "./SearchBar";
 import { ProfileIcon } from "./ProfileIcon";
 import { Hamburger } from "./Hamburger";
 import { MobileMenu } from "./MobileMenu";
-import { useChangeLanguage } from "@/hooks/useChangeLanguage";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import type { Tab } from "@/types/ui/Tabs";
 
 interface Props {
@@ -27,7 +27,6 @@ export function DashboardNavbar({
   handleLogout,
 }: Props) {
   const { t } = useTranslation();
-  const { changeLanguage, currentLang } = useChangeLanguage();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Auto-close mobile search bar when search is cleared
@@ -87,27 +86,7 @@ export function DashboardNavbar({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 shrink-0 ml-auto">
-            <select
-              value={currentLang}
-              onChange={(e) => changeLanguage(e.target.value)}
-              className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all text-xs sm:text-sm cursor-pointer outline-none"
-            >
-              <option value="en">🇬🇧 English</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="es">🇪🇸 Español</option>
-              <option value="it">🇮🇹 Italiano</option>
-              <option value="pt">🇵🇹 Português</option>
-              <option value="de">🇩🇪 Deutsch</option>
-              <option value="ru">🇷🇺 Русский</option>
-              <option value="ja">🇯🇵 日本語</option>
-              <option value="ko">🇰🇷 한국어</option>
-              <option value="zh">🇨🇳 中文</option>
-              <option value="ar">🇸🇦 العربية</option>
-              <option value="nl">🇳🇱 Nederlands</option>
-              <option value="pl">🇵🇱 Polski</option>
-              <option value="sv">🇸🇪 Svenska</option>
-              <option value="tr">🇹🇷 Türkçe</option>
-            </select>
+            <LanguageSelector className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all text-xs sm:text-sm cursor-pointer outline-none" />
 
             <ProfileIcon onClick={() => setActiveTab("profile")} />
 

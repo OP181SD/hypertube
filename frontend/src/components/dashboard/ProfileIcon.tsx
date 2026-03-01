@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { API_BASE_URL } from "@/constants/api";
 
 interface ProfileIconProps {
   onClick?: () => void;
@@ -16,7 +17,7 @@ export function ProfileIcon({ onClick }: ProfileIconProps) {
       {user?.profilePictureUrl ? (
         <img
           // src={user.profilePictureUrl}
-          src={`http://localhost:3000${user.profilePictureUrl}`}
+          src={`${API_BASE_URL}${user.profilePictureUrl}`}
           alt={user.username}
           className="relative w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full object-cover border border-white/20"
         />

@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChangeLanguage } from "@/hooks/useChangeLanguage";
+import { API_BASE_URL } from "@/constants/api";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 export default function AuthNavbar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const { changeLanguage, currentLang } = useChangeLanguage();
 
   const handleLogout = async () => {
     await logout();
@@ -29,32 +29,11 @@ export default function AuthNavbar() {
           </button>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <select
-              value={currentLang}
-              onChange={(e) => changeLanguage(e.target.value)}
-              className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm"
-            >
-              <option value="fr">🇫🇷 Français</option>
-              <option value="en">🇬🇧 English</option>
-              <option value="es">🇪🇸 Español</option>
-              <option value="it">🇮🇹 Italiano</option>
-              <option value="pt">🇵🇹 Português</option>
-              <option value="de">🇩🇪 Deutsch</option>
-              <option value="ru">🇷🇺 Русский</option>
-              <option value="ja">🇯🇵 日本語</option>
-              <option value="ko">🇰🇷 한국어</option>
-              <option value="zh">🇨🇳 中文</option>
-              <option value="ar">🇸🇦 العربية</option>
-              <option value="nl">🇳🇱 Nederlands</option>
-              <option value="pl">🇵🇱 Polski</option>
-              <option value="sv">🇸🇪 Svenska</option>
-              <option value="tr">🇹🇷 Türkçe</option>
-            </select>
+            <LanguageSelector className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm" />
 
             {user?.profilePictureUrl && (
               <img
-                // src={user.profilePictureUrl}
-                src={`http://localhost:3000${user.profilePictureUrl}`}
+                src={`${API_BASE_URL}${user.profilePictureUrl}`}
                 alt={user.username}
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-white/20"
               />
