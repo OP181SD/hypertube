@@ -23,8 +23,7 @@ export class StreamingService {
 
     if (!torrent) throw new NotFoundException("Torrent not found");
 
-    // Only start download when torrent is idle; for active/ready torrents the engine is already running
-    if (torrent.downloadStatus === "idle") {
+    if (!this.torrentService.isActive(torrentId)) {
       await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
     }
 
@@ -55,7 +54,7 @@ export class StreamingService {
 
     if (!torrent) throw new NotFoundException("Torrent not found");
 
-    if (torrent.downloadStatus === "idle") {
+    if (!this.torrentService.isActive(torrentId)) {
       await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
     }
 

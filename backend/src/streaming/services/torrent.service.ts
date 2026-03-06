@@ -100,6 +100,10 @@ export class TorrentService implements OnModuleDestroy {
     });
   }
 
+  isActive(torrentId: string): boolean {
+    return this.activeTorrents.has(torrentId);
+  }
+
   getProgress(torrentId: string): DownloadProgress {
     const active = this.activeTorrents.get(torrentId);
     if (!active) return { status: "idle", progress: 0, filePath: null, fileSize: null };
