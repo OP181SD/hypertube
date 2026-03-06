@@ -28,14 +28,9 @@ export class TmdbService {
   }
 
   private buildUrl(path: string): URL {
-    return new URL(`${this.baseUrl}${path}`);
-  }
-
-  private get authHeaders() {
-    return {
-      Authorization: `Bearer ${this.apiKey}`,
-      "Content-Type": "application/json",
-    };
+    const url = new URL(`${this.baseUrl}${path}`);
+    url.searchParams.set("api_key", this.apiKey);
+    return url;
   }
 
   async searchMovie(
@@ -52,7 +47,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.authHeaders,
+
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -80,7 +75,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.authHeaders,
+
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -106,7 +101,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.authHeaders,
+
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -138,7 +133,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
-        headers: this.authHeaders,
+
         signal: controller.signal,
       });
       clearTimeout(timeout);

@@ -67,8 +67,8 @@ export class StreamingService {
     if (!file) throw new NotFoundException("Video file not available yet");
 
     if (this.transcodingService.needsTranscoding(file.name)) {
-      const progress = this.torrentService.getProgress(torrentId);
-      const stream = this.transcodingService.transcodeToMp4(progress.filePath!);
+      const inputStream = file.createReadStream();
+      const stream = this.transcodingService.transcodeToMp4(inputStream, file.name);
       return { stream, mimeType: "video/mp4", fileSize: null };
     }
 
