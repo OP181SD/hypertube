@@ -20,9 +20,7 @@ export class EztvService {
   private readonly baseUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.baseUrl =
-      this.configService.get<string>("EZTV_BASE_URL") ??
-      "https://eztv.re/api";
+    this.baseUrl = this.configService.get<string>("EZTV_BASE_URL")!;
   }
 
   async searchTorrents(params: EztvSearchParams): Promise<EztvSearchResult> {

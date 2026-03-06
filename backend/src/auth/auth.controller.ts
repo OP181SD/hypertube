@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
@@ -29,7 +30,10 @@ import { User } from "@prisma/client";
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Public()
   @Post("oauth/token")
@@ -107,7 +111,7 @@ export class AuthController {
   // --- HELPER REDIRECTION ---
   private async handleOAuthRedirect(req: FastifyRequest, res: FastifyReply) {
     const user = req.user as User;
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = this.configService.get<string>("FRONTEND_URL")!;
 
     if (!user) {
       return res.status(302).redirect(`${frontendUrl}/login?error=auth_failed`);

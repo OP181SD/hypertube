@@ -24,9 +24,7 @@ export class TmdbService {
 
   constructor(private readonly configService: ConfigService) {
     this.apiKey = this.configService.get<string>("TMDB_API_KEY")!;
-    this.baseUrl =
-      this.configService.get<string>("TMDB_BASE_URL") ??
-      "https://api.themoviedb.org/3";
+    this.baseUrl = this.configService.get<string>("TMDB_BASE_URL")!;
   }
 
   private buildUrl(path: string): URL {
