@@ -37,6 +37,7 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
   const [status, setStatus] = useState<StreamStatus | null>(null);
 
   useEffect(() => {
+    setStatus(null);
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
