@@ -5,9 +5,6 @@ export function getStreamUrl(torrentId: string): string {
   return `${client.defaults.baseURL}/stream/${torrentId}`;
 }
 
-export async function startStream(torrentId: string): Promise<void> {
-  await client.post(`/stream/${torrentId}/start`);
-}
 
 export async function getStreamStatus(torrentId: string): Promise<StreamStatus> {
   const res = await client.get<StreamStatus>(`/stream/${torrentId}/status`);

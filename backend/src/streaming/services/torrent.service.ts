@@ -116,14 +116,6 @@ export class TorrentService implements OnModuleDestroy {
     };
   }
 
-  // ... (Garder le reste des méthodes identiques : destroyEngine, selectVideoFile, etc.)
-  isReady(torrentId: string): boolean {
-    const active = this.activeTorrents.get(torrentId);
-    if (!active?.file) return false;
-    // Consider ready if download started and we have a file
-    // (torrent-stream can stream from the beginning)
-    return active.file.length > 0;
-  }
 
   getFile(torrentId: string): TorrentFile | null {
     return this.activeTorrents.get(torrentId)?.file ?? null;
