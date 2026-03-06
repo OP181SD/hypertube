@@ -17,7 +17,6 @@ export class FacebookAuthGuard extends AuthGuard("facebook") {
     try {
       return (await super.canActivate(context)) as boolean;
     } catch (err) {
-      console.error("--- 🛡️ [FacebookAuthGuard] --- Erreur:", err);
       throw err;
     }
   }

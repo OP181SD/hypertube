@@ -72,7 +72,6 @@ export class AuthService {
   }
 
   async generateTokens(userId: string): Promise<TokenPair> {
-    console.log("--- 🔑 [AuthService] --- Génération des tokens pour:", userId);
     const payload = { sub: userId };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -84,7 +83,6 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    console.log("--- 🔑 [AuthService] --- Enregistrement du RefreshToken en DB...");
     await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
@@ -93,7 +91,6 @@ export class AuthService {
       },
     });
 
-    console.log("--- 🔑 [AuthService] --- Tokens générés avec succès.");
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -124,18 +121,14 @@ export class AuthService {
     profile: OAuthProfile,
     provider: AuthProvider,
   ): Promise<User> {
-    console.log("--- ⚡ [AuthService] --- Tentative de validation pour:", profile.email);
-    
     try {
       let user = await this.usersService.findByProviderId(provider, profile.id);
       if (user) {
-        console.log("--- ⚡ [AuthService] --- Utilisateur existant trouvé (Provider ID)");
         return user;
       }
 
       user = await this.usersService.findByEmail(profile.email);
       if (user) {
-        console.log("--- ⚡ [AuthService] --- Email trouvé, mise à jour du provider...");
         return await this.prisma.user.update({
           where: { id: user.id },
           data: {
@@ -145,25 +138,19 @@ export class AuthService {
         });
       }
 
-      console.log("--- ⚡ [AuthService] --- Création d'un nouvel utilisateur OAuth...");
-      // ATTENTION: On force des valeurs si elles sont vides
       const createData: CreateUserData = {
         email: profile.email,
         username: profile.username || `user_${Date.now()}`,
         firstName: profile.firstName || "Prenom",
-        lastName: profile.lastName || "Nom", // Google ne renvoie pas toujours le lastName !
+        lastName: profile.lastName || "Nom",
         authProvider: provider,
         providerId: profile.id,
         profilePictureUrl: profile.profilePictureUrl,
         emailVerified: true,
       };
 
-      console.log("--- ⚡ [AuthService] --- Données envoyées à UsersService:", JSON.stringify(createData));
-      const newUser = await this.usersService.create(createData);
-      console.log("--- ⚡ [AuthService] --- Succès création !");
-      return newUser;
+      return await this.usersService.create(createData);
     } catch (error) {
-      console.error("--- ❌ [AuthService] --- ERREUR FATALE:", error);
       throw error;
     }
   }

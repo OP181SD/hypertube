@@ -2,7 +2,7 @@ import { FC, useEffect, useState, useMemo, Component, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Plyr } from "plyr-react";
 import "plyr-react/plyr.css";
-import { getStreamUrl, startStream, getStreamStatus, getSubtitleUrl } from "@/api/stream.api";
+import { getStreamUrl, getStreamStatus, getSubtitleUrl } from "@/api/stream.api";
 import type { SubtitleInfo, StreamStatus } from "@/types/api";
 
 class PlyrErrorBoundary extends Component<
@@ -40,10 +40,6 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
-    // 1. Kick off the torrent download
-    startStream(torrentId).catch(() => {});
-
-    // 2. Poll until the file is identified and ready to stream
     const poll = async () => {
       try {
         const s = await getStreamStatus(torrentId);
@@ -80,19 +76,6 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
   const isReady = status?.status === "ready";
   const isError = status?.status === "error";
   const isDownloading = status?.status === "downloading";
-
-  // Diagnostic: fetch first subtitle and log content so we can verify the VTT
-  useEffect(() => {
-    if (!isReady || !subtitles?.length) return;
-    const sub = subtitles[0];
-    fetch(getSubtitleUrl(movieId, sub.lang))
-      .then((r) => r.text())
-      .then((text) => {
-        const hasCues = /-->/.test(text);
-        console.log(`[Subtitle ${sub.lang}] OK=${hasCues} length=${text.length}`, text.slice(0, 300));
-      })
-      .catch((err) => console.error(`[Subtitle ${sub.lang}] fetch error`, err));
-  }, [isReady, movieId, subtitles]);
 
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">

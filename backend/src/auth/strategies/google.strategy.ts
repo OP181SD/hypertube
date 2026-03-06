@@ -17,9 +17,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
   ) {
     const googleId = configService.get<string>("GOOGLE_CLIENT_ID");
     const callback = configService.get<string>("GOOGLE_CALLBACK_URL");
-    
-    console.log("--- DEBUG [GoogleStrategy] --- ID:", googleId ? "OK" : "MISSING");
-    console.log("--- DEBUG [GoogleStrategy] --- Callback URL:", callback);
 
     const opts: StrategyOptions = {
       clientID: googleId!,
@@ -36,8 +33,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
     profile: any, // On met any temporairement pour le log complet
     done: VerifyCallback,
   ) {
-    console.log("--- DEBUG [GoogleStrategy] --- profile reçu:", JSON.stringify(profile, null, 2));
-    
     const emails = profile.emails as Array<{ value: string }>;
     const name = profile.name as { givenName: string; familyName: string };
     const photos = profile.photos as Array<{ value: string }>;
@@ -61,7 +56,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
       );
       done(null, user);
     } catch (error) {
-      console.error("--- ERROR [GoogleStrategy] ---", error);
       done(error, undefined);
     }
   }

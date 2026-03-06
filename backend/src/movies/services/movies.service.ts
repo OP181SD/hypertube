@@ -4,42 +4,19 @@ import { YtsService } from "./yts.service";
 import { EztvService } from "./eztv.service";
 import { TmdbService } from "./tmdb.service";
 import { SubtitleService } from "../../streaming/services/subtitle.service";
+import { MovieCacheService } from "./movie-cache.service";
+import { MovieMapperService } from "./movie-mapper.service";
+import { MovieQueryService } from "./movie-query.service";
 import type {
-  YtsMovie,
-  EztvTorrent,
   PaginatedMovies,
   MovieDetail,
-  MovieListItem,
-  TorrentItem,
   SubtitleInfo,
   HeroMovie,
+  SearchParams,
 } from "../interfaces";
-import type { Movie, Torrent, Prisma } from "@prisma/client";
+import type { Movie, Torrent } from "@prisma/client";
 
 type MovieWithTorrents = Movie & { torrents: Torrent[] };
-
-export interface SearchParams {
-  query?: string;
-  genre?: string;
-  sortBy?: string;
-  order?: string;
-  minRating?: number;
-  minYear?: number;
-  maxYear?: number;
-  page?: number;
-  limit?: number;
-}
-
-const YTS_TRACKERS = [
-  "udp://open.demonii.com:1337/announce",
-  "udp://tracker.openbittorrent.com:80",
-  "udp://tracker.coppersurfer.tk:6969",
-  "udp://glotorrents.pw:6969/announce",
-  "udp://tracker.opentrackr.org:1337/announce",
-  "udp://torrent.gresille.org:80/announce",
-  "udp://p4p.arenabg.com:1337",
-  "udp://tracker.leechers-paradise.org:6969",
-];
 
 @Injectable()
 export class MoviesService {
@@ -51,6 +28,9 @@ export class MoviesService {
     private readonly eztvService: EztvService,
     private readonly tmdbService: TmdbService,
     private readonly subtitleService: SubtitleService,
+    private readonly movieCache: MovieCacheService,
+    private readonly movieMapper: MovieMapperService,
+    private readonly movieQuery: MovieQueryService,
   ) {}
 
   async getPopular(): Promise<HeroMovie[]> {
@@ -59,11 +39,9 @@ export class MoviesService {
 
     const result: HeroMovie[] = [];
     for (const m of tmdbMovies) {
-      // Fast path: movie already in DB (identified by tmdbId)
       let movie = await this.prisma.movie.findFirst({ where: { tmdbId: m.tmdbId } });
 
       if (!movie) {
-        // Fetch real imdbId so the record links to YTS data when searched later
         const details = await this.tmdbService.getMovieDetails(m.tmdbId);
         const realImdbId = details?.imdb_id ?? `tmdb-${m.tmdbId}`;
 
@@ -101,12 +79,11 @@ export class MoviesService {
       params.genre = "Sci-Fi";
     }
 
-    // Fetch from external APIs in parallel
     const [ytsResult, eztvResult] = await Promise.all([
       this.ytsService.searchMovies({
         query: params.query,
         genre: params.genre?.toLowerCase().replace(" ", "-"),
-        sortBy: this.mapSortField(params.sortBy),
+        sortBy: this.movieQuery.mapSortField(params.sortBy),
         order: params.order,
         minRating: params.minRating,
         page,
@@ -119,13 +96,13 @@ export class MoviesService {
       }),
     ]);
 
-    // Cache results to database
-    await this.cacheYtsMovies(ytsResult.movies);
-    await this.cacheEztvTorrents(eztvResult.torrents);
+    await this.movieCache.cacheYtsMovies(ytsResult.movies);
+    await this.movieCache.cacheEztvTorrents(eztvResult.torrents);
 
-    // Build DB query
-    const where = this.buildWhereClause(params);
-    const orderBy = this.buildOrderBy(params.sortBy, params.order);
+    const where = this.movieQuery.buildWhereClause(params);
+    // Subject requires results sorted by name when a search query is present
+    const effectiveSortBy = params.query && !params.sortBy ? "title" : params.sortBy;
+    const orderBy = this.movieQuery.buildOrderBy(effectiveSortBy, params.order);
 
     const [movies, total] = await Promise.all([
       this.prisma.movie.findMany({
@@ -137,19 +114,20 @@ export class MoviesService {
       this.prisma.movie.count({ where }),
     ]);
 
-    // Get watched and watchlist movie IDs for this user (if authenticated)
     const movieIds = movies.map((m) => m.id);
     const [watchedMovieIds, watchlistMovieIds] = userId
       ? await Promise.all([
-          this.getWatchedMovieIds(userId, movieIds),
-          this.getWatchlistMovieIds(userId, movieIds),
+          this.movieQuery.getWatchedMovieIds(userId, movieIds),
+          this.movieQuery.getWatchlistMovieIds(userId, movieIds),
         ])
       : [new Set<string>(), new Set<string>()];
 
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: movies.map((movie) => this.toListItem(movie, watchedMovieIds, watchlistMovieIds)),
+      data: movies.map((movie) =>
+        this.movieMapper.toListItem(movie, watchedMovieIds, watchlistMovieIds),
+      ),
       page,
       limit,
       total,
@@ -168,17 +146,17 @@ export class MoviesService {
       throw new NotFoundException("Movie not found");
     }
 
-    // Lazy-load torrents from YTS when none exist and we have a real imdbId
     let movie = found;
     if (found.torrents.length === 0 && found.imdbId && !found.imdbId.startsWith("tmdb-")) {
       const ytsResult = await this.ytsService.searchMovies({ query: found.imdbId, limit: 1 });
       if (ytsResult.movies.length > 0) {
-        await this.cacheYtsMovies(ytsResult.movies);
-        movie = (await this.prisma.movie.findUnique({ where: { id }, include: { torrents: true } })) ?? found;
+        await this.movieCache.cacheYtsMovies(ytsResult.movies);
+        movie =
+          (await this.prisma.movie.findUnique({ where: { id }, include: { torrents: true } })) ??
+          found;
       }
     }
 
-    // Lazy-enrich with TMDb data if missing
     let enrichedMovie = movie;
     if (!movie.tmdbId) {
       enrichedMovie = await this.enrichWithTmdb(movie);
@@ -200,12 +178,16 @@ export class MoviesService {
       label: s.label,
     }));
 
-    return this.toDetail(enrichedMovie, commentsCount, !!watchEntry, !!watchlistEntry, subtitles);
+    return this.movieMapper.toDetail(
+      enrichedMovie,
+      commentsCount,
+      !!watchEntry,
+      !!watchlistEntry,
+      subtitles,
+    );
   }
 
-  private async enrichWithTmdb(
-    movie: MovieWithTorrents,
-  ): Promise<MovieWithTorrents> {
+  private async enrichWithTmdb(movie: MovieWithTorrents): Promise<MovieWithTorrents> {
     try {
       const tmdbData = await this.tmdbService.findByImdbId(movie.imdbId);
       if (!tmdbData) return movie;
@@ -223,7 +205,7 @@ export class MoviesService {
       const posterUrl = this.tmdbService.getPosterUrl(tmdbData.poster_path);
       const backdropUrl = this.tmdbService.getBackdropUrl(tmdbData.backdrop_path);
 
-      const updated = await this.prisma.movie.update({
+      return await this.prisma.movie.update({
         where: { id: movie.id },
         data: {
           tmdbId: tmdbData.id,
@@ -238,281 +220,9 @@ export class MoviesService {
         },
         include: { torrents: true },
       });
-
-      return updated;
     } catch (error) {
       this.logger.error("TMDb enrichment failed", (error as Error).message);
       return movie;
     }
-  }
-
-  private async cacheYtsMovies(movies: YtsMovie[]): Promise<void> {
-    for (const yts of movies) {
-      try {
-        const movie = await this.prisma.movie.upsert({
-          where: { imdbId: yts.imdb_code },
-          create: {
-            imdbId: yts.imdb_code,
-            title: yts.title,
-            year: yts.year,
-            imdbRating: yts.rating,
-            runtime: yts.runtime,
-            posterUrl: yts.medium_cover_image,
-            backdropUrl: yts.background_image || null,
-            summary: yts.summary || null,
-            genres: yts.genres ?? [],
-          },
-          update: {
-            imdbRating: yts.rating,
-            posterUrl: yts.medium_cover_image,
-            backdropUrl: yts.background_image || undefined,
-          },
-        });
-
-        // Cache torrents
-        for (const torrent of yts.torrents ?? []) {
-          const magnetUrl = this.buildMagnetUrl(
-            torrent.hash,
-            yts.title,
-          );
-          await this.prisma.torrent.upsert({
-            where: { hash: torrent.hash },
-            create: {
-              movieId: movie.id,
-              hash: torrent.hash,
-              quality: torrent.quality,
-              source: "YTS",
-              seeds: torrent.seeds,
-              peers: torrent.peers,
-              sizeBytes: BigInt(torrent.size_bytes),
-              magnetUrl,
-            },
-            update: {
-              seeds: torrent.seeds,
-              peers: torrent.peers,
-            },
-          });
-        }
-      } catch (error) {
-        this.logger.warn(
-          `Failed to cache YTS movie ${yts.imdb_code}`,
-          (error as Error).message,
-        );
-      }
-    }
-  }
-
-  private async cacheEztvTorrents(torrents: EztvTorrent[]): Promise<void> {
-    for (const eztv of torrents) {
-      if (!eztv.imdb_id) continue;
-
-      const imdbId = eztv.imdb_id.startsWith("tt")
-        ? eztv.imdb_id
-        : `tt${eztv.imdb_id}`;
-
-      try {
-        const movie = await this.prisma.movie.upsert({
-          where: { imdbId },
-          create: {
-            imdbId,
-            title: eztv.title.replace(/\s*S\d+E\d+.*$/i, "").trim(),
-            posterUrl: eztv.large_screenshot || null,
-          },
-          update: {},
-        });
-
-        await this.prisma.torrent.upsert({
-          where: { hash: eztv.hash },
-          create: {
-            movieId: movie.id,
-            hash: eztv.hash,
-            quality: this.extractQuality(eztv.filename),
-            source: "EZTV",
-            seeds: eztv.seeds,
-            peers: eztv.peers,
-            sizeBytes: BigInt(eztv.size_bytes),
-            magnetUrl: eztv.magnet_url,
-          },
-          update: {
-            seeds: eztv.seeds,
-            peers: eztv.peers,
-          },
-        });
-      } catch (error) {
-        this.logger.warn(
-          `Failed to cache EZTV torrent ${eztv.hash}`,
-          (error as Error).message,
-        );
-      }
-    }
-  }
-
-  private buildWhereClause(params: SearchParams): Prisma.MovieWhereInput {
-    const where: Prisma.MovieWhereInput = {
-      NOT: [
-        { posterUrl: null },
-        { posterUrl: "" }
-      ]
-    };
-
-    if (params.query) {
-      where.AND = [
-        {
-          OR: [
-            { title: { contains: params.query, mode: "insensitive" } },
-            { director: { contains: params.query, mode: "insensitive" } },
-          ]
-        }
-      ];
-    }
-
-    if (params.genre) {
-      where.genres = { has: params.genre };
-    }
-
-    if (params.minRating != null) {
-      where.imdbRating = { gte: params.minRating };
-    }
-
-    if (params.minYear != null || params.maxYear != null) {
-      where.year = {
-        ...(params.minYear != null ? { gte: params.minYear } : {}),
-        ...(params.maxYear != null ? { lte: params.maxYear } : {}),
-      };
-    }
-
-    return where;
-  }
-
-  private buildOrderBy(
-    sortBy?: string,
-    order?: string,
-  ): Prisma.MovieOrderByWithRelationInput {
-    const direction = order === "asc" ? "asc" : "desc";
-
-    switch (sortBy) {
-      case "year":
-        return { year: direction };
-      case "rating":
-        return { imdbRating: direction };
-      case "title":
-        return { title: direction === "desc" ? "desc" : "asc" };
-      default:
-        return { imdbRating: "desc" };
-    }
-  }
-
-  private mapSortField(sortBy?: string): string | undefined {
-    switch (sortBy) {
-      case "rating":
-        return "rating";
-      case "year":
-        return "year";
-      case "title":
-        return "title";
-      case "seeds":
-        return "seeds";
-      default:
-        return undefined;
-    }
-  }
-
-  private async getWatchedMovieIds(
-    userId: string,
-    movieIds: string[],
-  ): Promise<Set<string>> {
-    if (movieIds.length === 0) return new Set();
-
-    const watched = await this.prisma.watchHistory.findMany({
-      where: { userId, movieId: { in: movieIds } },
-      select: { movieId: true },
-    });
-
-    return new Set(watched.map((w) => w.movieId));
-  }
-
-  private async getWatchlistMovieIds(
-    userId: string,
-    movieIds: string[],
-  ): Promise<Set<string>> {
-    if (movieIds.length === 0) return new Set();
-
-    const watchlisted = await this.prisma.watchlist.findMany({
-      where: { userId, movieId: { in: movieIds } },
-      select: { movieId: true },
-    });
-
-    return new Set(watchlisted.map((w) => w.movieId));
-  }
-
-  private toListItem(
-    movie: Movie,
-    watchedIds: Set<string>,
-    watchlistIds: Set<string>,
-  ): MovieListItem {
-    return {
-      id: movie.id,
-      title: movie.title,
-      year: movie.year,
-      imdbRating: movie.imdbRating,
-      posterUrl: movie.posterUrl,
-      backdropUrl: movie.backdropUrl,
-      genres: movie.genres,
-      watched: watchedIds.has(movie.id),
-      inWatchlist: watchlistIds.has(movie.id),
-    };
-  }
-
-  private toDetail(
-    movie: MovieWithTorrents,
-    commentsCount: number,
-    watched: boolean,
-    inWatchlist: boolean,
-    subtitles: SubtitleInfo[] = [],
-  ): MovieDetail {
-    const torrents = movie.torrents.map(
-      (t): TorrentItem => ({
-        id: t.id,
-        quality: t.quality,
-        seeds: t.seeds,
-        peers: t.peers,
-        sizeBytes: t.sizeBytes.toString(),
-        magnetUrl: t.magnetUrl,
-      }),
-    );
-
-    return {
-      id: movie.id,
-      title: movie.title,
-      imdbId: movie.imdbId,
-      year: movie.year,
-      imdbRating: movie.imdbRating,
-      runtime: movie.runtime,
-      summary: movie.summary,
-      posterUrl: movie.posterUrl,
-      backdropUrl: movie.backdropUrl,
-      genres: movie.genres,
-      director: movie.director,
-      producer: movie.producer,
-      cast: movie.cast,
-      torrents,
-      subtitles,
-      commentsCount,
-      watched,
-      inWatchlist,
-    };
-  }
-
-  private buildMagnetUrl(hash: string, title: string): string {
-    const encodedTitle = encodeURIComponent(title);
-    const trackers = YTS_TRACKERS.map(
-      (t) => `&tr=${encodeURIComponent(t)}`,
-    ).join("");
-    return `magnet:?xt=urn:btih:${hash}&dn=${encodedTitle}${trackers}`;
-  }
-
-  private extractQuality(filename: string): string {
-    const match = filename.match(/(\d{3,4}p)/i);
-    return match ? match[1] : "unknown";
   }
 }

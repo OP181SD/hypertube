@@ -25,6 +25,13 @@ describe("SubtitleService", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
+    // Restore the default config implementation in case a previous test overrode it
+    mockConfig.get.mockImplementation((key: string) => {
+      if (key === "OPENSUBTITLES_API_KEY") return "test-api-key";
+      if (key === "STORAGE_PATH") return "/tmp/test-videos";
+      return "";
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SubtitleService,

@@ -33,68 +33,41 @@ export class AuthController {
 
   @Public()
   @Post("oauth/token")
-  async token(@Body() dto: OAuthTokenDto, @Res() res: FastifyReply) {
-    try {
-      const isValidClient = await this.authService.validateOAuthClient(
-        dto.client_id,
-        dto.client_secret,
-      );
+  async token(@Body() dto: OAuthTokenDto) {
+    const isValidClient = await this.authService.validateOAuthClient(
+      dto.client_id,
+      dto.client_secret,
+    );
 
-      if (!isValidClient) {
-        // Au lieu de throw une exception qui fait crasher ton filtre global,
-        // on renvoie directement une vraie réponse HTTP 401 au frontend.
-        return res.status(HttpStatus.UNAUTHORIZED).send({
-          statusCode: 401,
-          message: "Invalid client credentials",
-          error: "Unauthorized",
-        });
-      }
+    if (!isValidClient) {
+      throw new UnauthorizedException("Invalid client credentials");
+    }
 
-      switch (dto.grant_type) {
-        case GrantType.PASSWORD: {
-          if (!dto.username || !dto.password) {
-            return res.status(HttpStatus.BAD_REQUEST).send({
-              statusCode: 400,
-              message: "username and password are required for password grant",
-              error: "Bad Request",
-            });
-          }
-          const user = await this.authService.validateLocalUser(
-            dto.username,
-            dto.password,
+    switch (dto.grant_type) {
+      case GrantType.PASSWORD: {
+        if (!dto.username || !dto.password) {
+          throw new BadRequestException(
+            "username and password are required for password grant",
           );
-          const tokens = await this.authService.generateTokens(user.id);
-          return res.status(HttpStatus.OK).send(tokens);
         }
-
-        case GrantType.REFRESH_TOKEN: {
-          if (!dto.refresh_token) {
-            return res.status(HttpStatus.BAD_REQUEST).send({
-              statusCode: 400,
-              message: "refresh_token is required for refresh_token grant",
-              error: "Bad Request",
-            });
-          }
-          const tokens = await this.authService.refreshTokens(dto.refresh_token);
-          return res.status(HttpStatus.OK).send(tokens);
-        }
-
-        default:
-          return res.status(HttpStatus.BAD_REQUEST).send({
-            statusCode: 400,
-            message: "Unsupported grant type",
-            error: "Bad Request",
-          });
+        const user = await this.authService.validateLocalUser(
+          dto.username,
+          dto.password,
+        );
+        return this.authService.generateTokens(user.id);
       }
-    } catch (error) {
-      // On vérifie si "error" est bien une instance de la classe Error
-      const errorMessage = error instanceof Error ? error.message : "Authentication failed";
 
-      return res.status(HttpStatus.UNAUTHORIZED).send({
-        statusCode: 401,
-        message: errorMessage,
-        error: "Unauthorized",
-      });
+      case GrantType.REFRESH_TOKEN: {
+        if (!dto.refresh_token) {
+          throw new BadRequestException(
+            "refresh_token is required for refresh_token grant",
+          );
+        }
+        return this.authService.refreshTokens(dto.refresh_token);
+      }
+
+      default:
+        throw new BadRequestException("Unsupported grant type");
     }
   }
 
@@ -132,23 +105,19 @@ export class AuthController {
   }
 
   // --- HELPER REDIRECTION ---
-  private async handleOAuthRedirect(req: FastifyRequest, res: FastifyReply, provider: string) {
+  private async handleOAuthRedirect(req: FastifyRequest, res: FastifyReply) {
     const user = req.user as User;
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
     if (!user) {
-      console.error(`--- 🚀 [AuthController] --- Erreur ${provider}: Pas d'utilisateur`);
       return res.status(302).redirect(`${frontendUrl}/login?error=auth_failed`);
     }
 
     try {
       const tokens = await this.authService.generateTokens(user.id);
       const redirectUrl = `${frontendUrl}/auth/callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`;
-      
-      console.log(`--- 🚀 [AuthController] --- Redirection ${provider} vers:`, redirectUrl);
       return res.status(302).redirect(redirectUrl);
-    } catch (error) {
-      console.error(`--- 🚀 [AuthController] --- Erreur tokens ${provider}:`, error);
+    } catch {
       return res.status(500).send({ message: "Internal server error during redirection" });
     }
   }
@@ -163,7 +132,7 @@ export class AuthController {
   @UseGuards(FtAuthGuard)
   @Get("auth/42/callback")
   async ft42Callback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res, "42");
+    return this.handleOAuthRedirect(req, res);
   }
 
   // OAuth - Google
@@ -176,7 +145,7 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get("auth/google/callback")
   async googleCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res, "Google");
+    return this.handleOAuthRedirect(req, res);
   }
 
   // OAuth - GitHub
@@ -189,7 +158,7 @@ export class AuthController {
   @UseGuards(GithubAuthGuard)
   @Get("auth/github/callback")
   async githubCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res, "GitHub");
+    return this.handleOAuthRedirect(req, res);
   }
 
   // OAuth - Facebook
@@ -202,7 +171,7 @@ export class AuthController {
   @UseGuards(FacebookAuthGuard)
   @Get("auth/facebook/callback")
   async facebookCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res, "Facebook");
+    return this.handleOAuthRedirect(req, res);
   }
 
   // OAuth - Twitter/X
@@ -215,7 +184,7 @@ export class AuthController {
   @UseGuards(TwitterAuthGuard)
   @Get("auth/x/callback") // <--- REMPLACE "auth/twitter/callback" par "auth/x/callback"
   async twitterCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res, "Twitter");
+    return this.handleOAuthRedirect(req, res);
   }
 
   // OAuth - Discord
@@ -228,6 +197,6 @@ export class AuthController {
   @UseGuards(DiscordAuthGuard)
   @Get("auth/discord/callback")
   async discordCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res, "Discord");
+    return this.handleOAuthRedirect(req, res);
   }
 }

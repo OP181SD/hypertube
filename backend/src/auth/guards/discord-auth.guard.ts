@@ -17,7 +17,6 @@ export class DiscordAuthGuard extends AuthGuard("discord") {
     try {
       return (await super.canActivate(context)) as boolean;
     } catch (err) {
-      console.error("--- 🛡️ [DiscordAuthGuard] --- Erreur:", err);
       throw err;
     }
   }

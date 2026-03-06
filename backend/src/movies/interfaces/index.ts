@@ -207,3 +207,15 @@ export interface TorrentItem {
   sizeBytes: string; // BigInt serialized as string
   magnetUrl: string;
 }
+
+export interface SearchParams {
+  query?: string;
+  genre?: string;
+  sortBy?: string;
+  order?: string;
+  minRating?: number;
+  minYear?: number;
+  maxYear?: number;
+  page?: number;
+  limit?: number;
+}

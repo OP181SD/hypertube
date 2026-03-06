@@ -13,7 +13,7 @@ const TMDB_GENRE_MAP: Record<number, string> = {
   28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
   99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
   27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance",
-  878: "Science Fiction", 10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western",
+  878: "Sci-Fi", 10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western",
 };
 
 @Injectable()
@@ -30,9 +30,14 @@ export class TmdbService {
   }
 
   private buildUrl(path: string): URL {
-    const url = new URL(`${this.baseUrl}${path}`);
-    url.searchParams.set("api_key", this.apiKey);
-    return url;
+    return new URL(`${this.baseUrl}${path}`);
+  }
+
+  private get authHeaders() {
+    return {
+      Authorization: `Bearer ${this.apiKey}`,
+      "Content-Type": "application/json",
+    };
   }
 
   async searchMovie(
@@ -49,6 +54,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
+        headers: this.authHeaders,
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -76,6 +82,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
+        headers: this.authHeaders,
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -101,6 +108,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
+        headers: this.authHeaders,
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -132,6 +140,7 @@ export class TmdbService {
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url.toString(), {
+        headers: this.authHeaders,
         signal: controller.signal,
       });
       clearTimeout(timeout);

@@ -23,8 +23,10 @@ export class StreamingService {
 
     if (!torrent) throw new NotFoundException("Torrent not found");
 
-    // Always attempt startDownload — it's idempotent (no-op if already active in memory)
-    await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
+    // Only start download when torrent is idle; for active/ready torrents the engine is already running
+    if (torrent.downloadStatus === "idle") {
+      await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
+    }
 
     if (userId && userId !== "anonymous") {
       try {
@@ -53,6 +55,10 @@ export class StreamingService {
 
     if (!torrent) throw new NotFoundException("Torrent not found");
 
+    if (torrent.downloadStatus === "idle") {
+      await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
+    }
+
     return this.torrentService.getProgress(torrentId);
   }
 
@@ -61,9 +67,8 @@ export class StreamingService {
     if (!file) throw new NotFoundException("Video file not available yet");
 
     if (this.transcodingService.needsTranscoding(file.name)) {
-      // Pipe the torrent stream directly into ffmpeg — avoids seeking in incomplete files
-      const inputStream = file.createReadStream();
-      const stream = this.transcodingService.transcodeToMp4(inputStream, file.name);
+      const progress = this.torrentService.getProgress(torrentId);
+      const stream = this.transcodingService.transcodeToMp4(progress.filePath!);
       return { stream, mimeType: "video/mp4", fileSize: null };
     }
 

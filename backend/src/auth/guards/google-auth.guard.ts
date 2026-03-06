@@ -16,13 +16,9 @@ export class GoogleAuthGuard extends AuthGuard("google") {
       response.end = (chunk: any) => response.send(chunk);
     }
 
-    console.log("--- 🛡️ [GoogleAuthGuard] --- Tentative d'activation (Patch appliqué)");
-    
     try {
-      const result = (await super.canActivate(context)) as boolean;
-      return result;
+      return (await super.canActivate(context)) as boolean;
     } catch (err) {
-      console.error("--- 🛡️ [GoogleAuthGuard] --- Erreur lors de la redirection:", err);
       throw err;
     }
   }

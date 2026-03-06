@@ -69,6 +69,19 @@ export class TorrentService implements OnModuleDestroy {
       this.logger.log(`[READY] Video found: ${videoFile.name} (${(videoFile.length / 1024 / 1024).toFixed(2)} MB)`);
       active.file = videoFile;
       videoFile.select();
+
+      // Deselect all other files to save bandwidth
+      for (const f of engine.files) {
+        if (f !== videoFile) f.deselect();
+      }
+
+      // Persist downloading status to DB
+      this.prisma.torrent.update({
+        where: { id: torrentId },
+        data: { downloadStatus: "downloading" },
+      }).catch((err: Error) => {
+        this.logger.error(`[ERROR] Failed to update torrent status: ${err.message}`);
+      });
     });
 
     engine.on("download", (pieceIndex: any) => { // On met 'any' ici

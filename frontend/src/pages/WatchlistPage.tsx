@@ -14,7 +14,7 @@ export function WatchlistPage() {
   useEffect(() => {
     getWatchlist()
       .then(setMovies)
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -25,8 +25,8 @@ export function WatchlistPage() {
     try {
       await removeFromWatchlist(movieId);
       setMovies((prev) => prev.filter((m) => m.id !== movieId));
-    } catch (error) {
-      console.error("Failed to remove from watchlist", error);
+    } catch {
+      // silently ignore, UI already reset via finally
     } finally {
       setRemoving(null);
     }

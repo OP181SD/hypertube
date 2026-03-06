@@ -21,7 +21,6 @@ export class TwitterAuthGuard extends AuthGuard("twitter") {
     try {
       return (await super.canActivate(context)) as boolean;
     } catch (err) {
-      console.error("--- 🛡️ [TwitterAuthGuard] --- Erreur:", err);
       throw err;
     }
   }

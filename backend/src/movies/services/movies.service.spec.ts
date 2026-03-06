@@ -6,6 +6,9 @@ import { YtsService } from "./yts.service";
 import { EztvService } from "./eztv.service";
 import { TmdbService } from "./tmdb.service";
 import { SubtitleService } from "../../streaming/services/subtitle.service";
+import { MovieCacheService } from "./movie-cache.service";
+import { MovieMapperService } from "./movie-mapper.service";
+import { MovieQueryService } from "./movie-query.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import {
   ytsMovie,
@@ -41,6 +44,21 @@ const mockSubtitleService = {
   getAvailableSubtitles: vi.fn().mockResolvedValue([]),
 };
 
+const mockMovieCacheService = {
+  cacheYtsMovies: vi.fn().mockResolvedValue(undefined),
+  cacheEztvTorrents: vi.fn().mockResolvedValue(undefined),
+};
+
+const mockMovieMapperService = new MovieMapperService();
+
+const mockMovieQueryService = {
+  buildWhereClause: vi.fn().mockReturnValue({}),
+  buildOrderBy: vi.fn().mockReturnValue({ imdbRating: "desc" }),
+  mapSortField: vi.fn().mockReturnValue(undefined),
+  getWatchedMovieIds: vi.fn().mockResolvedValue(new Set()),
+  getWatchlistMovieIds: vi.fn().mockResolvedValue(new Set()),
+};
+
 const mockPrisma = {
   movie: {
     upsert: vi.fn(),
@@ -71,6 +89,14 @@ describe("MoviesService", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Reset mock implementations that use fn().mockResolvedValue
+    mockMovieCacheService.cacheYtsMovies.mockResolvedValue(undefined);
+    mockMovieCacheService.cacheEztvTorrents.mockResolvedValue(undefined);
+    mockMovieQueryService.buildWhereClause.mockReturnValue({});
+    mockMovieQueryService.buildOrderBy.mockReturnValue({ imdbRating: "desc" });
+    mockMovieQueryService.mapSortField.mockReturnValue(undefined);
+    mockMovieQueryService.getWatchedMovieIds.mockResolvedValue(new Set());
+    mockMovieQueryService.getWatchlistMovieIds.mockResolvedValue(new Set());
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -79,6 +105,9 @@ describe("MoviesService", () => {
         { provide: EztvService, useValue: mockEztvService },
         { provide: TmdbService, useValue: mockTmdbService },
         { provide: SubtitleService, useValue: mockSubtitleService },
+        { provide: MovieCacheService, useValue: mockMovieCacheService },
+        { provide: MovieMapperService, useValue: mockMovieMapperService },
+        { provide: MovieQueryService, useValue: mockMovieQueryService },
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
@@ -102,7 +131,6 @@ describe("MoviesService", () => {
       ];
       const dbId = "00000000-0000-0000-0000-000000000001";
       mockTmdbService.getPopularMovies.mockResolvedValue(tmdbMovies);
-      // Movie already in DB by tmdbId → skip extra TMDb call
       mockPrisma.movie.findFirst.mockResolvedValue({ id: dbId, tmdbId: 603 });
 
       const result = await service.getPopular();
@@ -128,7 +156,7 @@ describe("MoviesService", () => {
       ];
       const dbId = "00000000-0000-0000-0000-000000000001";
       mockTmdbService.getPopularMovies.mockResolvedValue(tmdbMovies);
-      mockPrisma.movie.findFirst.mockResolvedValue(null); // not in DB
+      mockPrisma.movie.findFirst.mockResolvedValue(null);
       mockTmdbService.getMovieDetails.mockResolvedValue({ imdb_id: "tt0133093" });
       mockPrisma.movie.upsert.mockResolvedValue({ id: dbId, imdbId: "tt0133093" });
 
@@ -160,11 +188,8 @@ describe("MoviesService", () => {
         torrents: [],
         torrentsCount: 0,
       });
-      mockPrisma.movie.upsert.mockResolvedValue(mockDbMovie);
-      mockPrisma.torrent.upsert.mockResolvedValue({});
       mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie, mockDbMovie2]);
       mockPrisma.movie.count.mockResolvedValue(2);
-      mockPrisma.watchHistory.findMany.mockResolvedValue([]);
 
       const result = await service.search(
         { query: "matrix", page: 1, limit: 20 },
@@ -173,6 +198,8 @@ describe("MoviesService", () => {
 
       expect(mockYtsService.searchMovies).toHaveBeenCalled();
       expect(mockEztvService.searchTorrents).toHaveBeenCalled();
+      expect(mockMovieCacheService.cacheYtsMovies).toHaveBeenCalledWith([ytsMovie, ytsMovie2]);
+      expect(mockMovieCacheService.cacheEztvTorrents).toHaveBeenCalledWith([]);
       expect(result.data).toHaveLength(2);
       expect(result.page).toBe(1);
       expect(result.total).toBe(2);
@@ -188,13 +215,11 @@ describe("MoviesService", () => {
         torrents: [],
         torrentsCount: 0,
       });
-      mockPrisma.movie.upsert.mockResolvedValue(mockDbMovie);
-      mockPrisma.torrent.upsert.mockResolvedValue({});
       mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie]);
       mockPrisma.movie.count.mockResolvedValue(1);
-      mockPrisma.watchHistory.findMany.mockResolvedValue([
-        { movieId: mockDbMovie.id },
-      ]);
+      mockMovieQueryService.getWatchedMovieIds.mockResolvedValue(
+        new Set([mockDbMovie.id]),
+      );
 
       const result = await service.search(
         { query: "matrix", page: 1, limit: 20 },
@@ -213,8 +238,6 @@ describe("MoviesService", () => {
         torrents: [],
         torrentsCount: 0,
       });
-      mockPrisma.movie.upsert.mockResolvedValue(mockDbMovie);
-      mockPrisma.torrent.upsert.mockResolvedValue({});
       mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie]);
       mockPrisma.movie.count.mockResolvedValue(1);
 
@@ -224,7 +247,7 @@ describe("MoviesService", () => {
       );
 
       expect(result.data[0].watched).toBe(false);
-      expect(mockPrisma.watchHistory.findMany).not.toHaveBeenCalled();
+      expect(mockMovieQueryService.getWatchedMovieIds).not.toHaveBeenCalled();
     });
 
     it("should handle YTS failure gracefully", async () => {
@@ -236,11 +259,8 @@ describe("MoviesService", () => {
         torrents: [eztvTorrent],
         torrentsCount: 1,
       });
-      mockPrisma.movie.upsert.mockResolvedValue(mockDbMovie);
-      mockPrisma.torrent.upsert.mockResolvedValue({});
       mockPrisma.movie.findMany.mockResolvedValue([]);
       mockPrisma.movie.count.mockResolvedValue(0);
-      mockPrisma.watchHistory.findMany.mockResolvedValue([]);
 
       const result = await service.search(
         { query: "test", page: 1, limit: 20 },
@@ -250,7 +270,7 @@ describe("MoviesService", () => {
       expect(result.data).toEqual([]);
     });
 
-    it("should cache YTS movies with torrents to database", async () => {
+    it("should delegate caching to MovieCacheService", async () => {
       mockYtsService.searchMovies.mockResolvedValue({
         movies: [ytsMovie],
         movieCount: 1,
@@ -259,32 +279,16 @@ describe("MoviesService", () => {
         torrents: [],
         torrentsCount: 0,
       });
-      mockPrisma.movie.upsert.mockResolvedValue(mockDbMovie);
-      mockPrisma.torrent.upsert.mockResolvedValue({});
       mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie]);
       mockPrisma.movie.count.mockResolvedValue(1);
-      mockPrisma.watchHistory.findMany.mockResolvedValue([]);
 
-      await service.search(
-        { query: "matrix", page: 1, limit: 20 },
-        "user-id",
-      );
+      await service.search({ query: "matrix", page: 1, limit: 20 }, "user-id");
 
-      expect(mockPrisma.movie.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { imdbId: "tt0133093" },
-          create: expect.objectContaining({
-            imdbId: "tt0133093",
-            title: "The Matrix",
-            year: 1999,
-          }),
-        }),
-      );
-      // Should upsert torrents for the movie
-      expect(mockPrisma.torrent.upsert).toHaveBeenCalledTimes(2); // 2 torrents on ytsMovie
+      expect(mockMovieCacheService.cacheYtsMovies).toHaveBeenCalledWith([ytsMovie]);
+      expect(mockMovieCacheService.cacheEztvTorrents).toHaveBeenCalledWith([]);
     });
 
-    it("should apply sorting and filtering in DB query", async () => {
+    it("should apply sorting and filtering via MovieQueryService", async () => {
       mockYtsService.searchMovies.mockResolvedValue({
         movies: [],
         movieCount: 0,
@@ -295,7 +299,6 @@ describe("MoviesService", () => {
       });
       mockPrisma.movie.findMany.mockResolvedValue([]);
       mockPrisma.movie.count.mockResolvedValue(0);
-      mockPrisma.watchHistory.findMany.mockResolvedValue([]);
 
       await service.search(
         {
@@ -310,14 +313,10 @@ describe("MoviesService", () => {
         "user-id",
       );
 
-      expect(mockPrisma.movie.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orderBy: { imdbRating: "desc" },
-          where: expect.objectContaining({
-            imdbRating: { gte: 7 },
-          }),
-        }),
+      expect(mockMovieQueryService.buildWhereClause).toHaveBeenCalledWith(
+        expect.objectContaining({ genre: "Action", minRating: 7 }),
       );
+      expect(mockMovieQueryService.buildOrderBy).toHaveBeenCalledWith("rating", "desc");
     });
 
     it("should calculate pagination correctly", async () => {
@@ -329,17 +328,10 @@ describe("MoviesService", () => {
         torrents: [],
         torrentsCount: 0,
       });
-      mockPrisma.movie.findMany.mockResolvedValue([
-        mockDbMovie,
-        mockDbMovie2,
-      ]);
+      mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie, mockDbMovie2]);
       mockPrisma.movie.count.mockResolvedValue(50);
-      mockPrisma.watchHistory.findMany.mockResolvedValue([]);
 
-      const result = await service.search(
-        { page: 2, limit: 20 },
-        "user-id",
-      );
+      const result = await service.search({ page: 2, limit: 20 }, "user-id");
 
       expect(result.page).toBe(2);
       expect(result.limit).toBe(20);
@@ -358,6 +350,7 @@ describe("MoviesService", () => {
       mockPrisma.movie.findUnique.mockResolvedValue(movieWithTorrents);
       mockPrisma.comment.count.mockResolvedValue(5);
       mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
+      mockPrisma.watchlist.findUnique.mockResolvedValue(null);
 
       const result = await service.findById(mockDbMovie.id, "user-id");
 
@@ -388,6 +381,7 @@ describe("MoviesService", () => {
         userId: "user-id",
         movieId: mockDbMovie.id,
       });
+      mockPrisma.watchlist.findUnique.mockResolvedValue(null);
 
       const result = await service.findById(mockDbMovie.id, "user-id");
 
@@ -401,18 +395,39 @@ describe("MoviesService", () => {
         .mockResolvedValueOnce(movieNoTorrents)
         .mockResolvedValueOnce(movieWithTorrents);
       mockYtsService.searchMovies.mockResolvedValue({
-        movies: [{ imdb_code: "tt0133093", title: "The Matrix", torrents: [{ hash: mockDbTorrent.hash, quality: "1080p", seeds: 150, peers: 25, size_bytes: 2684354560 }], year: 1999, rating: 8.7, genres: ["Action"], medium_cover_image: null, background_image: null, summary: "" }],
+        movies: [
+          {
+            imdb_code: "tt0133093",
+            title: "The Matrix",
+            torrents: [
+              {
+                hash: mockDbTorrent.hash,
+                quality: "1080p",
+                seeds: 150,
+                peers: 25,
+                size_bytes: 2684354560,
+              },
+            ],
+            year: 1999,
+            rating: 8.7,
+            genres: ["Action"],
+            medium_cover_image: null,
+            background_image: null,
+            summary: "",
+          },
+        ],
         movieCount: 1,
       });
-      mockPrisma.torrent.upsert.mockResolvedValue(mockDbTorrent);
       mockPrisma.comment.count.mockResolvedValue(0);
       mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
+      mockPrisma.watchlist.findUnique.mockResolvedValue(null);
 
       const result = await service.findById(mockDbMovie.id, "user-id");
 
       expect(mockYtsService.searchMovies).toHaveBeenCalledWith(
         expect.objectContaining({ query: "tt0133093" }),
       );
+      expect(mockMovieCacheService.cacheYtsMovies).toHaveBeenCalled();
       expect(result.torrents).toHaveLength(1);
     });
 
@@ -444,6 +459,7 @@ describe("MoviesService", () => {
       });
       mockPrisma.comment.count.mockResolvedValue(0);
       mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
+      mockPrisma.watchlist.findUnique.mockResolvedValue(null);
 
       const result = await service.findById(mockDbMovie2.id, "user-id");
 
@@ -465,10 +481,10 @@ describe("MoviesService", () => {
       mockTmdbService.findByImdbId.mockResolvedValue(null);
       mockPrisma.comment.count.mockResolvedValue(0);
       mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
+      mockPrisma.watchlist.findUnique.mockResolvedValue(null);
 
       const result = await service.findById(mockDbMovie2.id, "user-id");
 
-      // Should still return the movie without enrichment
       expect(result.title).toBe("Inception");
       expect(result.director).toBeNull();
     });

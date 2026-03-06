@@ -7,12 +7,6 @@ import type { VideoInfo } from "../interfaces";
 
 const BROWSER_NATIVE_EXTENSIONS = [".mp4", ".webm"];
 
-const INPUT_FORMAT_MAP: Record<string, string> = {
-  ".mkv": "matroska",
-  ".avi": "avi",
-  ".mov": "mov",
-  ".flv": "flv",
-};
 
 @Injectable()
 export class TranscodingService {
@@ -28,18 +22,10 @@ export class TranscodingService {
     return !BROWSER_NATIVE_EXTENSIONS.includes(ext);
   }
 
-  /**
-   * Transcodes a readable stream (e.g. from torrent-stream) to fragmented MP4.
-   * Using a stream instead of a file path avoids ffmpeg seeking in incomplete files.
-   */
-  transcodeToMp4(inputStream: Readable, fileName: string): Readable {
-    this.logger.log(`[Transcode] Starting: ${fileName}`);
+  transcodeToMp4(filePath: string): Readable {
+    this.logger.log(`[Transcode] Starting: ${filePath}`);
 
-    const ext = fileName.toLowerCase().slice(fileName.lastIndexOf("."));
-    const inputFormat = INPUT_FORMAT_MAP[ext] ?? "matroska";
-
-    return ffmpeg(inputStream)
-      .inputFormat(inputFormat)
+    return ffmpeg(filePath)
       .videoCodec("copy")
       .audioCodec("aac")
       .outputOptions(["-movflags frag_keyframe+empty_moov"])

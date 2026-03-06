@@ -29,9 +29,7 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
     if (!movie.id) return;
     getComments(movie.id)
       .then(setComments)
-      .catch(() => {
-        console.error("Erreur lors de la récupération des commentaires");
-      });
+      .catch(() => {});
   }, [movie.id]);
 
   return (

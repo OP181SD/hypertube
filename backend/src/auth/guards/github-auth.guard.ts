@@ -17,7 +17,6 @@ export class GithubAuthGuard extends AuthGuard("github") {
     try {
       return (await super.canActivate(context)) as boolean;
     } catch (err) {
-      console.error("--- 🛡️ [GithubAuthGuard] --- Erreur:", err);
       throw err;
     }
   }

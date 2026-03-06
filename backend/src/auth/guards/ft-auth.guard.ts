@@ -17,7 +17,6 @@ export class FtAuthGuard extends AuthGuard("42") {
     try {
       return (await super.canActivate(context)) as boolean;
     } catch (err) {
-      console.error("--- 🛡️ [FtAuthGuard] --- Erreur:", err);
       throw err;
     }
   }
