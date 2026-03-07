@@ -95,7 +95,7 @@ export default function MovieDetailPage() {
           />
         ) : (
           <div className="flex items-center justify-center h-48 rounded-xl bg-white/5 border border-white/10 text-white/50 text-sm">
-            Aucun flux disponible pour ce film
+            {t("no_stream_available")}
           </div>
         )}
 
@@ -149,6 +149,13 @@ export default function MovieDetailPage() {
               <div>
                 <span className="text-white/50">{t("director")}</span>
                 <p className="text-white mt-0.5">{movie.director}</p>
+              </div>
+            )}
+
+            {movie.producer && (
+              <div>
+                <span className="text-white/50">{t("producer")}</span>
+                <p className="text-white mt-0.5">{movie.producer}</p>
               </div>
             )}
 

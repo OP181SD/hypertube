@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PlayIcon, PlusIcon, ArrowLeftIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,10 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
       .catch(() => {});
   }, [movie.id]);
 
+  useEffect(() => {
+    refreshComments();
+  }, [refreshComments]);
+
   return (
     <div className="bg-black min-h-screen">
       {/* HEADER IMAGE */}
@@ -60,7 +64,7 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
               className="flex items-center justify-center gap-2 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-all duration-300 w-full lg:w-48 h-12 text-sm sm:text-base shadow-2xl hover:shadow-white/20 hover:scale-105"
             >
               <PlayIcon className="w-5 h-5" />
-              {movie.watched ? "Revoir" : "Regarder"}
+              {movie.watched ? t("rewatch") : t("watch")}
             </button>
 
             <button
@@ -91,7 +95,7 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
                   onClick={() => setShowFullSynopsis(true)}
                   className="underline ml-2 hover:text-gray-300 transition-all duration-300"
                 >
-                  Afficher plus
+                  {t("show_more")}
                 </button>
               )}
             </p>
@@ -111,12 +115,17 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
             <div className="text-xs sm:text-sm drop-shadow-lg">
               {movie.director && (
                 <p className="bg-white/5 backdrop-blur-sm px-3 py-2 rounded border border-white/10 mb-2">
-                  <strong>Réalisateur :</strong> {movie.director}
+                  <strong>{t("director")} :</strong> {movie.director}
+                </p>
+              )}
+              {movie.producer && (
+                <p className="bg-white/5 backdrop-blur-sm px-3 py-2 rounded border border-white/10 mb-2">
+                  <strong>{t("producer")} :</strong> {movie.producer}
                 </p>
               )}
               {movie.cast.length > 0 && (
                 <p className="bg-white/5 backdrop-blur-sm px-3 py-2 rounded border border-white/10">
-                  <strong>Avec :</strong> {movie.cast.join(", ")}
+                  <strong>{t("cast")} :</strong> {movie.cast.join(", ")}
                 </p>
               )}
             </div>

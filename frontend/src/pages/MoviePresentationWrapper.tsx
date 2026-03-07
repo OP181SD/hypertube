@@ -1,12 +1,14 @@
 // src/pages/MoviePresentationWrapper.tsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import MoviePresentation from "@/components/movie/MoviePresentation";
 import type { MovieDetail } from "@/types/api";
 import { getMovie } from "@/api/movies.api";
 
 const MoviePresentationWrapper: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +36,8 @@ const MoviePresentationWrapper: React.FC = () => {
     };
   }, [id]);
 
-  if (loading) return <div className="text-white text-center mt-20">Chargement...</div>;
-  if (error || !movie) return <div className="text-red-500 text-center mt-20">{error || "Film introuvable"}</div>;
+  if (loading) return <div className="text-white text-center mt-20">{t("loading")}</div>;
+  if (error || !movie) return <div className="text-red-500 text-center mt-20">{error || t("movie_not_found")}</div>;
 
   return <MoviePresentation movie={movie} />;
 };

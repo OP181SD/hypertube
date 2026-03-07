@@ -114,5 +114,13 @@
   "remove_from_watchlist": "Retirer de ma liste",
   "in_watchlist": "Dans ma liste",
   "watchlist_empty": "Votre liste est vide",
-  "watchlist_empty_detail": "Ajoutez des films à votre liste pour les regarder plus tard"
+  "watchlist_empty_detail": "Ajoutez des films à votre liste pour les regarder plus tard",
+  "watch": "Regarder",
+  "rewatch": "Revoir",
+  "show_more": "Afficher plus",
+  "no_stream_available": "Aucun flux disponible pour ce film",
+  "movie_not_found": "Film introuvable",
+  "user_not_found": "Utilisateur introuvable",
+  "full_name": "Nom complet",
+  "saving": "Enregistrement..."
 }

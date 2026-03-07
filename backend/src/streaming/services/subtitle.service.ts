@@ -171,6 +171,7 @@ export class SubtitleService {
     movieId: string,
     lang: string,
   ): Promise<string | null> {
+    if (!PRINCIPAL_LANGUAGES.includes(lang)) return null;
     try {
       // Check disk cache first
       const cached = await this.getCachedSubtitle(movieId, lang);
@@ -249,6 +250,7 @@ export class SubtitleService {
     movieId: string,
     lang: string,
   ): Promise<string | null> {
+    if (!PRINCIPAL_LANGUAGES.includes(lang)) return null;
     try {
       const filePath = this.getSubtitlePath(movieId, lang);
       await access(filePath);

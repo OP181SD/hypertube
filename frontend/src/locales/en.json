@@ -114,5 +114,13 @@
   "remove_from_watchlist": "Remove from watchlist",
   "in_watchlist": "In my list",
   "watchlist_empty": "Your watchlist is empty",
-  "watchlist_empty_detail": "Add movies to your watchlist to watch them later"
+  "watchlist_empty_detail": "Add movies to your watchlist to watch them later",
+  "watch": "Watch",
+  "rewatch": "Watch again",
+  "show_more": "Show more",
+  "no_stream_available": "No stream available for this movie",
+  "movie_not_found": "Movie not found",
+  "user_not_found": "User not found",
+  "full_name": "Full name",
+  "saving": "Saving..."
 }
