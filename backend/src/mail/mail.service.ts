@@ -11,13 +11,11 @@ export class MailService {
   private from: string;
 
   constructor(private readonly configService: ConfigService) {
+    const smtpUser = this.configService.get<string>("SMTP_USER");
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>("SMTP_HOST"),
       port: this.configService.get<number>("SMTP_PORT"),
-      auth: {
-        user: this.configService.get<string>("SMTP_USER"),
-        pass: this.configService.get<string>("SMTP_PASS"),
-      },
+      ...(smtpUser ? { auth: { user: smtpUser, pass: this.configService.get<string>("SMTP_PASS") } } : {}),
     });
 
     this.from = this.configService.get<string>("MAIL_FROM", "noreply@hypertube.local");
