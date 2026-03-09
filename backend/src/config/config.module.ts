@@ -55,8 +55,8 @@ import Joi from "joi";
         // SMTP
         SMTP_HOST: Joi.string().required(),
         SMTP_PORT: Joi.number().default(587),
-        SMTP_USER: Joi.string().required(),
-        SMTP_PASS: Joi.string().required(),
+        SMTP_USER: Joi.string().allow("").default(""),
+        SMTP_PASS: Joi.string().allow("").default(""),
         MAIL_FROM: Joi.string().required(),
 
         // External APIs
