@@ -14,12 +14,9 @@ export async function login(credentials: {
   username: string;
   password: string;
 }): Promise<TokenPair> {
-  const res = await client.post<TokenPair>("/oauth/token", {
-    grant_type: "password",
+  const res = await client.post<TokenPair>("/auth/login", {
     username: credentials.username,
     password: credentials.password,
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
   });
   return res.data;
 }

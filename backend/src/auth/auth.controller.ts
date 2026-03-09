@@ -34,6 +34,14 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Post("auth/login")
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() dto: { username: string; password: string }) {
+    const user = await this.authService.validateLocalUser(dto.username, dto.password);
+    return this.authService.generateTokens(user.id);
+  }
+
+  @Public()
   @Post("oauth/token")
   async token(@Body() dto: OAuthTokenDto) {
     const isValidClient = await this.authService.validateOAuthClient(
