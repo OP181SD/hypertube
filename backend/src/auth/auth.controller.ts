@@ -21,7 +21,6 @@ import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { FtAuthGuard } from "./guards/ft-auth.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
 import { GithubAuthGuard } from "./guards/github-auth.guard";
-import { FacebookAuthGuard } from "./guards/facebook-auth.guard";
 import { DiscordAuthGuard } from "./guards/discord-auth.guard";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -161,19 +160,6 @@ export class AuthController {
   @UseGuards(GithubAuthGuard)
   @Get("auth/github/callback")
   async githubCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res);
-  }
-
-  // OAuth - Facebook
-  @Public()
-  @UseGuards(FacebookAuthGuard)
-  @Get("auth/facebook")
-  async facebookLogin() {}
-
-  @Public()
-  @UseGuards(FacebookAuthGuard)
-  @Get("auth/facebook/callback")
-  async facebookCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     return this.handleOAuthRedirect(req, res);
   }
 

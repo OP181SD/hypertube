@@ -47,11 +47,6 @@ import Joi from "joi";
         GITHUB_CLIENT_SECRET: Joi.string().required(),
         GITHUB_CALLBACK_URL: Joi.string().uri().required(),
 
-        // OAuth - Facebook
-        FACEBOOK_CLIENT_ID: Joi.string().required(),
-        FACEBOOK_CLIENT_SECRET: Joi.string().required(),
-        FACEBOOK_CALLBACK_URL: Joi.string().uri().required(),
-
         // OAuth - Discord
         DISCORD_CLIENT_ID: Joi.string().required(),
         DISCORD_CLIENT_SECRET: Joi.string().required(),
