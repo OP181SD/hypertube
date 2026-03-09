@@ -46,10 +46,10 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {movies.map((m, index) => (
+        {movies.map((m) => (
           <Link
-            to={`/movies/preview/${m.id}`} 
-            key={`${m.id}-${index}`}
+            to={`/movies/preview/${m.id}`}
+            key={m.id}
             className="group relative rounded-lg overflow-hidden bg-gray-900 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
           >
             {m.posterUrl ? (

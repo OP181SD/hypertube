@@ -159,9 +159,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
         {movies.length > 1 && (
           <div className="absolute bottom-4 sm:bottom-6 inset-x-0 flex justify-center">
             <ul className="flex gap-1.5 sm:gap-2 items-center px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-sm">
-              {movies.map((_, index) => (
+              {movies.map((m, index) => (
                 <li
-                  key={index}
+                  key={m.id}
                   onClick={() => handleSelect(index)}
                   className={`rounded-full cursor-pointer transition-all duration-300 ${
                     index === activeIndex
