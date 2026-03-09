@@ -1,12 +1,10 @@
 
 import { AuthStep } from "../auth/AuthStep";
 
-// --------------------------- Types ---------------------------
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
 
 export const Modal = ({ isOpen, onClose }: ModalProps) => {
   if (!isOpen) return null;
