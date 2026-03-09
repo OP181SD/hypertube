@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { useTranslation } from "react-i18next";
 import { SearchBar } from "./SearchBar";
 import { ProfileIcon } from "./ProfileIcon";
@@ -29,14 +29,10 @@ export function DashboardNavbar({
   const { t } = useTranslation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-  // Auto-close mobile search bar when search is cleared
-  useEffect(() => {
-    if (!search) setMobileSearchOpen(false);
-  }, [search]);
+
 
   return (
     <header>
-      {/* Mobile search bar — slides in below the navbar */}
       <div
         className={`lg:hidden fixed top-14 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg border-b border-white/10 px-4 py-3 transition-all duration-200 ${
           mobileSearchOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
