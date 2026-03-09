@@ -12,7 +12,6 @@ enum AuthProvider {
   GOOGLE
   GITHUB
   FACEBOOK
-  TWITTER
   DISCORD
 }
 

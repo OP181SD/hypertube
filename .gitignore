@@ -1,7 +1,5 @@
 # Dependencies
 node_modules/
-.pnpm-store/
-pnpm-lock.yaml
 
 # Build
 dist/
@@ -42,7 +40,6 @@ videos/
 *.log
 npm-debug.log*
 yarn-debug.log*
-pnpm-debug.log*
 lerna-debug.log*
 
 # Misc

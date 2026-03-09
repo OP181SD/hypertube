@@ -2,30 +2,29 @@
   "name": "hypertube",
   "version": "6.3.0",
   "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "overrides": {
+    "fastify": "5.8.2",
+    "ws": "^8.18.0",
+    "hono": "^4.12.5",
+    "@hono/node-server": "^1.19.11"
+  },
   "scripts": {
-    "dev:back": "pnpm --filter hypertube-backend start:dev",
-    "dev:front": "pnpm --filter frontend dev",
-    "build:back": "pnpm --filter hypertube-backend build",
-    "build:front": "pnpm --filter frontend build",
-    "lint:back": "pnpm --filter hypertube-backend lint",
-    "lint:front": "pnpm --filter frontend lint",
-    "test": "pnpm --filter hypertube-backend test",
-    "test:e2e": "pnpm --filter hypertube-backend test:e2e",
+    "dev:back": "npm run start:dev --workspace=backend",
+    "dev:front": "npm run dev --workspace=frontend",
+    "build:back": "npm run build --workspace=backend",
+    "build:front": "npm run build --workspace=frontend",
+    "lint:back": "npm run lint --workspace=backend",
+    "lint:front": "npm run lint --workspace=frontend",
+    "test": "npm run test --workspace=backend",
+    "test:e2e": "npm run test:e2e --workspace=backend",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "prisma:generate": "pnpm --filter hypertube-backend prisma:generate",
-    "prisma:migrate:dev": "pnpm --filter hypertube-backend prisma:migrate:dev",
-    "prisma:studio": "pnpm --filter hypertube-backend prisma:studio"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "argon2",
-      "@nestjs/core",
-      "@prisma/engines",
-      "@swc/core",
-      "esbuild",
-      "prisma"
-    ]
-  },
-  "packageManager": "pnpm@10.28.2"
+    "prisma:generate": "npm run prisma:generate --workspace=backend",
+    "prisma:migrate:dev": "npm run prisma:migrate:dev --workspace=backend",
+    "prisma:studio": "npm run prisma:studio --workspace=backend"
+  }
 }

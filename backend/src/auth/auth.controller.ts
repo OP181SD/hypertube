@@ -22,7 +22,6 @@ import { FtAuthGuard } from "./guards/ft-auth.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
 import { GithubAuthGuard } from "./guards/github-auth.guard";
 import { FacebookAuthGuard } from "./guards/facebook-auth.guard";
-import { TwitterAuthGuard } from "./guards/twitter-auth.guard";
 import { DiscordAuthGuard } from "./guards/discord-auth.guard";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -175,19 +174,6 @@ export class AuthController {
   @UseGuards(FacebookAuthGuard)
   @Get("auth/facebook/callback")
   async facebookCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
-    return this.handleOAuthRedirect(req, res);
-  }
-
-  // OAuth - Twitter/X
-  @Public()
-  @UseGuards(TwitterAuthGuard)
-  @Get("auth/twitter")
-  async twitterLogin() {}
-
-  @Public()
-  @UseGuards(TwitterAuthGuard)
-  @Get("auth/x/callback") // <--- REMPLACE "auth/twitter/callback" par "auth/x/callback"
-  async twitterCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     return this.handleOAuthRedirect(req, res);
   }
 

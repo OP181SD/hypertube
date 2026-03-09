@@ -52,11 +52,6 @@ import Joi from "joi";
         FACEBOOK_CLIENT_SECRET: Joi.string().required(),
         FACEBOOK_CALLBACK_URL: Joi.string().uri().required(),
 
-        // OAuth - Twitter/X
-        X_CLIENT_ID: Joi.string().required(),
-        X_CLIENT_SECRET: Joi.string().required(),
-        X_CALLBACK_URL: Joi.string().uri().required(),
-
         // OAuth - Discord
         DISCORD_CLIENT_ID: Joi.string().required(),
         DISCORD_CLIENT_SECRET: Joi.string().required(),
