@@ -19,7 +19,12 @@ export function Profile() {
 
   if (!user) return null;
 
-  const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
+  // Avatar fallback unique basé sur le username
+  const profileSrc = user.profilePictureUrl
+    ? `${API_BASE_URL}${user.profilePictureUrl}`
+    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+        user.username
+      )}`;
 
   return (
     <div className="min-h-screen bg-black text-white px-6 sm:px-10 md:px-20 pt-16 flex flex-col items-center">
@@ -28,25 +33,21 @@ export function Profile() {
           <button
             onClick={triggerAvatarUpload}
             disabled={uploading}
-            className="relative rounded-full p-1 bg-linear-to-tr from-[#795EF0] via-[#C270ED] to-[#38BDF8] cursor-pointer"
+            className="relative rounded-full p-1 bg-gradient-to-tr from-[#795EF0] via-[#C270ED] to-[#38BDF8] cursor-pointer"
           >
-            {user.profilePictureUrl ? (
-              <img
-                src={`${API_BASE_URL}${user.profilePictureUrl}`}
-                alt={user.username}
-                className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20 transition-transform duration-300 hover:scale-105"
-              />
-            ) : (
-              <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-white/10 flex items-center justify-center text-3xl font-bold text-white/60 ring-2 ring-black/20">
-                {initials}
-              </div>
-            )}
+            <img
+              src={profileSrc}
+              alt={user.username}
+              className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20 transition-transform duration-300 hover:scale-105"
+            />
+
             {uploading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
                 <div className="w-6 h-6 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
               </div>
             )}
           </button>
+
           <input
             ref={fileInputRef}
             type="file"
@@ -63,9 +64,13 @@ export function Profile() {
       </div>
 
       {message && (
-        <div className={`mb-6 px-4 py-3 rounded-xl text-sm w-full max-w-md text-center ${
-          message.type === "success" ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-400/10 border border-red-400/20 text-red-400"
-        }`}>
+        <div
+          className={`mb-6 px-4 py-3 rounded-xl text-sm w-full max-w-md text-center ${
+            message.type === "success"
+              ? "bg-green-500/10 border border-green-500/20 text-green-400"
+              : "bg-red-400/10 border border-red-400/20 text-red-400"
+          }`}
+        >
           {message.text}
         </div>
       )}
