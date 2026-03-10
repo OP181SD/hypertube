@@ -53,9 +53,9 @@ export class MovieQueryService {
       case "rating":
         return { imdbRating: direction };
       case "title":
-        return { title: direction === "desc" ? "desc" : "asc" };
+        return { title: order === "desc" ? "desc" : "asc" };
       default:
-        return { imdbRating: "desc" };
+        return { title: "asc" };
     }
   }
 
