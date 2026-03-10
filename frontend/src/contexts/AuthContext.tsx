@@ -10,11 +10,11 @@ import {
   login as loginApi,
   register as registerApi,
   logout as logoutApi,
-  refreshTokens,
+  refresh as refreshApi,
   forgotPassword as forgotPwdApi,
   resetPassword as resetPwdApi,
 } from "@/api/auth.api";
-import { getUser, updateUser as updateUserApi } from "@/api/users.api";
+import { getMe, getUser, updateUser as updateUserApi } from "@/api/users.api";
 import client from "@/api/client";
 import i18n from "@/i18n";
 import type {
@@ -43,15 +43,6 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function decodeToken(token: string): { sub: string } | null {
-  try {
-    const payload = token.split(".")[1];
-    return JSON.parse(atob(payload));
-  } catch {
-    return null;
-  }
-}
-
 function syncLanguage(user: UserPublic) {
   if (user.language) {
     const lng = LANG_TO_I18N[user.language] ?? "en";
@@ -65,28 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const clearAuth = useCallback(() => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    document.cookie = "has_session=; max-age=0; path=/";
     setUser(null);
     setError(null);
   }, []);
 
   const restoreSession = useCallback(async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
+    if (!document.cookie.includes("has_session=1")) {
       setLoading(false);
       return;
     }
-
-    const decoded = decodeToken(token);
-    if (!decoded?.sub) {
-      clearAuth();
-      setLoading(false);
-      return;
-    }
-
     try {
-      const u = await getUser(decoded.sub);
+      const u = await getMe();
       setUser(u);
       syncLanguage(u);
     } catch {
@@ -109,22 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           response?: { status: number };
         };
         const original = axiosErr.config;
-        if (axiosErr.response?.status === 401 && original && !original._retry) {
+        const isRefreshCall = (original as { url?: string })?.url?.includes("/auth/refresh");
+        if (axiosErr.response?.status === 401 && original && !original._retry && !isRefreshCall) {
           original._retry = true;
-          const rt = localStorage.getItem("refresh_token");
-          if (rt) {
-            try {
-              const tokens = await refreshTokens(rt);
-              localStorage.setItem("access_token", tokens.access_token);
-              localStorage.setItem("refresh_token", tokens.refresh_token);
-              if (original.headers) {
-                original.headers.Authorization = `Bearer ${tokens.access_token}`;
-              }
-              return client(original as Parameters<typeof client>[0]);
-            } catch {
-              clearAuth();
-            }
-          } else {
+          try {
+            await refreshApi();
+            return client(original as Parameters<typeof client>[0]);
+          } catch {
             clearAuth();
           }
         }
@@ -141,16 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (username: string, password: string) => {
       setError(null);
       try {
-        const tokens = await loginApi({ username, password });
-        localStorage.setItem("access_token", tokens.access_token);
-        localStorage.setItem("refresh_token", tokens.refresh_token);
-
-        const decoded = decodeToken(tokens.access_token);
-        if (decoded?.sub) {
-          const u = await getUser(decoded.sub);
-          setUser(u);
-          syncLanguage(u);
-        }
+        await loginApi({ username, password });
+        const u = await getMe();
+        setUser(u);
+        syncLanguage(u);
       } catch (err: unknown) {
         const axiosErr = err as {
           response?: { data?: { message?: string | string[] } };
@@ -168,16 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (data: RegisterRequest) => {
       setError(null);
       try {
-        const tokens = await registerApi(data);
-        localStorage.setItem("access_token", tokens.access_token);
-        localStorage.setItem("refresh_token", tokens.refresh_token);
-
-        const decoded = decodeToken(tokens.access_token);
-        if (decoded?.sub) {
-          const u = await getUser(decoded.sub);
-          setUser(u);
-          syncLanguage(u);
-        }
+        await registerApi(data);
+        const u = await getMe();
+        setUser(u);
+        syncLanguage(u);
       } catch (err: unknown) {
         const axiosErr = err as {
           response?: { data?: { message?: string | string[] } };
@@ -192,9 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    const rt = localStorage.getItem("refresh_token");
     try {
-      await logoutApi(rt || undefined);
+      await logoutApi();
     } catch {
       // still clear local state
     }

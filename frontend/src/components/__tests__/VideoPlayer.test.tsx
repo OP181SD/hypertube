@@ -16,7 +16,6 @@ const subtitles: SubtitleInfo[] = [
 describe("VideoPlayer", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    localStorage.setItem("access_token", "test-jwt-token");
   });
 
   it("renders video element when status is ready", async () => {

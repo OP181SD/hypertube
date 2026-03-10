@@ -33,6 +33,19 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get("me")
+  async getMe(@CurrentUser() currentUser: User) {
+    return {
+      id: currentUser.id,
+      username: currentUser.username,
+      firstName: currentUser.firstName,
+      lastName: currentUser.lastName,
+      profilePictureUrl: currentUser.profilePictureUrl,
+      language: currentUser.language,
+      email: currentUser.email,
+    };
+  }
+
   @Get(":id")
   async findOne(
     @Param("id", ParseUUIDPipe) id: string,

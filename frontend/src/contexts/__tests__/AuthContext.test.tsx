@@ -8,12 +8,13 @@ vi.mock("@/api/auth.api", () => ({
   login: vi.fn(),
   register: vi.fn(),
   logout: vi.fn(),
-  refreshTokens: vi.fn(),
+  refresh: vi.fn(),
   forgotPassword: vi.fn(),
   resetPassword: vi.fn(),
 }));
 
 vi.mock("@/api/users.api", () => ({
+  getMe: vi.fn(),
   getUser: vi.fn(),
 }));
 
@@ -67,11 +68,6 @@ function renderWithAuth() {
   );
 }
 
-function fakeJwt(sub: string): string {
-  const payload = btoa(JSON.stringify({ sub }));
-  return `header.${payload}.sig`;
-}
-
 const USER = {
   id: "user-1",
   username: "john",
@@ -84,10 +80,10 @@ const USER = {
 describe("AuthContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
+    document.cookie = "has_session=; max-age=0; path=/";
   });
 
-  it("starts unauthenticated when no token exists", async () => {
+  it("starts unauthenticated when no session cookie exists", async () => {
     renderWithAuth();
 
     await waitFor(() =>
@@ -95,12 +91,12 @@ describe("AuthContext", () => {
     );
     expect(screen.getByTestId("authenticated").textContent).toBe("false");
     expect(screen.getByTestId("user").textContent).toBe("null");
+    expect(usersApi.getMe).not.toHaveBeenCalled();
   });
 
-  it("restores session from existing token on mount", async () => {
-    localStorage.setItem("access_token", fakeJwt("user-1"));
-    localStorage.setItem("refresh_token", "rt");
-    vi.mocked(usersApi.getUser).mockResolvedValueOnce(USER);
+  it("restores session from existing cookie on mount", async () => {
+    document.cookie = "has_session=1";
+    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
 
     renderWithAuth();
 
@@ -108,18 +104,12 @@ describe("AuthContext", () => {
       expect(screen.getByTestId("authenticated").textContent).toBe("true"),
     );
     expect(screen.getByTestId("user").textContent).toBe("john");
-    expect(usersApi.getUser).toHaveBeenCalledWith("user-1");
+    expect(usersApi.getMe).toHaveBeenCalled();
   });
 
-  it("login stores tokens and fetches user", async () => {
-    const token = fakeJwt("user-1");
-    vi.mocked(authApi.login).mockResolvedValueOnce({
-      access_token: token,
-      refresh_token: "rt",
-      token_type: "Bearer",
-      expires_in: 900,
-    });
-    vi.mocked(usersApi.getUser).mockResolvedValueOnce(USER);
+  it("login calls api and fetches user", async () => {
+    vi.mocked(authApi.login).mockResolvedValueOnce({ message: "Logged in successfully" });
+    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
 
     renderWithAuth();
     await waitFor(() =>
@@ -133,20 +123,13 @@ describe("AuthContext", () => {
     await waitFor(() =>
       expect(screen.getByTestId("authenticated").textContent).toBe("true"),
     );
-    expect(localStorage.getItem("access_token")).toBe(token);
-    expect(localStorage.getItem("refresh_token")).toBe("rt");
+    expect(usersApi.getMe).toHaveBeenCalled();
     expect(screen.getByTestId("user").textContent).toBe("john");
   });
 
-  it("register stores tokens and fetches user", async () => {
-    const token = fakeJwt("user-1");
-    vi.mocked(authApi.register).mockResolvedValueOnce({
-      access_token: token,
-      refresh_token: "rt",
-      token_type: "Bearer",
-      expires_in: 900,
-    });
-    vi.mocked(usersApi.getUser).mockResolvedValueOnce(USER);
+  it("register calls api and fetches user", async () => {
+    vi.mocked(authApi.register).mockResolvedValueOnce({ message: "Registered successfully" });
+    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
 
     renderWithAuth();
     await waitFor(() =>
@@ -160,13 +143,13 @@ describe("AuthContext", () => {
     await waitFor(() =>
       expect(screen.getByTestId("authenticated").textContent).toBe("true"),
     );
-    expect(localStorage.getItem("access_token")).toBe(token);
+    expect(usersApi.getMe).toHaveBeenCalled();
+    expect(screen.getByTestId("user").textContent).toBe("john");
   });
 
-  it("logout clears tokens and state", async () => {
-    localStorage.setItem("access_token", fakeJwt("user-1"));
-    localStorage.setItem("refresh_token", "rt");
-    vi.mocked(usersApi.getUser).mockResolvedValueOnce(USER);
+  it("logout clears user state", async () => {
+    document.cookie = "has_session=1";
+    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
     vi.mocked(authApi.logout).mockResolvedValueOnce({
       message: "Logged out successfully",
     });
@@ -183,7 +166,6 @@ describe("AuthContext", () => {
     await waitFor(() =>
       expect(screen.getByTestId("authenticated").textContent).toBe("false"),
     );
-    expect(localStorage.getItem("access_token")).toBeNull();
-    expect(localStorage.getItem("refresh_token")).toBeNull();
+    expect(screen.getByTestId("user").textContent).toBe("null");
   });
 });

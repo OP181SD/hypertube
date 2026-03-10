@@ -18,31 +18,9 @@ import OAuthCallback from "../OAuthCallback";
 describe("OAuthCallback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
   });
 
-  it("stores tokens from URL and navigates to /dashboard", async () => {
-    render(
-      <MemoryRouter
-        initialEntries={[
-          "/auth/callback?access_token=at123&refresh_token=rt456",
-        ]}
-      >
-        <OAuthCallback />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(localStorage.getItem("access_token")).toBe("at123");
-      expect(localStorage.getItem("refresh_token")).toBe("rt456");
-      expect(mockRestoreSession).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith("/dashboard", {
-        replace: true,
-      });
-    });
-  });
-
-  it("redirects to / if no tokens in URL", async () => {
+  it("calls restoreSession and navigates to /dashboard", async () => {
     render(
       <MemoryRouter initialEntries={["/auth/callback"]}>
         <OAuthCallback />
@@ -50,7 +28,10 @@ describe("OAuthCallback", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(mockRestoreSession).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith("/dashboard", {
+        replace: true,
+      });
     });
   });
 });

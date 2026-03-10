@@ -103,9 +103,8 @@ export class StreamingService {
     if (!entry) throw new NotFoundException(`Subtitle '${lang}' not found`);
 
     const vttContent = await this.subtitleService.downloadSubtitle(entry.fileId, movieId, lang);
-    if (!vttContent) throw new NotFoundException("Failed to download subtitle");
 
-    return { content: vttContent };
+    return { content: vttContent ?? "WEBVTT\n\n" };
   }
 
   private parseRange(rangeHeader: string, fileSize: number): { start: number; end: number } {

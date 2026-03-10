@@ -3,7 +3,7 @@ import client from "../client";
 import {
   register,
   login,
-  refreshTokens,
+  refresh,
   forgotPassword,
   resetPassword,
   logout,
@@ -14,13 +14,7 @@ vi.mock("../client", () => ({
 }));
 
 const mockPost = vi.mocked(client.post);
-
-const TOKEN_PAIR = {
-  access_token: "at",
-  refresh_token: "rt",
-  token_type: "Bearer",
-  expires_in: 900,
-};
+const MSG = { message: "ok" };
 
 describe("auth.api", () => {
   beforeEach(() => {
@@ -29,7 +23,7 @@ describe("auth.api", () => {
 
   describe("register", () => {
     it("should POST /auth/register with correct payload", async () => {
-      mockPost.mockResolvedValueOnce({ data: TOKEN_PAIR });
+      mockPost.mockResolvedValueOnce({ data: MSG });
 
       const payload = {
         email: "test@test.com",
@@ -41,67 +35,51 @@ describe("auth.api", () => {
       const result = await register(payload);
 
       expect(mockPost).toHaveBeenCalledWith("/auth/register", payload);
-      expect(result).toEqual(TOKEN_PAIR);
+      expect(result).toEqual(MSG);
     });
   });
 
   describe("login", () => {
-    it("should POST /oauth/token with password grant type", async () => {
-      mockPost.mockResolvedValueOnce({ data: TOKEN_PAIR });
+    it("should POST /auth/login with credentials", async () => {
+      mockPost.mockResolvedValueOnce({ data: MSG });
 
       const result = await login({ username: "testuser", password: "Password1" });
 
-      expect(mockPost).toHaveBeenCalledWith(
-        "/oauth/token",
-        expect.objectContaining({
-          grant_type: "password",
-          username: "testuser",
-          password: "Password1",
-          client_id: expect.any(String),
-          client_secret: expect.any(String),
-        }),
-      );
-      expect(result).toEqual(TOKEN_PAIR);
+      expect(mockPost).toHaveBeenCalledWith("/auth/login", {
+        username: "testuser",
+        password: "Password1",
+      });
+      expect(result).toEqual(MSG);
     });
   });
 
-  describe("refreshTokens", () => {
-    it("should POST /oauth/token with refresh_token grant type", async () => {
-      mockPost.mockResolvedValueOnce({ data: TOKEN_PAIR });
+  describe("refresh", () => {
+    it("should POST /auth/refresh with no body", async () => {
+      mockPost.mockResolvedValueOnce({ data: MSG });
 
-      const result = await refreshTokens("old-rt");
+      const result = await refresh();
 
-      expect(mockPost).toHaveBeenCalledWith(
-        "/oauth/token",
-        expect.objectContaining({
-          grant_type: "refresh_token",
-          refresh_token: "old-rt",
-          client_id: expect.any(String),
-          client_secret: expect.any(String),
-        }),
-      );
-      expect(result).toEqual(TOKEN_PAIR);
+      expect(mockPost).toHaveBeenCalledWith("/auth/refresh");
+      expect(result).toEqual(MSG);
     });
   });
 
   describe("forgotPassword", () => {
     it("should POST /auth/forgot-password with email", async () => {
-      const msg = { message: "If the email exists, a reset link has been sent" };
-      mockPost.mockResolvedValueOnce({ data: msg });
+      mockPost.mockResolvedValueOnce({ data: MSG });
 
       const result = await forgotPassword("test@test.com");
 
       expect(mockPost).toHaveBeenCalledWith("/auth/forgot-password", {
         email: "test@test.com",
       });
-      expect(result).toEqual(msg);
+      expect(result).toEqual(MSG);
     });
   });
 
   describe("resetPassword", () => {
     it("should POST /auth/reset-password with token and password", async () => {
-      const msg = { message: "Password has been reset successfully" };
-      mockPost.mockResolvedValueOnce({ data: msg });
+      mockPost.mockResolvedValueOnce({ data: MSG });
 
       const result = await resetPassword("tok123", "NewPass1");
 
@@ -109,31 +87,18 @@ describe("auth.api", () => {
         token: "tok123",
         password: "NewPass1",
       });
-      expect(result).toEqual(msg);
+      expect(result).toEqual(MSG);
     });
   });
 
   describe("logout", () => {
-    it("should POST /auth/logout with optional refresh_token", async () => {
-      const msg = { message: "Logged out successfully" };
-      mockPost.mockResolvedValueOnce({ data: msg });
-
-      const result = await logout("rt");
-
-      expect(mockPost).toHaveBeenCalledWith("/auth/logout", {
-        refresh_token: "rt",
-      });
-      expect(result).toEqual(msg);
-    });
-
-    it("should POST /auth/logout without refresh_token", async () => {
-      const msg = { message: "Logged out successfully" };
-      mockPost.mockResolvedValueOnce({ data: msg });
+    it("should POST /auth/logout with no body", async () => {
+      mockPost.mockResolvedValueOnce({ data: MSG });
 
       const result = await logout();
 
-      expect(mockPost).toHaveBeenCalledWith("/auth/logout", {});
-      expect(result).toEqual(msg);
+      expect(mockPost).toHaveBeenCalledWith("/auth/logout");
+      expect(result).toEqual(MSG);
     });
   });
 });

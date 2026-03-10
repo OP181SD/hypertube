@@ -63,8 +63,7 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
     };
   }, [torrentId]);
 
-  const token = localStorage.getItem("access_token");
-  const streamSrc = `${getStreamUrl(torrentId)}${token ? `?access_token=${token}` : ""}`;
+  const streamSrc = getStreamUrl(torrentId);
 
   const defaultLang = useMemo(() => {
     if (!subtitles?.length) return "en";

@@ -342,7 +342,7 @@ describe("StreamingService", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it("should throw NotFoundException when download fails", async () => {
+    it("should return empty VTT when download fails", async () => {
       mockPrisma.movie.findUnique.mockResolvedValue({
         id: "m1",
         imdbId: "tt0133093",
@@ -352,9 +352,8 @@ describe("StreamingService", () => {
       ]);
       mockSubtitleService.downloadSubtitle.mockResolvedValue(null);
 
-      await expect(
-        service.getSubtitleFileByMovieId("m1", "en"),
-      ).rejects.toThrow(NotFoundException);
+      const result = await service.getSubtitleFileByMovieId("m1", "en");
+      expect(result.content).toBe("WEBVTT\n\n");
     });
 
     it("should return VTT content for valid subtitle", async () => {

@@ -15,8 +15,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     const opts: StrategyOptionsWithRequest = {
       jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: FastifyRequest) =>
+          (req?.cookies as Record<string, string>)?.access_token ?? null,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
-        ExtractJwt.fromUrlQueryParameter("access_token"),
       ]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>("JWT_ACCESS_SECRET")!,
@@ -30,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const authHeader = req.headers.authorization;
     const token = authHeader
       ? authHeader.replace("Bearer ", "")
-      : (req.query as Record<string, string>)?.access_token;
+      : (req.cookies as Record<string, string>)?.access_token;
 
     if (token) {
       const isBlacklisted = await this.authService.isAccessTokenBlacklisted(token);

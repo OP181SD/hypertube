@@ -1,35 +1,24 @@
 import client from "./client";
-import type { TokenPair, RegisterRequest, MessageResponse } from "@/types/api";
+import type { RegisterRequest, MessageResponse } from "@/types/api";
 
-const CLIENT_ID = import.meta.env.VITE_OAUTH_CLIENT_ID ?? "hypertube-web";
-const CLIENT_SECRET =
-  import.meta.env.VITE_OAUTH_CLIENT_SECRET ?? "hypertube-web-secret";
-
-export async function register(data: RegisterRequest): Promise<TokenPair> {
-  const res = await client.post<TokenPair>("/auth/register", data);
+export async function register(data: RegisterRequest): Promise<MessageResponse> {
+  const res = await client.post<MessageResponse>("/auth/register", data);
   return res.data;
 }
 
 export async function login(credentials: {
   username: string;
   password: string;
-}): Promise<TokenPair> {
-  const res = await client.post<TokenPair>("/auth/login", {
+}): Promise<MessageResponse> {
+  const res = await client.post<MessageResponse>("/auth/login", {
     username: credentials.username,
     password: credentials.password,
   });
   return res.data;
 }
 
-export async function refreshTokens(
-  refreshToken: string,
-): Promise<TokenPair> {
-  const res = await client.post<TokenPair>("/oauth/token", {
-    grant_type: "refresh_token",
-    refresh_token: refreshToken,
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-  });
+export async function refresh(): Promise<MessageResponse> {
+  const res = await client.post<MessageResponse>("/auth/refresh");
   return res.data;
 }
 
@@ -53,11 +42,7 @@ export async function resetPassword(
   return res.data;
 }
 
-export async function logout(
-  refreshToken?: string,
-): Promise<MessageResponse> {
-  const res = await client.post<MessageResponse>("/auth/logout", {
-    ...(refreshToken ? { refresh_token: refreshToken } : {}),
-  });
+export async function logout(): Promise<MessageResponse> {
+  const res = await client.post<MessageResponse>("/auth/logout");
   return res.data;
 }
