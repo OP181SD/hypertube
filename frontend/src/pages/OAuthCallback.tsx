@@ -7,9 +7,13 @@ export default function OAuthCallback() {
   const { restoreSession } = useAuth();
 
   useEffect(() => {
-    restoreSession().then(() => {
-      navigate("/dashboard", { replace: true });
-    });
+    restoreSession()
+      .then(() => {
+        navigate("/dashboard", { replace: true });
+      })
+      .catch(() => {
+        navigate("/login", { replace: true });
+      });
   }, [navigate, restoreSession]);
 
   return null;

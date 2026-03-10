@@ -122,5 +122,6 @@
   "movie_not_found": "Movie not found",
   "user_not_found": "User not found",
   "full_name": "Full name",
-  "saving": "Saving..."
+  "saving": "Saving...",
+  "profile_picture_optional": "Profile picture (optional)"
 }

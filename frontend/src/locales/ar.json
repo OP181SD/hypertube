@@ -114,5 +114,6 @@
   "remove_from_watchlist": "إزالة من قائمة المشاهدة",
   "in_watchlist": "في قائمتي",
   "watchlist_empty": "قائمة مشاهدتك فارغة",
-  "watchlist_empty_detail": "أضف أفلاماً إلى قائمة مشاهدتك لتشاهدها لاحقاً"
+  "watchlist_empty_detail": "أضف أفلاماً إلى قائمة مشاهدتك لتشاهدها لاحقاً",
+  "profile_picture_optional": "صورة الملف الشخصي (اختياري)"
 }

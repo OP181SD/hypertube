@@ -122,5 +122,6 @@
   "movie_not_found": "Film introuvable",
   "user_not_found": "Utilisateur introuvable",
   "full_name": "Nom complet",
-  "saving": "Enregistrement..."
+  "saving": "Enregistrement...",
+  "profile_picture_optional": "Photo de profil (optionnelle)"
 }

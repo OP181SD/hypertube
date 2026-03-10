@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSignupForm } from "@/hooks/useSignupForm";
 
@@ -12,12 +12,38 @@ const BackChevron = () => (
   </svg>
 );
 
+const CameraIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+    <circle cx="12" cy="13" r="4"></circle>
+  </svg>
+);
+
 const inputClass =
   "w-full px-4 py-3 rounded-xl bg-[#2c2c2e] text-[#f5f5f7] border border-[#424245] focus:border-[#0071e3] focus:outline-none placeholder-[#86868b]";
 
 export const SignupManualView: React.FC<SignupManualViewProps> = ({ onBack }) => {
   const { t } = useTranslation();
-  const { fields, setField, loading, displayError, handleSubmit } = useSignupForm();
+  const { fields, setField, setProfilePicture, loading, displayError, handleSubmit } = useSignupForm();
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setProfilePicture(file);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+    } else {
+      setPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    }
+  };
 
   return (
     <div className="w-full flex flex-col gap-3">
@@ -28,6 +54,30 @@ export const SignupManualView: React.FC<SignupManualViewProps> = ({ onBack }) =>
         <BackChevron />
         {t("back") || "Retour"}
       </button>
+
+      {/* Avatar picker */}
+      <div className="flex flex-col items-center gap-2 py-1">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="relative w-20 h-20 rounded-full bg-[#2c2c2e] border-2 border-[#424245] hover:border-[#0071e3] transition-colors overflow-hidden flex items-center justify-center cursor-pointer"
+          aria-label={t("profile_picture_optional")}
+        >
+          {preview ? (
+            <img src={preview} alt="avatar preview" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[#86868b]"><CameraIcon /></span>
+          )}
+        </button>
+        <span className="text-[#86868b] text-xs">{t("profile_picture_optional")}</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <input

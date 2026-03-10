@@ -10,7 +10,11 @@ export default function AuthNavbar() {
   const { logout, user } = useAuth();
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+    } catch {
+      // logout clears local state internally regardless
+    }
     navigate("/");
   };
 

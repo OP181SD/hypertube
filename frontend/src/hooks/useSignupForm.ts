@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { getMe, uploadProfilePicture } from "@/api/users.api";
 
 export function useSignupForm() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export function useSignupForm() {
     password: "",
     confirmPassword: "",
   });
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [localError, setLocalError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -59,6 +61,14 @@ export function useSignupForm() {
     try {
       const { username, firstName, lastName, email, password } = fields;
       await register({ email, username, firstName, lastName, password });
+      if (profilePicture) {
+        try {
+          const me = await getMe();
+          await uploadProfilePicture(me.id, profilePicture);
+        } catch {
+          // Non-blocking: avatar upload failure doesn't prevent registration
+        }
+      }
       navigate("/dashboard");
     } catch {
       // authError is set by AuthContext
@@ -70,6 +80,8 @@ export function useSignupForm() {
   return {
     fields,
     setField,
+    profilePicture,
+    setProfilePicture,
     loading,
     displayError: localError || authError,
     handleSubmit,
