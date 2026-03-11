@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,11 +12,15 @@ type Props = {
 export const AuthLogin: React.FC<Props> = ({ dispatch }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, error: authError } = useAuth();
+  const { login, error: authError, clearError } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    return () => clearError();
+  }, [clearError]);
 
   const handleLogin = async () => {
     setLocalError("");
@@ -35,7 +39,10 @@ export const AuthLogin: React.FC<Props> = ({ dispatch }) => {
     }
   };
 
-  const displayError = localError || authError;
+  const translatedAuthError = authError === "Invalid credentials"
+    ? t("error_invalid_credentials")
+    : authError;
+  const displayError = localError || translatedAuthError;
 
   return (
     <div className="flex flex-col gap-6 p-8 pt-12 bg-[#1c1c1e]">

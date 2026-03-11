@@ -31,6 +31,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  clearError: () => void;
   login: (username: string, password: string) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
@@ -151,6 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const clearError = useCallback(() => setError(null), []);
+
   const logout = useCallback(async () => {
     try {
       await logoutApi();
@@ -193,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         loading,
         error,
+        clearError,
         login,
         register,
         logout,
