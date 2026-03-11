@@ -123,5 +123,6 @@
   "user_not_found": "User not found",
   "full_name": "Full name",
   "saving": "Saving...",
-  "profile_picture_optional": "Profile picture (optional)"
+  "profile_picture_required": "Profile picture",
+  "error_profile_picture_required": "Please add a profile picture."
 }

@@ -115,5 +115,6 @@
   "in_watchlist": "Listemde",
   "watchlist_empty": "İzleme listen boş",
   "watchlist_empty_detail": "Daha sonra izlemek için filmleri listene ekle",
-  "profile_picture_optional": "Profil fotoğrafı (isteğe bağlı)"
+  "profile_picture_required": "Profil fotoğrafı",
+  "error_profile_picture_required": "Lütfen bir profil fotoğrafı ekle."
 }

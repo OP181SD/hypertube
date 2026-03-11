@@ -115,5 +115,6 @@
   "in_watchlist": "Auf meiner Liste",
   "watchlist_empty": "Deine Merkliste ist leer",
   "watchlist_empty_detail": "Füge Filme zu deiner Merkliste hinzu, um sie später zu schauen",
-  "profile_picture_optional": "Profilbild (optional)"
+  "profile_picture_required": "Profilbild",
+  "error_profile_picture_required": "Bitte füge ein Profilbild hinzu."
 }

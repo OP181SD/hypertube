@@ -115,5 +115,6 @@
   "in_watchlist": "في قائمتي",
   "watchlist_empty": "قائمة مشاهدتك فارغة",
   "watchlist_empty_detail": "أضف أفلاماً إلى قائمة مشاهدتك لتشاهدها لاحقاً",
-  "profile_picture_optional": "صورة الملف الشخصي (اختياري)"
+  "profile_picture_required": "صورة الملف الشخصي",
+  "error_profile_picture_required": "يرجى إضافة صورة للملف الشخصي."
 }

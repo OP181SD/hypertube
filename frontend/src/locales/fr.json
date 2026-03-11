@@ -123,5 +123,6 @@
   "user_not_found": "Utilisateur introuvable",
   "full_name": "Nom complet",
   "saving": "Enregistrement...",
-  "profile_picture_optional": "Photo de profil (optionnelle)"
+  "profile_picture_required": "Photo de profil",
+  "error_profile_picture_required": "Veuillez ajouter une photo de profil."
 }

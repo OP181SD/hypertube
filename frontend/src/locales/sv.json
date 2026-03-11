@@ -115,5 +115,6 @@
   "in_watchlist": "I min lista",
   "watchlist_empty": "Din bevakningslista är tom",
   "watchlist_empty_detail": "Lägg till filmer i din bevakningslista för att titta på dem senare",
-  "profile_picture_optional": "Profilbild (valfritt)"
+  "profile_picture_required": "Profilbild",
+  "error_profile_picture_required": "Lägg till en profilbild."
 }

@@ -115,5 +115,6 @@
   "in_watchlist": "В моём списке",
   "watchlist_empty": "Ваш список просмотра пуст",
   "watchlist_empty_detail": "Добавьте фильмы в список, чтобы посмотреть их позже",
-  "profile_picture_optional": "Фото профиля (необязательно)"
+  "profile_picture_required": "Фото профиля",
+  "error_profile_picture_required": "Пожалуйста, добавьте фото профиля."
 }

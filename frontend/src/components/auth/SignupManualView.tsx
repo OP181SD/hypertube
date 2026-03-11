@@ -61,7 +61,7 @@ export const SignupManualView: React.FC<SignupManualViewProps> = ({ onBack }) =>
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="relative w-20 h-20 rounded-full bg-[#2c2c2e] border-2 border-[#424245] hover:border-[#0071e3] transition-colors overflow-hidden flex items-center justify-center cursor-pointer"
-          aria-label={t("profile_picture_optional")}
+          aria-label={t("profile_picture_required")}
         >
           {preview ? (
             <img src={preview} alt="avatar preview" className="w-full h-full object-cover" />
@@ -69,7 +69,7 @@ export const SignupManualView: React.FC<SignupManualViewProps> = ({ onBack }) =>
             <span className="text-[#86868b]"><CameraIcon /></span>
           )}
         </button>
-        <span className="text-[#86868b] text-xs">{t("profile_picture_optional")}</span>
+        <span className="text-[#86868b] text-xs">{t("profile_picture_required")}</span>
         <input
           ref={fileInputRef}
           type="file"

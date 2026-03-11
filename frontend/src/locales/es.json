@@ -115,5 +115,6 @@
   "in_watchlist": "En mi lista",
   "watchlist_empty": "Tu lista está vacía",
   "watchlist_empty_detail": "Añade películas a tu lista para verlas más tarde",
-  "profile_picture_optional": "Foto de perfil (opcional)"
+  "profile_picture_required": "Foto de perfil",
+  "error_profile_picture_required": "Por favor añade una foto de perfil."
 }
