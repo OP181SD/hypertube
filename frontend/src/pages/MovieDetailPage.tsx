@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getMovie } from "@/api/movies.api";
+import { getComments } from "@/api/comments.api";
 import { VideoPlayer } from "@/components/player/VideoPlayer";
 import { QualitySelector } from "@/components/player/QualitySelector";
-import type { MovieDetail } from "@/types/api";
+import { CommentsSection } from "@/components/comments/CommentsSection";
+import type { MovieDetail, Comment } from "@/types/api";
 
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +15,7 @@ export default function MovieDetailPage() {
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTorrentId, setSelectedTorrentId] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +40,17 @@ export default function MovieDetailPage() {
 
     return () => { cancelled = true; };
   }, [id, navigate]);
+
+  const refreshComments = useCallback(() => {
+    if (!id) return;
+    getComments(id)
+      .then(setComments)
+      .catch(() => {});
+  }, [id]);
+
+  useEffect(() => {
+    refreshComments();
+  }, [refreshComments]);
 
   if (loading) {
     return (
@@ -137,6 +151,12 @@ export default function MovieDetailPage() {
               </div>
             )}
 
+            {movie.summary && (
+              <p className="text-sm text-white/70 leading-relaxed mb-4">
+                {movie.summary}
+              </p>
+            )}
+
             <QualitySelector
               torrents={movie.torrents}
               selectedId={selectedTorrentId}
@@ -166,6 +186,14 @@ export default function MovieDetailPage() {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="mt-8">
+          <CommentsSection
+            movieId={movie.id}
+            comments={comments}
+            onCommentChange={refreshComments}
+          />
         </div>
       </div>
     </div>

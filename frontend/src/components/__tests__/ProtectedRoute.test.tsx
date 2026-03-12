@@ -21,6 +21,7 @@ const AUTH_BASE = {
   restoreSession: vi.fn(),
   updateUser: vi.fn(),
   refreshUser: vi.fn(),
+  clearError: vi.fn(),
 };
 
 describe("ProtectedRoute", () => {
