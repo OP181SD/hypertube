@@ -26,6 +26,7 @@
     "docker:down": "docker compose down",
     "prisma:generate": "npm run prisma:generate --workspace=backend",
     "prisma:migrate:dev": "npm run prisma:migrate:dev --workspace=backend",
-    "prisma:studio": "npm run prisma:studio --workspace=backend"
+    "prisma:studio": "npm run prisma:studio --workspace=backend",
+    "debug:browser": "chromium-browser --remote-debugging-port=9222 --user-data-dir=/tmp/chromium-debug"
   }
 }
