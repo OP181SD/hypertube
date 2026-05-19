@@ -14,6 +14,7 @@
     "@types/pg": "8.11.11"
   },
   "scripts": {
+    "setup": "bash setup.sh",
     "dev:back": "npm run start:dev --workspace=backend",
     "dev:front": "npm run dev --workspace=frontend",
     "build:back": "npm run build --workspace=backend",
