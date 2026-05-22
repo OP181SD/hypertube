@@ -46,9 +46,6 @@ export function useSignupForm() {
     if (password !== confirmPassword) {
       return t("error_passwords_not_match");
     }
-    if (!profilePicture) {
-      return t("error_profile_picture_required");
-    }
     return null;
   };
 
@@ -64,14 +61,15 @@ export function useSignupForm() {
     try {
       const { username, firstName, lastName, email, password } = fields;
       await register({ email, username, firstName, lastName, password });
-      try {
-        const me = await getMe();
-        await uploadProfilePicture(me.id, profilePicture!);
-        navigate("/dashboard");
-      } catch {
-        // Account created but avatar upload failed — go to profile to retry
-        navigate("/profile");
+      if (profilePicture) {
+        try {
+          const me = await getMe();
+          await uploadProfilePicture(me.id, profilePicture);
+        } catch {
+          // Upload failed — account is valid, user can retry from profile
+        }
       }
+      navigate("/dashboard");
     } catch {
       // register() failed — authError is set by AuthContext
     } finally {
