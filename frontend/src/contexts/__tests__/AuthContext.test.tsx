@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { AuthProvider, useAuth } from "../AuthContext";
 
@@ -18,44 +17,41 @@ vi.mock("@/api/auth.api", () => ({
 vi.mock("@/api/users.api", () => ({
   getMe: vi.fn(),
   getUser: vi.fn(),
+  updateUser: vi.fn(),
 }));
 
 vi.mock("@/api/client", () => ({
   default: {
-    interceptors: {
-      response: { use: vi.fn(() => 0), eject: vi.fn() },
-    },
+    interceptors: { response: { use: vi.fn(() => 0), eject: vi.fn() } },
   },
 }));
 
 import * as authApi from "@/api/auth.api";
 import * as usersApi from "@/api/users.api";
 
+const USER = {
+  id: "user-1",
+  username: "john",
+  firstName: "John",
+  lastName: "Doe",
+  profilePictureUrl: null,
+  language: "EN" as const,
+};
+
+let authRef!: ReturnType<typeof useAuth>;
+
 function TestConsumer() {
-  const auth = useAuth();
+  authRef = useAuth();
   return (
     <div>
-      <span data-testid="loading">{String(auth.loading)}</span>
-      <span data-testid="authenticated">{String(auth.isAuthenticated)}</span>
-      <span data-testid="user">{auth.user ? auth.user.username : "null"}</span>
-      <span data-testid="error">{auth.error || "null"}</span>
-      <button onClick={() => auth.login("testuser", "Password1")}>
-        Login
-      </button>
-      <button
-        onClick={() =>
-          auth.register({
-            email: "t@t.com",
-            username: "test",
-            firstName: "T",
-            lastName: "U",
-            password: "Password1",
-          })
-        }
-      >
-        Register
-      </button>
-      <button onClick={() => auth.logout()}>Logout</button>
+      <span data-testid="loading">{String(authRef.loading)}</span>
+      <span data-testid="authenticated">
+        {String(authRef.isAuthenticated)}
+      </span>
+      <span data-testid="user">
+        {authRef.user ? authRef.user.username : "null"}
+      </span>
+      <span data-testid="error">{authRef.error || "null"}</span>
     </div>
   );
 }
@@ -70,14 +66,21 @@ function renderWithAuth() {
   );
 }
 
-const USER = {
-  id: "user-1",
-  username: "john",
-  firstName: "John",
-  lastName: "Doe",
-  profilePictureUrl: null,
-  language: "EN" as const,
-};
+async function renderReady() {
+  renderWithAuth();
+  await waitFor(() =>
+    expect(screen.getByTestId("loading").textContent).toBe("false"),
+  );
+}
+
+async function renderLoggedIn() {
+  document.cookie = "has_session=1";
+  vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
+  renderWithAuth();
+  await waitFor(() =>
+    expect(screen.getByTestId("authenticated").textContent).toBe("true"),
+  );
+}
 
 describe("AuthContext", () => {
   beforeEach(() => {
@@ -86,88 +89,187 @@ describe("AuthContext", () => {
   });
 
   it("starts unauthenticated when no session cookie exists", async () => {
-    renderWithAuth();
-
-    await waitFor(() =>
-      expect(screen.getByTestId("loading").textContent).toBe("false"),
-    );
+    await renderReady();
     expect(screen.getByTestId("authenticated").textContent).toBe("false");
-    expect(screen.getByTestId("user").textContent).toBe("null");
     expect(usersApi.getMe).not.toHaveBeenCalled();
   });
 
-  it("restores session from existing cookie on mount", async () => {
-    document.cookie = "has_session=1";
-    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
-
-    renderWithAuth();
-
-    await waitFor(() =>
-      expect(screen.getByTestId("authenticated").textContent).toBe("true"),
-    );
+  it("restores the session from an existing cookie on mount", async () => {
+    await renderLoggedIn();
     expect(screen.getByTestId("user").textContent).toBe("john");
     expect(usersApi.getMe).toHaveBeenCalled();
   });
 
-  it("login calls api and fetches user", async () => {
-    vi.mocked(authApi.login).mockResolvedValueOnce({ message: "Logged in successfully" });
-    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
+  it("clears state when session restoration fails", async () => {
+    document.cookie = "has_session=1";
+    vi.mocked(usersApi.getMe).mockRejectedValueOnce(new Error("expired"));
 
-    renderWithAuth();
-    await waitFor(() =>
-      expect(screen.getByTestId("loading").textContent).toBe("false"),
-    );
+    await renderReady();
 
-    await act(async () => {
-      await userEvent.click(screen.getByText("Login"));
-    });
-
-    await waitFor(() =>
-      expect(screen.getByTestId("authenticated").textContent).toBe("true"),
-    );
-    expect(usersApi.getMe).toHaveBeenCalled();
-    expect(screen.getByTestId("user").textContent).toBe("john");
+    expect(screen.getByTestId("authenticated").textContent).toBe("false");
   });
 
-  it("register calls api without opening a session (email verification required)", async () => {
-    vi.mocked(authApi.register).mockResolvedValueOnce({
-      message: "Registration successful. Please check your email to verify your account.",
-    });
-
-    renderWithAuth();
-    await waitFor(() =>
-      expect(screen.getByTestId("loading").textContent).toBe("false"),
-    );
+  it("login authenticates and loads the user", async () => {
+    vi.mocked(authApi.login).mockResolvedValueOnce({ message: "ok" });
+    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
+    await renderReady();
 
     await act(async () => {
-      await userEvent.click(screen.getByText("Register"));
+      await authRef.login("john", "Password1");
     });
 
-    await waitFor(() => expect(authApi.register).toHaveBeenCalled());
-    // No session until the user verifies their email.
+    expect(authApi.login).toHaveBeenCalledWith({
+      username: "john",
+      password: "Password1",
+    });
+    expect(screen.getByTestId("authenticated").textContent).toBe("true");
+  });
+
+  it("login surfaces the backend error message and rethrows", async () => {
+    vi.mocked(authApi.login).mockRejectedValueOnce({
+      response: { data: { message: "Invalid credentials" } },
+    });
+    await renderReady();
+
+    await act(async () => {
+      await expect(authRef.login("john", "bad")).rejects.toBeDefined();
+    });
+
+    expect(screen.getByTestId("error").textContent).toBe("Invalid credentials");
+  });
+
+  it("register calls the API without opening a session", async () => {
+    vi.mocked(authApi.register).mockResolvedValueOnce({ message: "check email" });
+    await renderReady();
+
+    await act(async () => {
+      await authRef.register({
+        email: "t@t.com",
+        username: "test",
+        firstName: "T",
+        lastName: "U",
+        password: "Password1",
+      });
+    });
+
+    expect(authApi.register).toHaveBeenCalled();
     expect(usersApi.getMe).not.toHaveBeenCalled();
     expect(screen.getByTestId("authenticated").textContent).toBe("false");
   });
 
-  it("logout clears user state", async () => {
-    document.cookie = "has_session=1";
+  it("verifyEmail authenticates and loads the user", async () => {
+    vi.mocked(authApi.verifyEmail).mockResolvedValueOnce({ message: "verified" });
     vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
-    vi.mocked(authApi.logout).mockResolvedValueOnce({
-      message: "Logged out successfully",
-    });
-
-    renderWithAuth();
-    await waitFor(() =>
-      expect(screen.getByTestId("authenticated").textContent).toBe("true"),
-    );
+    await renderReady();
 
     await act(async () => {
-      await userEvent.click(screen.getByText("Logout"));
+      await authRef.verifyEmail("valid-token");
     });
 
-    await waitFor(() =>
-      expect(screen.getByTestId("authenticated").textContent).toBe("false"),
+    expect(authApi.verifyEmail).toHaveBeenCalledWith("valid-token");
+    expect(screen.getByTestId("authenticated").textContent).toBe("true");
+  });
+
+  it("verifyEmail surfaces the error and rethrows on an invalid token", async () => {
+    vi.mocked(authApi.verifyEmail).mockRejectedValueOnce({
+      response: { data: { message: "Invalid verification token" } },
+    });
+    await renderReady();
+
+    await act(async () => {
+      await expect(authRef.verifyEmail("bad")).rejects.toBeDefined();
+    });
+
+    expect(screen.getByTestId("error").textContent).toBe(
+      "Invalid verification token",
     );
+  });
+
+  it("resendVerification delegates to the API", async () => {
+    vi.mocked(authApi.resendVerification).mockResolvedValueOnce({
+      message: "sent",
+    });
+    await renderReady();
+
+    await act(async () => {
+      await authRef.resendVerification("t@t.com");
+    });
+
+    expect(authApi.resendVerification).toHaveBeenCalledWith("t@t.com");
+  });
+
+  it("forgotPassword and resetPassword delegate to the API", async () => {
+    vi.mocked(authApi.forgotPassword).mockResolvedValueOnce({ message: "sent" });
+    vi.mocked(authApi.resetPassword).mockResolvedValueOnce({ message: "reset" });
+    await renderReady();
+
+    await act(async () => {
+      await authRef.forgotPassword("t@t.com");
+      await authRef.resetPassword("token", "NewPass1");
+    });
+
+    expect(authApi.forgotPassword).toHaveBeenCalledWith("t@t.com");
+    expect(authApi.resetPassword).toHaveBeenCalledWith("token", "NewPass1");
+  });
+
+  it("updateUser updates the stored user", async () => {
+    await renderLoggedIn();
+    vi.mocked(usersApi.updateUser).mockResolvedValueOnce({
+      ...USER,
+      username: "john2",
+    });
+
+    await act(async () => {
+      await authRef.updateUser({ username: "john2" });
+    });
+
+    expect(usersApi.updateUser).toHaveBeenCalledWith("user-1", {
+      username: "john2",
+    });
+    expect(screen.getByTestId("user").textContent).toBe("john2");
+  });
+
+  it("refreshUser reloads the user from the API", async () => {
+    await renderLoggedIn();
+    vi.mocked(usersApi.getUser).mockResolvedValueOnce({
+      ...USER,
+      username: "john-fresh",
+    });
+
+    await act(async () => {
+      await authRef.refreshUser();
+    });
+
+    expect(usersApi.getUser).toHaveBeenCalledWith("user-1");
+    expect(screen.getByTestId("user").textContent).toBe("john-fresh");
+  });
+
+  it("logout clears the user state", async () => {
+    await renderLoggedIn();
+    vi.mocked(authApi.logout).mockResolvedValueOnce({ message: "out" });
+
+    await act(async () => {
+      await authRef.logout();
+    });
+
+    expect(screen.getByTestId("authenticated").textContent).toBe("false");
     expect(screen.getByTestId("user").textContent).toBe("null");
+  });
+
+  it("clearError resets the error state", async () => {
+    vi.mocked(authApi.login).mockRejectedValueOnce({
+      response: { data: { message: "Invalid credentials" } },
+    });
+    await renderReady();
+
+    await act(async () => {
+      await expect(authRef.login("x", "y")).rejects.toBeDefined();
+    });
+    expect(screen.getByTestId("error").textContent).toBe("Invalid credentials");
+
+    await act(async () => {
+      authRef.clearError();
+    });
+    expect(screen.getByTestId("error").textContent).toBe("null");
   });
 });

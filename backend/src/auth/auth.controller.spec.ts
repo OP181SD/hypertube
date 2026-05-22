@@ -229,4 +229,116 @@ describe("AuthController", () => {
       );
     });
   });
+
+  describe("POST /auth/login", () => {
+    it("validates credentials, sets cookies and returns a message", async () => {
+      mockAuthService.validateLocalUser.mockResolvedValue(mockDbUser);
+      mockAuthService.generateTokens.mockResolvedValue(mockTokenPair);
+
+      const result = await controller.login(
+        { username: validUser.username, password: validUser.password },
+        mockRes as any,
+      );
+
+      expect(result.message).toBeDefined();
+      expect(mockAuthService.validateLocalUser).toHaveBeenCalledWith(
+        validUser.username,
+        validUser.password,
+      );
+      expect(mockRes.setCookie).toHaveBeenCalled();
+    });
+  });
+
+  describe("POST /auth/refresh", () => {
+    it("refreshes tokens and sets cookies when the refresh cookie is present", async () => {
+      mockAuthService.refreshTokens.mockResolvedValue(mockTokenPair);
+
+      const result = await controller.refresh(mockReq as any, mockRes as any);
+
+      expect(result.message).toBeDefined();
+      expect(mockAuthService.refreshTokens).toHaveBeenCalledWith(
+        "mock-refresh-token",
+      );
+      expect(mockRes.setCookie).toHaveBeenCalled();
+    });
+
+    it("throws UnauthorizedException when no refresh cookie is present", async () => {
+      await expect(
+        controller.refresh({ cookies: {} } as any, mockRes as any),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe("POST /oauth/token — unsupported grant", () => {
+    it("throws BadRequestException for an unknown grant type", async () => {
+      mockAuthService.validateOAuthClient.mockResolvedValue(true);
+
+      await expect(
+        controller.token({
+          grant_type: "client_credentials" as GrantType,
+          client_id: "test-client",
+          client_secret: "test-secret",
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe("OAuth callbacks", () => {
+    function makeOAuthRes() {
+      const redirect = vi.fn();
+      const send = vi.fn();
+      const status = vi.fn().mockReturnValue({ redirect, send });
+      return { setCookie: vi.fn(), status, redirect, send };
+    }
+
+    it("sets cookies and redirects to the frontend callback on success", async () => {
+      mockAuthService.generateTokens.mockResolvedValue(mockTokenPair);
+      const res = makeOAuthRes();
+
+      await controller.ft42Callback({ user: mockDbUser } as any, res as any);
+
+      expect(res.setCookie).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(302);
+      expect(res.redirect).toHaveBeenCalledWith(
+        "http://localhost:5173/auth/callback",
+      );
+    });
+
+    it("redirects to the login page with an error when no user is resolved", async () => {
+      const res = makeOAuthRes();
+
+      await controller.ft42Callback({ user: undefined } as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(302);
+      expect(res.redirect).toHaveBeenCalledWith(
+        "http://localhost:5173/login?error=auth_failed",
+      );
+    });
+
+    it("responds 500 when token generation fails", async () => {
+      mockAuthService.generateTokens.mockRejectedValue(new Error("boom"));
+      const res = makeOAuthRes();
+
+      await controller.ft42Callback({ user: mockDbUser } as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalled();
+    });
+
+    it("uses the same redirect flow for Google, GitHub and Discord callbacks", async () => {
+      mockAuthService.generateTokens.mockResolvedValue(mockTokenPair);
+
+      for (const cb of [
+        controller.googleCallback,
+        controller.githubCallback,
+        controller.discordCallback,
+      ]) {
+        const res = makeOAuthRes();
+        await cb.call(controller, { user: mockDbUser } as any, res as any);
+        expect(res.redirect).toHaveBeenCalledWith(
+          "http://localhost:5173/auth/callback",
+        );
+      }
+    });
+  });
 });

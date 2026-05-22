@@ -23,6 +23,9 @@ const mockEngine = {
   remove: vi.fn((_, cb?: () => void) => cb?.()),
 };
 
+// Engine event handlers registered by startDownload — captured so tests can fire them.
+const engineHandlers: Record<string, (...args: unknown[]) => void> = {};
+
 vi.mock("torrent-stream", () => ({
   default: vi.fn(() => mockEngine),
 }));
@@ -48,10 +51,11 @@ describe("TorrentService", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    // Reset engine.on mock to support event handlers
+    // Capture every engine handler, and auto-fire "ready" asynchronously.
+    for (const key of Object.keys(engineHandlers)) delete engineHandlers[key];
     mockEngine.on.mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
+      engineHandlers[event] = cb;
       if (event === "ready") {
-        // Simulate async ready event
         setTimeout(() => cb(), 0);
       }
     });
@@ -100,8 +104,8 @@ describe("TorrentService", () => {
 
     it("should select the largest video file from engine", async () => {
       const smallFile = {
-        name: "sample.txt",
-        path: "sample.txt",
+        name: "sample.mp4",
+        path: "sample.mp4",
         length: 100,
         createReadStream: vi.fn(),
         select: vi.fn(),
@@ -231,6 +235,34 @@ describe("TorrentService", () => {
       service.onModuleDestroy();
 
       expect(mockEngine.destroy).toHaveBeenCalled();
+    });
+  });
+
+  describe("engine events", () => {
+    it("marks the torrent ready in the DB once downloading completes", async () => {
+      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+
+      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
+      await new Promise((r) => setTimeout(r, 50)); // let "ready" fire first
+
+      mockPrisma.torrent.update.mockClear();
+      engineHandlers.idle();
+
+      expect(mockPrisma.torrent.update).toHaveBeenCalledWith({
+        where: { id: "t1" },
+        data: { downloadStatus: "ready" },
+      });
+    });
+
+    it("does not crash when the engine emits an error", async () => {
+      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+
+      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(() =>
+        engineHandlers.error(new Error("swarm error")),
+      ).not.toThrow();
     });
   });
 });
