@@ -58,7 +58,15 @@ export class StreamingService {
       await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
     }
 
-    return this.torrentService.getProgress(torrentId);
+    const progress = this.torrentService.getProgress(torrentId);
+    const file = this.torrentService.getFile(torrentId);
+    if (file) {
+      const mimeType = this.transcodingService.needsTranscoding(file.name)
+        ? "video/mp4"
+        : this.getMimeType(file.name);
+      return { ...progress, mimeType };
+    }
+    return progress;
   }
 
   async getVideoStream(torrentId: string, rangeHeader?: string): Promise<StreamResult> {

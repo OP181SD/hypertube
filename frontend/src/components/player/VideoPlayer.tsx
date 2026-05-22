@@ -90,7 +90,7 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
           source={{
             type: "video",
             title: movieId,
-            sources: [{ src: streamSrc, type: "video/mp4" }],
+            sources: [{ src: streamSrc, type: status?.mimeType ?? "video/mp4" }],
             tracks: (subtitles ?? []).map((sub) => ({
               kind: "subtitles",
               src: getSubtitleUrl(movieId, sub.lang),

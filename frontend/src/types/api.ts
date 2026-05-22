@@ -126,6 +126,7 @@ export interface StreamStatus {
   progress: number;
   filePath?: string;
   fileSize?: number;
+  mimeType?: string;
 }
 
 // ── Hero ──

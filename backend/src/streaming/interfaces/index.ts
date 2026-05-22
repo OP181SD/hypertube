@@ -5,6 +5,7 @@ export interface DownloadProgress {
   progress: number;
   filePath: string | null;
   fileSize: number | null;
+  mimeType?: string;
 }
 
 export interface StreamResult {
