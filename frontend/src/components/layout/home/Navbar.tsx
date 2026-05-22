@@ -1,11 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Modal } from "@/components/modal/Modal";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 export default function Navbar() {
   const [isModalOpen, setIsOpenModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
+
+  // Opened when redirected from a protected route (?auth=login).
+  useEffect(() => {
+    if (searchParams.get("auth")) {
+      setIsOpenModal(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   return (
     <header>

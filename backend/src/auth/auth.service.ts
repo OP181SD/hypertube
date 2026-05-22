@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
@@ -41,7 +42,7 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<TokenPair> {
+  async register(dto: RegisterDto): Promise<void> {
     const user = await this.usersService.create({
       email: dto.email,
       username: dto.username,
@@ -50,13 +51,65 @@ export class AuthService {
       password: dto.password,
     });
 
-    return this.generateTokens(user.id);
+    await this.sendEmailVerification(user.id, user.email, user.username);
   }
 
-  async validateLocalUser(
-    username: string,
-    password: string,
-  ): Promise<User> {
+  private async sendEmailVerification(userId: string, email: string, username: string): Promise<void> {
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    await this.prisma.emailVerification.create({
+      data: { token, userId, expiresAt },
+    });
+
+    const frontendUrl = this.configService.get<string>("FRONTEND_URL");
+    const verificationLink = `${frontendUrl}/verify-email?token=${token}`;
+    await this.mailService.sendVerificationEmail(email, username, verificationLink);
+  }
+
+  async verifyEmail(token: string): Promise<TokenPair> {
+    const record = await this.prisma.emailVerification.findUnique({ where: { token } });
+
+    if (!record) {
+      throw new BadRequestException("Invalid verification token");
+    }
+    if (record.usedAt) {
+      throw new BadRequestException("Verification token already used");
+    }
+    if (record.expiresAt < new Date()) {
+      throw new BadRequestException("Verification token expired");
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { emailVerified: true },
+      }),
+      this.prisma.emailVerification.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    return this.generateTokens(record.userId);
+  }
+
+  async resendVerification(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+
+    // Always return silently to avoid leaking info
+    if (!user || user.authProvider !== AuthProvider.LOCAL) {
+      return;
+    }
+    if (user.emailVerified) {
+      return;
+    }
+
+    await this.sendEmailVerification(user.id, user.email, user.username);
+  }
+
+  async validateLocalUser(username: string, password: string): Promise<User> {
     const user = await this.usersService.findByUsername(username);
 
     if (!user || !user.passwordHash) {
@@ -66,6 +119,10 @@ export class AuthService {
     const isPasswordValid = await argon2.verify(user.passwordHash, password);
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid credentials");
+    }
+
+    if (!user.emailVerified) {
+      throw new ForbiddenException("Please verify your email before logging in");
     }
 
     return user;
@@ -117,10 +174,7 @@ export class AuthService {
     return this.generateTokens(storedToken.userId);
   }
 
-  async validateOAuthUser(
-    profile: OAuthProfile,
-    provider: AuthProvider,
-  ): Promise<User> {
+  async validateOAuthUser(profile: OAuthProfile, provider: AuthProvider): Promise<User> {
     try {
       let user = await this.usersService.findByProviderId(provider, profile.id);
       if (user) {
@@ -155,10 +209,7 @@ export class AuthService {
     }
   }
 
-  async validateOAuthClient(
-    clientId: string,
-    clientSecret: string,
-  ): Promise<boolean> {
+  async validateOAuthClient(clientId: string, clientSecret: string): Promise<boolean> {
     const client = await this.prisma.oAuthClient.findUnique({
       where: { clientId },
     });
@@ -254,12 +305,7 @@ export class AuthService {
   }
 
   async blacklistAccessToken(token: string, expiresIn: number): Promise<void> {
-    await this.redisService.set(
-      `bl:${token}`,
-      "1",
-      "EX",
-      expiresIn,
-    );
+    await this.redisService.set(`bl:${token}`, "1", "EX", expiresIn);
   }
 
   async isAccessTokenBlacklisted(token: string): Promise<boolean> {

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useSignupForm } from "@/hooks/useSignupForm";
 
@@ -12,10 +12,10 @@ const BackChevron = () => (
   </svg>
 );
 
-const CameraIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-    <circle cx="12" cy="13" r="4"></circle>
+const MailIcon = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+    <path d="m22 7-10 5L2 7"></path>
   </svg>
 );
 
@@ -24,26 +24,52 @@ const inputClass =
 
 export const SignupManualView: React.FC<SignupManualViewProps> = ({ onBack }) => {
   const { t } = useTranslation();
-  const { fields, setField, setProfilePicture, loading, displayError, handleSubmit } = useSignupForm();
-  const [preview, setPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    fields,
+    setField,
+    loading,
+    displayError,
+    handleSubmit,
+    registered,
+    handleResend,
+    resendMessage,
+  } = useSignupForm();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    setProfilePicture(file);
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreview((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return url;
-      });
-    } else {
-      setPreview((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
-    }
-  };
+  if (registered) {
+    return (
+      <div className="w-full flex flex-col items-center gap-3 text-center py-2">
+        <span className="text-[#0071e3]">
+          <MailIcon />
+        </span>
+        <h3 className="text-[#f5f5f7] text-lg font-semibold">
+          {t("check_email_title")}
+        </h3>
+        <p className="text-[#86868b] text-sm">
+          {t("check_email_desc", { email: fields.email })}
+        </p>
+
+        {resendMessage ? (
+          <p className="text-green-400 text-xs bg-green-400/10 border border-green-400/20 rounded-xl px-4 py-3 w-full">
+            {resendMessage}
+          </p>
+        ) : (
+          <button
+            onClick={handleResend}
+            className="text-[#0071e3] hover:text-[#0077ed] transition-colors text-sm font-medium cursor-pointer"
+          >
+            {t("resend_verification")}
+          </button>
+        )}
+
+        <button
+          onClick={onBack}
+          className="mt-2 px-6 py-2 cursor-pointer rounded-full bg-[#2c2c2e] border border-[#424245] text-[#f5f5f7] hover:bg-[#3a3a3c] transition-colors"
+        >
+          {t("back")}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-3">
@@ -52,32 +78,8 @@ export const SignupManualView: React.FC<SignupManualViewProps> = ({ onBack }) =>
         className="text-[#0071e3] text-sm hover:underline self-start flex items-center gap-2"
       >
         <BackChevron />
-        {t("back") || "Retour"}
+        {t("back")}
       </button>
-
-      {/* Avatar picker */}
-      <div className="flex flex-col items-center gap-2 py-1">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="relative w-20 h-20 rounded-full bg-[#2c2c2e] border-2 border-[#424245] hover:border-[#0071e3] transition-colors overflow-hidden flex items-center justify-center cursor-pointer"
-          aria-label={t("profile_picture_required")}
-        >
-          {preview ? (
-            <img src={preview} alt="avatar preview" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-[#86868b]"><CameraIcon /></span>
-          )}
-        </button>
-        <span className="text-[#86868b] text-xs">{t("profile_picture_required")}</span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-      </div>
 
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <input
@@ -126,6 +128,7 @@ export const SignupManualView: React.FC<SignupManualViewProps> = ({ onBack }) =>
         onChange={(e) => setField("confirmPassword")(e.target.value)}
         placeholder={t("confirm_password_placeholder")}
         className={inputClass}
+        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
       />
 
       {displayError && (

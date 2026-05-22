@@ -54,7 +54,10 @@ export default function MovieDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-b from-black via-zinc-950 to-black flex items-center justify-center">
+      <div
+        data-testid="movie-detail-loading"
+        className="min-h-screen bg-linear-to-b from-black via-zinc-950 to-black flex items-center justify-center"
+      >
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
           <div className="w-2 h-2 bg-white/80 rounded-full animate-pulse [animation-delay:0.2s]" />
@@ -165,6 +168,14 @@ export default function MovieDetailPage() {
           </div>
 
           <div className="lg:w-80 space-y-3 text-sm text-white/70">
+            {movie.posterUrl && (
+              <img
+                src={movie.posterUrl}
+                alt={movie.title}
+                className="w-full rounded-xl"
+              />
+            )}
+
             {movie.director && (
               <div>
                 <span className="text-white/50">{t("director")}</span>

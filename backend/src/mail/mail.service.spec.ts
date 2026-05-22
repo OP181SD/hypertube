@@ -3,10 +3,13 @@ import { ConfigService } from "@nestjs/config";
 import { MailService } from "./mail.service";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// Mock nodemailer
+const mockSendMail = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({ messageId: "test-id" }),
+);
+
 vi.mock("nodemailer", () => ({
   createTransport: vi.fn().mockReturnValue({
-    sendMail: vi.fn().mockResolvedValue({ messageId: "test-id" }),
+    sendMail: mockSendMail,
   }),
 }));
 
@@ -19,7 +22,7 @@ const mockConfigService = {
       SMTP_PORT: 587,
       SMTP_USER: "test-user",
       SMTP_PASS: "test-pass",
-      MAIL_FROM: "noreply@test.com",
+      MAIL_FROM: "HyperTube <noreply@test.com>",
     };
     return config[key] ?? defaultValue;
   }),
@@ -45,30 +48,26 @@ describe("MailService", () => {
     expect(service).toBeDefined();
   });
 
-  it("should create nodemailer transport with correct config", () => {
-    expect(nodemailer.createTransport).toHaveBeenCalledWith({
-      host: "smtp.test.com",
-      port: 587,
-      auth: {
-        user: "test-user",
-        pass: "test-pass",
-      },
-    });
+  it("should create nodemailer transport from SMTP config", () => {
+    expect(nodemailer.createTransport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        host: "smtp.test.com",
+        port: 587,
+        auth: { user: "test-user", pass: "test-pass" },
+      }),
+    );
   });
 
   describe("sendPasswordReset", () => {
     it("should send email with correct parameters", async () => {
-      const transport = (nodemailer.createTransport as any)();
-
       await service.sendPasswordReset(
         "user@example.com",
         "testuser",
         "http://localhost:5173/reset-password?token=abc123",
       );
 
-      expect(transport.sendMail).toHaveBeenCalledWith(
+      expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
-          from: "noreply@test.com",
           to: "user@example.com",
           subject: "HyperTube - Password Reset",
           html: expect.stringContaining("testuser"),
@@ -77,18 +76,43 @@ describe("MailService", () => {
     });
 
     it("should include reset link in email", async () => {
-      const transport = (nodemailer.createTransport as any)();
-
       await service.sendPasswordReset(
         "user@example.com",
         "testuser",
         "http://localhost:5173/reset-password?token=abc123",
       );
 
-      const callArgs = transport.sendMail.mock.calls[0][0];
-      expect(callArgs.html).toContain(
-        "http://localhost:5173/reset-password?token=abc123",
+      const callArgs = mockSendMail.mock.calls[0][0];
+      expect(callArgs.html).toContain("http://localhost:5173/reset-password?token=abc123");
+    });
+  });
+
+  describe("sendVerificationEmail", () => {
+    it("should send verification email with correct parameters", async () => {
+      await service.sendVerificationEmail(
+        "user@example.com",
+        "testuser",
+        "http://localhost:5173/verify-email?token=xyz789",
       );
+
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: "user@example.com",
+          subject: "HyperTube - Verify your email",
+          html: expect.stringContaining("testuser"),
+        }),
+      );
+    });
+
+    it("should include verification link in email", async () => {
+      await service.sendVerificationEmail(
+        "user@example.com",
+        "testuser",
+        "http://localhost:5173/verify-email?token=xyz789",
+      );
+
+      const callArgs = mockSendMail.mock.calls[0][0];
+      expect(callArgs.html).toContain("http://localhost:5173/verify-email?token=xyz789");
     });
   });
 });

@@ -3,6 +3,8 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { GrantType } from "./dto/oauth-token.dto";
@@ -16,8 +18,20 @@ const mockTokenPair = {
   expires_in: 900,
 };
 
+const mockConfigService = {
+  get: vi.fn((key: string) => {
+    const config: Record<string, unknown> = {
+      NODE_ENV: "test",
+      FRONTEND_URL: "http://localhost:5173",
+    };
+    return config[key];
+  }),
+};
+
 const mockAuthService = {
   register: vi.fn(),
+  verifyEmail: vi.fn(),
+  resendVerification: vi.fn(),
   validateLocalUser: vi.fn(),
   generateTokens: vi.fn(),
   refreshTokens: vi.fn(),
@@ -25,6 +39,16 @@ const mockAuthService = {
   forgotPassword: vi.fn(),
   resetPassword: vi.fn(),
   logout: vi.fn(),
+  blacklistAccessToken: vi.fn(),
+};
+
+const mockRes = {
+  setCookie: vi.fn(),
+  clearCookie: vi.fn(),
+};
+
+const mockReq = {
+  cookies: { refresh_token: "mock-refresh-token" },
 };
 
 describe("AuthController", () => {
@@ -35,15 +59,23 @@ describe("AuthController", () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
-    }).compile();
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: ConfigService, useValue: mockConfigService },
+      ],
+    })
+      // ThrottlerGuard needs ThrottlerModule's providers — not relevant to
+      // controller unit tests, so replace it with a pass-through.
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<AuthController>(AuthController);
   });
 
   describe("POST /auth/register", () => {
-    it("should register and return token pair", async () => {
-      mockAuthService.register.mockResolvedValue(mockTokenPair);
+    it("should register and return a confirmation message", async () => {
+      mockAuthService.register.mockResolvedValue(undefined);
 
       const result = await controller.register({
         email: validUser.email,
@@ -53,9 +85,36 @@ describe("AuthController", () => {
         password: validUser.password,
       });
 
-      expect(result).toEqual(mockTokenPair);
-      expect(result.access_token).toBeDefined();
-      expect(result.refresh_token).toBeDefined();
+      expect(result.message).toBeDefined();
+      expect(mockAuthService.register).toHaveBeenCalledWith(
+        expect.objectContaining({ email: validUser.email }),
+      );
+    });
+  });
+
+  describe("POST /auth/verify-email", () => {
+    it("should verify email, set cookies and return success message", async () => {
+      mockAuthService.verifyEmail.mockResolvedValue(mockTokenPair);
+
+      const result = await controller.verifyEmail(
+        { token: "valid-token" },
+        mockRes as any,
+      );
+
+      expect(result.message).toBeDefined();
+      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith("valid-token");
+      expect(mockRes.setCookie).toHaveBeenCalled();
+    });
+  });
+
+  describe("POST /auth/resend-verification", () => {
+    it("should return a generic success message", async () => {
+      mockAuthService.resendVerification.mockResolvedValue(undefined);
+
+      const result = await controller.resendVerification({ email: "test@example.com" });
+
+      expect(result.message).toBeDefined();
+      expect(mockAuthService.resendVerification).toHaveBeenCalledWith("test@example.com");
     });
   });
 
@@ -133,14 +192,10 @@ describe("AuthController", () => {
     it("should return success message regardless of email existence", async () => {
       mockAuthService.forgotPassword.mockResolvedValue(undefined);
 
-      const result = await controller.forgotPassword({
-        email: "test@example.com",
-      });
+      const result = await controller.forgotPassword({ email: "test@example.com" });
 
       expect(result.message).toBeDefined();
-      expect(mockAuthService.forgotPassword).toHaveBeenCalledWith(
-        "test@example.com",
-      );
+      expect(mockAuthService.forgotPassword).toHaveBeenCalledWith("test@example.com");
     });
   });
 
@@ -163,13 +218,14 @@ describe("AuthController", () => {
 
       const result = await controller.logout(
         mockDbUser as any,
-        "refresh-token",
+        mockReq as any,
+        mockRes as any,
       );
 
       expect(result.message).toBeDefined();
       expect(mockAuthService.logout).toHaveBeenCalledWith(
         mockDbUser.id,
-        "refresh-token",
+        "mock-refresh-token",
       );
     });
   });

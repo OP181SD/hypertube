@@ -95,6 +95,12 @@ export class SubtitleService {
       return [];
     }
 
+    // Movies with no real IMDb id carry a synthetic "tmdb-<id>" placeholder.
+    // OpenSubtitles only understands real IMDb ids — skip the pointless call.
+    if (imdbId.startsWith("tmdb-")) {
+      return [];
+    }
+
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10_000);

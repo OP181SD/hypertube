@@ -13,6 +13,8 @@ import {
   refresh as refreshApi,
   forgotPassword as forgotPwdApi,
   resetPassword as resetPwdApi,
+  verifyEmail as verifyEmailApi,
+  resendVerification as resendVerificationApi,
 } from "@/api/auth.api";
 import { getMe, getUser, updateUser as updateUserApi } from "@/api/users.api";
 import client from "@/api/client";
@@ -34,6 +36,8 @@ interface AuthContextValue {
   clearError: () => void;
   login: (username: string, password: string) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
+  verifyEmail: (token: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<MessageResponse>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<MessageResponse>;
   resetPassword: (token: string, password: string) => Promise<MessageResponse>;
@@ -135,10 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (data: RegisterRequest) => {
       setError(null);
       try {
+        // Backend creates the account and sends a verification email.
+        // No session is opened until the user verifies their address.
         await registerApi(data);
-        const u = await getMe();
-        setUser(u);
-        syncLanguage(u);
       } catch (err: unknown) {
         const axiosErr = err as {
           response?: { data?: { message?: string | string[] } };
@@ -151,6 +154,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
+
+  const verifyEmail = useCallback(async (token: string) => {
+    setError(null);
+    try {
+      // Backend validates the token and sets the session cookies.
+      await verifyEmailApi(token);
+      const u = await getMe();
+      setUser(u);
+      syncLanguage(u);
+    } catch (err: unknown) {
+      const axiosErr = err as {
+        response?: { data?: { message?: string | string[] } };
+      };
+      const message =
+        axiosErr?.response?.data?.message || "Verification failed";
+      setError(Array.isArray(message) ? message[0] : message);
+      throw err;
+    }
+  }, []);
+
+  const resendVerification = useCallback(async (email: string) => {
+    return resendVerificationApi(email);
+  }, []);
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -199,6 +225,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearError,
         login,
         register,
+        verifyEmail,
+        resendVerification,
         logout,
         forgotPassword,
         resetPassword,

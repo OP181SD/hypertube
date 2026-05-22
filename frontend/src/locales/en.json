@@ -124,5 +124,15 @@
   "full_name": "Full name",
   "saving": "Saving...",
   "profile_picture_required": "Profile picture",
-  "error_profile_picture_required": "Please add a profile picture."
+  "error_profile_picture_required": "Please add a profile picture.",
+  "check_email_title": "Check your email",
+  "check_email_desc": "We sent a verification link to {{email}}. Click it to activate your account.",
+  "resend_verification": "Resend verification email",
+  "resend_verification_done": "If the address exists and is unverified, a new link has been sent.",
+  "verify_email_title": "Email verification",
+  "verify_email_verifying": "Verifying your email…",
+  "verify_email_success": "Your email is verified. Redirecting…",
+  "verify_email_failed": "Verification failed. The link is invalid or has expired.",
+  "verify_email_resend_prompt": "Enter your email address to get a new link:",
+  "error_email_not_verified": "Please verify your email before logging in."
 }

@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "../AuthContext";
 vi.mock("@/api/auth.api", () => ({
   login: vi.fn(),
   register: vi.fn(),
+  verifyEmail: vi.fn(),
+  resendVerification: vi.fn(),
   logout: vi.fn(),
   refresh: vi.fn(),
   forgotPassword: vi.fn(),
@@ -127,9 +129,10 @@ describe("AuthContext", () => {
     expect(screen.getByTestId("user").textContent).toBe("john");
   });
 
-  it("register calls api and fetches user", async () => {
-    vi.mocked(authApi.register).mockResolvedValueOnce({ message: "Registered successfully" });
-    vi.mocked(usersApi.getMe).mockResolvedValueOnce(USER);
+  it("register calls api without opening a session (email verification required)", async () => {
+    vi.mocked(authApi.register).mockResolvedValueOnce({
+      message: "Registration successful. Please check your email to verify your account.",
+    });
 
     renderWithAuth();
     await waitFor(() =>
@@ -140,11 +143,10 @@ describe("AuthContext", () => {
       await userEvent.click(screen.getByText("Register"));
     });
 
-    await waitFor(() =>
-      expect(screen.getByTestId("authenticated").textContent).toBe("true"),
-    );
-    expect(usersApi.getMe).toHaveBeenCalled();
-    expect(screen.getByTestId("user").textContent).toBe("john");
+    await waitFor(() => expect(authApi.register).toHaveBeenCalled());
+    // No session until the user verifies their email.
+    expect(usersApi.getMe).not.toHaveBeenCalled();
+    expect(screen.getByTestId("authenticated").textContent).toBe("false");
   });
 
   it("logout clears user state", async () => {

@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { getMe, uploadProfilePicture } from "@/api/users.api";
 
 export function useSignupForm() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { register, error: authError } = useAuth();
+  const { register, resendVerification, error: authError } = useAuth();
 
   const [fields, setFields] = useState({
     username: "",
@@ -17,9 +14,10 @@ export function useSignupForm() {
     password: "",
     confirmPassword: "",
   });
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [localError, setLocalError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   const setField = (field: keyof typeof fields) => (value: string) => {
     setFields((prev) => ({ ...prev, [field]: value }));
@@ -46,9 +44,6 @@ export function useSignupForm() {
     if (password !== confirmPassword) {
       return t("error_passwords_not_match");
     }
-    if (!profilePicture) {
-      return t("error_profile_picture_required");
-    }
     return null;
   };
 
@@ -64,14 +59,8 @@ export function useSignupForm() {
     try {
       const { username, firstName, lastName, email, password } = fields;
       await register({ email, username, firstName, lastName, password });
-      try {
-        const me = await getMe();
-        await uploadProfilePicture(me.id, profilePicture!);
-        navigate("/dashboard");
-      } catch {
-        // Account created but avatar upload failed — go to profile to retry
-        navigate("/profile");
-      }
+      // Account created — the user must now verify their email.
+      setRegistered(true);
     } catch {
       // register() failed — authError is set by AuthContext
     } finally {
@@ -79,13 +68,24 @@ export function useSignupForm() {
     }
   };
 
+  const handleResend = async () => {
+    setResendMessage("");
+    try {
+      await resendVerification(fields.email);
+    } catch {
+      // Response is intentionally generic regardless of outcome.
+    }
+    setResendMessage(t("resend_verification_done"));
+  };
+
   return {
     fields,
     setField,
-    profilePicture,
-    setProfilePicture,
     loading,
     displayError: localError || authError,
     handleSubmit,
+    registered,
+    handleResend,
+    resendMessage,
   };
 }

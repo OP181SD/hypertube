@@ -11,7 +11,7 @@ import { PrismaService } from "../prisma/prisma.service";
 const mockTorrentService = {
   startDownload: vi.fn(),
   getProgress: vi.fn(),
-  isReady: vi.fn(),
+  isActive: vi.fn(),
   getFile: vi.fn(),
   destroyEngine: vi.fn(),
 };
@@ -24,6 +24,7 @@ const mockTranscodingService = {
 const mockSubtitleService = {
   getAvailableSubtitles: vi.fn(),
   downloadSubtitle: vi.fn(),
+  getCachedSubtitle: vi.fn(),
 };
 
 const mockPrisma = {
@@ -78,6 +79,7 @@ describe("StreamingService", () => {
       mockPrisma.torrent.findUnique.mockResolvedValue(torrent);
       mockPrisma.torrent.update.mockResolvedValue(torrent);
       mockPrisma.watchHistory.upsert.mockResolvedValue({});
+      mockTorrentService.isActive.mockReturnValue(false);
       mockTorrentService.startDownload.mockResolvedValue(undefined);
       mockTorrentService.getProgress.mockReturnValue({
         status: "downloading",
@@ -106,6 +108,7 @@ describe("StreamingService", () => {
       mockPrisma.torrent.findUnique.mockResolvedValue(torrent);
       mockPrisma.torrent.update.mockResolvedValue(torrent);
       mockPrisma.watchHistory.upsert.mockResolvedValue({});
+      mockTorrentService.isActive.mockReturnValue(true);
       mockTorrentService.getProgress.mockReturnValue({
         status: "downloading",
         progress: 50,

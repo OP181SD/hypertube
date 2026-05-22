@@ -83,7 +83,7 @@ describe("TorrentService", () => {
 
       expect(mockPrisma.torrent.update).toHaveBeenCalledWith({
         where: { id: "t1" },
-        data: { downloadStatus: "downloading" },
+        data: expect.objectContaining({ downloadStatus: "downloading" }),
       });
     });
 
@@ -142,7 +142,23 @@ describe("TorrentService", () => {
       });
     });
 
-    it("should return downloading status with progress", async () => {
+    it("should return downloading status before the video file is ready", async () => {
+      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+
+      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
+
+      // getProgress is read synchronously, before the mocked async "ready"
+      // event has had a chance to fire and select a video file.
+      const progress = service.getProgress("t1");
+
+      expect(progress.status).toBe("downloading");
+      expect(progress.fileSize).toBeNull();
+
+      // let the "ready" event fire so the peer-log interval gets cleared
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    it("should return ready status once the video file is selected", async () => {
       mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
 
       await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
@@ -150,14 +166,23 @@ describe("TorrentService", () => {
 
       const progress = service.getProgress("t1");
 
-      expect(progress.status).toBe("downloading");
+      expect(progress.status).toBe("ready");
       expect(progress.fileSize).toBe(1_000_000_000);
     });
   });
 
-  describe("isReady", () => {
+  describe("isActive", () => {
     it("should return false for unknown torrent", () => {
-      expect(service.isReady("unknown")).toBe(false);
+      expect(service.isActive("unknown")).toBe(false);
+    });
+
+    it("should return true for an active torrent", async () => {
+      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+
+      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(service.isActive("t1")).toBe(true);
     });
   });
 

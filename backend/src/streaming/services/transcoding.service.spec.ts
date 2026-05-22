@@ -7,6 +7,7 @@ import { TranscodingService } from "./transcoding.service";
 // Mock fluent-ffmpeg
 const mockFfmpegInstance = {
   ffprobe: vi.fn(),
+  inputFormat: vi.fn().mockReturnThis(),
   outputOptions: vi.fn().mockReturnThis(),
   format: vi.fn().mockReturnThis(),
   audioCodec: vi.fn().mockReturnThis(),
@@ -73,7 +74,7 @@ describe("TranscodingService", () => {
       const mockStream = new PassThrough();
       mockFfmpegInstance.pipe.mockReturnValue(mockStream);
 
-      const result = service.transcodeToMp4("/path/to/movie.mkv");
+      const result = service.transcodeToMp4(new PassThrough(), "/path/to/movie.mkv");
 
       expect(result).toBe(mockStream);
       expect(mockFfmpegInstance.outputOptions).toHaveBeenCalled();
@@ -84,7 +85,7 @@ describe("TranscodingService", () => {
       const mockStream = new PassThrough();
       mockFfmpegInstance.pipe.mockReturnValue(mockStream);
 
-      service.transcodeToMp4("/path/to/movie.mkv");
+      service.transcodeToMp4(new PassThrough(), "/path/to/movie.mkv");
 
       expect(mockFfmpegInstance.videoCodec).toHaveBeenCalledWith("copy");
       expect(mockFfmpegInstance.audioCodec).toHaveBeenCalledWith("aac");

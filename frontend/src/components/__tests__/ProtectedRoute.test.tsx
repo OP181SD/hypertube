@@ -15,6 +15,8 @@ const mockUseAuth = vi.mocked(useAuth);
 const AUTH_BASE = {
   login: vi.fn(),
   register: vi.fn(),
+  verifyEmail: vi.fn(),
+  resendVerification: vi.fn(),
   logout: vi.fn(),
   forgotPassword: vi.fn(),
   resetPassword: vi.fn(),

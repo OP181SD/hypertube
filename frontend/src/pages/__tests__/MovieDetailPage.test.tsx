@@ -20,6 +20,10 @@ vi.mock("@/contexts/AuthContext", () => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: "en" } }),
 }));
+// Plyr cannot run inside jsdom — stub it so the page can render in tests.
+vi.mock("plyr-react", () => ({
+  Plyr: () => <div data-testid="video-player" />,
+}));
 
 const mockMovie: MovieDetail = {
   id: "movie-1",
@@ -108,7 +112,8 @@ describe("MovieDetailPage", () => {
       expect(screen.getByText("Test Movie")).toBeInTheDocument();
     });
     expect(screen.getByText("2024")).toBeInTheDocument();
-    expect(screen.getByText("8.5")).toBeInTheDocument();
+    // Rating is rendered as "★ 8.5"
+    expect(screen.getByText(/8\.5/)).toBeInTheDocument();
     expect(screen.getByText("A great test movie.")).toBeInTheDocument();
     expect(screen.getByText("John Director")).toBeInTheDocument();
   });
@@ -149,6 +154,6 @@ describe("MovieDetailPage", () => {
 
     renderPage();
 
-    expect(screen.getByText("loading")).toBeInTheDocument();
+    expect(screen.getByTestId("movie-detail-loading")).toBeInTheDocument();
   });
 });

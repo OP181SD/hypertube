@@ -7,6 +7,7 @@ import MovieDetailPage from "@/pages/MovieDetailPage";
 import MoviePresentationWrapper from "./pages/MoviePresentationWrapper";
 import UserProfilePage from "@/pages/UserProfilePage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import OAuthCallback from "@/pages/OAuthCallback";
 import Navbar from "@/components/layout/home/Navbar";
 import AuthNavbar from "@/components/layout/AuthNavbar";
@@ -83,6 +84,14 @@ export default function App() {
             element={
               <MainLayout>
                 <ResetPasswordPage />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={
+              <MainLayout>
+                <VerifyEmailPage />
               </MainLayout>
             }
           />

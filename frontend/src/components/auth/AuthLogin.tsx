@@ -39,9 +39,12 @@ export const AuthLogin: React.FC<Props> = ({ dispatch }) => {
     }
   };
 
-  const translatedAuthError = authError === "Invalid credentials"
-    ? t("error_invalid_credentials")
-    : authError;
+  const translatedAuthError =
+    authError === "Invalid credentials"
+      ? t("error_invalid_credentials")
+      : authError === "Please verify your email before logging in"
+        ? t("error_email_not_verified")
+        : authError;
   const displayError = localError || translatedAuthError;
 
   return (

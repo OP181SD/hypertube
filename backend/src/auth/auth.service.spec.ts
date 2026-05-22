@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import {
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
   ConflictException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
@@ -34,6 +35,11 @@ const mockPrismaService = {
     updateMany: vi.fn(),
   },
   passwordReset: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+  },
+  emailVerification: {
     create: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
@@ -78,6 +84,7 @@ const mockUsersService = {
 
 const mockMailService = {
   sendPasswordReset: vi.fn(),
+  sendVerificationEmail: vi.fn(),
 };
 
 describe("AuthService", () => {
@@ -102,9 +109,10 @@ describe("AuthService", () => {
   });
 
   describe("register", () => {
-    it("should create user and return token pair", async () => {
+    it("should create user and send verification email", async () => {
       mockUsersService.create.mockResolvedValue(mockDbUser);
-      mockPrismaService.refreshToken.create.mockResolvedValue({});
+      mockPrismaService.emailVerification.create.mockResolvedValue({});
+      mockMailService.sendVerificationEmail.mockResolvedValue(undefined);
 
       const result = await service.register({
         email: validUser.email,
@@ -114,10 +122,7 @@ describe("AuthService", () => {
         password: validUser.password,
       });
 
-      expect(result).toHaveProperty("access_token");
-      expect(result).toHaveProperty("refresh_token");
-      expect(result).toHaveProperty("token_type", "Bearer");
-      expect(result).toHaveProperty("expires_in", 900);
+      expect(result).toBeUndefined();
       expect(mockUsersService.create).toHaveBeenCalledWith({
         email: validUser.email,
         username: validUser.username,
@@ -125,6 +130,18 @@ describe("AuthService", () => {
         lastName: validUser.lastName,
         password: validUser.password,
       });
+      expect(mockPrismaService.emailVerification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: mockDbUser.id,
+          token: expect.any(String),
+          expiresAt: expect.any(Date),
+        }),
+      });
+      expect(mockMailService.sendVerificationEmail).toHaveBeenCalledWith(
+        mockDbUser.email,
+        mockDbUser.username,
+        expect.stringContaining("http://localhost:5173/verify-email?token="),
+      );
     });
 
     it("should propagate ConflictException from usersService", async () => {
@@ -144,9 +161,82 @@ describe("AuthService", () => {
     });
   });
 
+  describe("verifyEmail", () => {
+    it("should verify email and return token pair", async () => {
+      const record = {
+        id: "verif-id",
+        token: "valid-token",
+        userId: mockDbUser.id,
+        expiresAt: new Date(Date.now() + 86400000),
+        usedAt: null,
+      };
+      mockPrismaService.emailVerification.findUnique.mockResolvedValue(record);
+      mockPrismaService.$transaction.mockResolvedValue([]);
+      mockPrismaService.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.verifyEmail("valid-token");
+
+      expect(result).toHaveProperty("access_token");
+      expect(result).toHaveProperty("refresh_token");
+      expect(mockPrismaService.$transaction).toHaveBeenCalled();
+    });
+
+    it("should throw BadRequestException for invalid token", async () => {
+      mockPrismaService.emailVerification.findUnique.mockResolvedValue(null);
+
+      await expect(service.verifyEmail("invalid-token")).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException for already used token", async () => {
+      mockPrismaService.emailVerification.findUnique.mockResolvedValue({
+        usedAt: new Date(),
+        expiresAt: new Date(Date.now() + 86400000),
+      });
+
+      await expect(service.verifyEmail("used-token")).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException for expired token", async () => {
+      mockPrismaService.emailVerification.findUnique.mockResolvedValue({
+        usedAt: null,
+        expiresAt: new Date(Date.now() - 86400000),
+      });
+
+      await expect(service.verifyEmail("expired-token")).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe("resendVerification", () => {
+    it("should send a new verification email for unverified local user", async () => {
+      mockUsersService.findByEmail.mockResolvedValue(mockDbUser);
+      mockPrismaService.emailVerification.create.mockResolvedValue({});
+      mockMailService.sendVerificationEmail.mockResolvedValue(undefined);
+
+      await service.resendVerification(mockDbUser.email);
+
+      expect(mockMailService.sendVerificationEmail).toHaveBeenCalled();
+    });
+
+    it("should not throw for nonexistent email (security)", async () => {
+      mockUsersService.findByEmail.mockResolvedValue(null);
+
+      await expect(service.resendVerification("nobody@example.com")).resolves.toBeUndefined();
+      expect(mockMailService.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    it("should not resend for already verified user", async () => {
+      mockUsersService.findByEmail.mockResolvedValue({ ...mockDbUser, emailVerified: true });
+
+      await service.resendVerification(mockDbUser.email);
+
+      expect(mockMailService.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+  });
+
   describe("validateLocalUser", () => {
     it("should return user when credentials are valid", async () => {
-      mockUsersService.findByUsername.mockResolvedValue(mockDbUser);
+      const verifiedUser = { ...mockDbUser, emailVerified: true };
+      mockUsersService.findByUsername.mockResolvedValue(verifiedUser);
       vi.mocked(argon2.verify).mockResolvedValue(true);
 
       const result = await service.validateLocalUser(
@@ -154,7 +244,16 @@ describe("AuthService", () => {
         "SecurePass123!",
       );
 
-      expect(result).toEqual(mockDbUser);
+      expect(result).toEqual(verifiedUser);
+    });
+
+    it("should throw ForbiddenException when email is not verified", async () => {
+      mockUsersService.findByUsername.mockResolvedValue(mockDbUser); // emailVerified: false
+      vi.mocked(argon2.verify).mockResolvedValue(true);
+
+      await expect(
+        service.validateLocalUser(mockDbUser.username, "SecurePass123!"),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it("should throw UnauthorizedException when user not found", async () => {

@@ -124,5 +124,15 @@
   "full_name": "Nom complet",
   "saving": "Enregistrement...",
   "profile_picture_required": "Photo de profil",
-  "error_profile_picture_required": "Veuillez ajouter une photo de profil."
+  "error_profile_picture_required": "Veuillez ajouter une photo de profil.",
+  "check_email_title": "Vérifie ta boîte mail",
+  "check_email_desc": "Nous avons envoyé un lien de vérification à {{email}}. Clique dessus pour activer ton compte.",
+  "resend_verification": "Renvoyer l'email de vérification",
+  "resend_verification_done": "Si l'adresse existe et n'est pas vérifiée, un nouveau lien a été envoyé.",
+  "verify_email_title": "Vérification de l'email",
+  "verify_email_verifying": "Vérification de ton email…",
+  "verify_email_success": "Ton email est vérifié. Redirection…",
+  "verify_email_failed": "Échec de la vérification. Le lien est invalide ou a expiré.",
+  "verify_email_resend_prompt": "Saisis ton adresse email pour recevoir un nouveau lien :",
+  "error_email_not_verified": "Vérifie ton adresse email avant de te connecter."
 }

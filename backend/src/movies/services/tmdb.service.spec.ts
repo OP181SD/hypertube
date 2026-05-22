@@ -72,7 +72,7 @@ describe("TmdbService", () => {
       expect(url).toContain("year=1999");
     });
 
-    it("should include Bearer token header", async () => {
+    it("should include the API key as a query parameter", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => tmdbSearchResponse,
@@ -80,13 +80,9 @@ describe("TmdbService", () => {
 
       await service.searchMovie("test");
 
-      const opts = (global.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0][1] as RequestInit;
-      expect(opts.headers).toEqual(
-        expect.objectContaining({
-          Authorization: "Bearer test-tmdb-key",
-        }),
-      );
+      const url = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as string;
+      expect(url).toContain("api_key=test-tmdb-key");
     });
 
     it("should return empty on API error", async () => {

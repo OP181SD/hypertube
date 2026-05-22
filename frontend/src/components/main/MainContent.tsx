@@ -4,19 +4,17 @@ import { useMovies } from "@/hooks/useMovies";
 import { useHeroMovies } from "@/hooks/useHeroMovies";
 import { HeroSection } from "@/components/ui/HeroSection";
 import { MoviesSection } from "@/components/ui/MoviesSection";
-import { useAuth } from "@/contexts/AuthContext"; // 1. Importer useAuth
 
 export default function MainContent() {
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuth(); // 2. Récupérer l'état d'auth
   const { movies, loading } = useMovies({ sortBy: "rating" });
   const hero = useHeroMovies();
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* 3. N'afficher la HeroSection QUE si connecté */}
-      {isAuthenticated && hero.movies.length > 0 && (
+      {/* Front page : les top films, visibles par tout le monde (sujet III.4) */}
+      {hero.movies.length > 0 && (
         <HeroSection
           movies={hero.movies}
           activeIndex={activeIndex}
@@ -67,7 +65,7 @@ export default function MainContent() {
           </p>
         </div>
 
-        {isAuthenticated && (movies.length > 0 || loading) && (
+        {(movies.length > 0 || loading) && (
           <div className="w-full mt-12">
             <MoviesSection
               movies={movies}

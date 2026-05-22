@@ -8,6 +8,37 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: "en" } }),
 }));
 
+// Plyr cannot run inside jsdom (relies on TextTrack, media APIs, layout).
+// Stub it with a plain <video> so we can assert what VideoPlayer feeds it.
+vi.mock("plyr-react", () => ({
+  Plyr: ({
+    source,
+  }: {
+    source?: {
+      tracks?: Array<{
+        kind: string;
+        src: string;
+        srclang: string;
+        label: string;
+      }>;
+    };
+  }) => (
+    <div data-testid="video-player">
+      <video>
+        {(source?.tracks ?? []).map((tr, i) => (
+          <track
+            key={i}
+            kind={tr.kind}
+            src={tr.src}
+            srcLang={tr.srclang}
+            label={tr.label}
+          />
+        ))}
+      </video>
+    </div>
+  ),
+}));
+
 const subtitles: SubtitleInfo[] = [
   { lang: "en", label: "English" },
   { lang: "fr", label: "French" },

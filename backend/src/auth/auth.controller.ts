@@ -13,12 +13,16 @@ import {
 } from "@nestjs/common";
 import type { TokenPair } from "./auth.service";
 import { ConfigService } from "@nestjs/config";
+import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
+import { LoginDto } from "./dto/login.dto";
 import { OAuthTokenDto, GrantType } from "./dto/oauth-token.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { VerifyEmailDto } from "./dto/verify-email.dto";
+import { ResendVerificationDto } from "./dto/resend-verification.dto";
 import { FtAuthGuard } from "./guards/ft-auth.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
 import { GithubAuthGuard } from "./guards/github-auth.guard";
@@ -61,10 +65,12 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("auth/login")
   @HttpCode(HttpStatus.OK)
   async login(
-    @Body() dto: { username: string; password: string },
+    @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
     const user = await this.authService.validateLocalUser(dto.username, dto.password);
@@ -74,6 +80,8 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("oauth/token")
   async token(@Body() dto: OAuthTokenDto) {
     const isValidClient = await this.authService.validateOAuthClient(
@@ -116,16 +124,34 @@ export class AuthController {
   @Public()
   @Post("auth/register")
   @HttpCode(HttpStatus.CREATED)
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: FastifyReply,
-  ) {
-    const tokens = await this.authService.register(dto);
-    this.setCookies(res, tokens);
-    return { message: "Registered successfully" };
+  async register(@Body() dto: RegisterDto) {
+    await this.authService.register(dto);
+    return { message: "Registration successful. Please check your email to verify your account." };
   }
 
   @Public()
+  @Post("auth/verify-email")
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const tokens = await this.authService.verifyEmail(dto.token);
+    this.setCookies(res, tokens);
+    return { message: "Email verified successfully" };
+  }
+
+  @Public()
+  @Post("auth/resend-verification")
+  @HttpCode(HttpStatus.OK)
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    await this.authService.resendVerification(dto.email);
+    return { message: "If the email exists and is unverified, a new verification link has been sent" };
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 3_600_000 } })
   @Post("auth/forgot-password")
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: ForgotPasswordDto) {

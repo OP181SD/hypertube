@@ -85,7 +85,7 @@ describe("SubtitleService", () => {
       });
       expect(result[1]).toEqual({
         lang: "fr",
-        label: "French",
+        label: "Français",
         fileId: "200",
       });
     });

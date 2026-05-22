@@ -75,10 +75,14 @@ export class TorrentService implements OnModuleDestroy {
         if (f !== videoFile) f.deselect();
       }
 
-      // Persist downloading status to DB
+      // Persist the file path + downloading status to DB.
+      // filePath is required by the cleanup cron to locate the file on disk.
       this.prisma.torrent.update({
         where: { id: torrentId },
-        data: { downloadStatus: "downloading" },
+        data: {
+          downloadStatus: "downloading",
+          filePath: join(this.storagePath, videoFile.path),
+        },
       }).catch((err: Error) => {
         this.logger.error(`[ERROR] Failed to update torrent status: ${err.message}`);
       });
@@ -93,6 +97,21 @@ export class TorrentService implements OnModuleDestroy {
       if (pieceIndex % 50 === 0) {
         this.logger.debug(`[PROGRESS] ${torrentId}: ${active.progress}%`);
       }
+    });
+
+    // Fired once every selected piece is downloaded — the video file is complete.
+    // Marking the DB status "ready" is what lets the cleanup cron pick up
+    // stale (unwatched for a month) files for deletion.
+    engine.on("idle", () => {
+      if (!active.file) return;
+      active.progress = 100;
+      this.logger.log(`[DONE] Download complete for ${torrentId}`);
+      this.prisma.torrent.update({
+        where: { id: torrentId },
+        data: { downloadStatus: "ready" },
+      }).catch((err: Error) => {
+        this.logger.error(`[ERROR] Failed to mark torrent ready: ${err.message}`);
+      });
     });
 
     engine.on("error", (err) => {

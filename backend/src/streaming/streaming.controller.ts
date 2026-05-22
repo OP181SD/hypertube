@@ -10,7 +10,6 @@ import {
 import type { FastifyReply } from "fastify";
 import type { User } from "@prisma/client";
 import { StreamingService } from "./streaming.service";
-import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import type { SubtitleEntry } from "./interfaces";
 
@@ -20,13 +19,11 @@ export class StreamingController {
 
   constructor(private readonly streamingService: StreamingService) {}
 
-  @Public()
   @Get("stream/:torrentId/status")
   async getStatus(@Param("torrentId", ParseUUIDPipe) torrentId: string) {
     return this.streamingService.getStreamStatus(torrentId);
   }
 
-  @Public()
   @Get("stream/:torrentId")
   async stream(
     @Param("torrentId", ParseUUIDPipe) torrentId: string,
@@ -36,7 +33,7 @@ export class StreamingController {
   ): Promise<void> {
     const progress = await this.streamingService.initiateStream(
       torrentId,
-      user?.id ?? "anonymous",
+      user.id,
     );
 
     if (!progress.filePath) {
@@ -67,7 +64,6 @@ export class StreamingController {
     }
   }
 
-  @Public()
   @Get("subtitles/:movieId")
   async getSubtitles(
     @Param("movieId", ParseUUIDPipe) movieId: string,
@@ -75,7 +71,6 @@ export class StreamingController {
     return this.streamingService.getSubtitlesByMovieId(movieId);
   }
 
-  @Public()
   @Get("subtitles/:movieId/:lang")
   async getSubtitleFile(
     @Param("movieId", ParseUUIDPipe) movieId: string,

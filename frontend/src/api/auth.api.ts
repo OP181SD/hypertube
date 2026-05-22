@@ -46,3 +46,19 @@ export async function logout(): Promise<MessageResponse> {
   const res = await client.post<MessageResponse>("/auth/logout");
   return res.data;
 }
+
+export async function verifyEmail(token: string): Promise<MessageResponse> {
+  const res = await client.post<MessageResponse>("/auth/verify-email", {
+    token,
+  });
+  return res.data;
+}
+
+export async function resendVerification(
+  email: string,
+): Promise<MessageResponse> {
+  const res = await client.post<MessageResponse>("/auth/resend-verification", {
+    email,
+  });
+  return res.data;
+}

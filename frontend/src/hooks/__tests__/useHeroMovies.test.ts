@@ -3,53 +3,41 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useHeroMovies } from "../useHeroMovies";
 
 vi.mock("@/api/movies.api", () => ({
-  searchMovies: vi.fn(),
+  fetchPopularMovies: vi.fn(),
 }));
 
-import { searchMovies } from "@/api/movies.api";
+import { fetchPopularMovies } from "@/api/movies.api";
 
-const mockSearchMovies = vi.mocked(searchMovies);
+const mockFetchPopularMovies = vi.mocked(fetchPopularMovies);
 
 describe("useHeroMovies", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSearchMovies.mockResolvedValue({
-      data: [
-        {
-          id: "1",
-          title: "Top Movie",
-          year: 2023,
-          imdbRating: 9.0,
-          posterUrl: "url",
-          backdropUrl: null,
-          genres: [],
-          watched: false,
-          inWatchlist: false,
-        },
-      ],
-      page: 1,
-      limit: 7,
-      total: 1,
-      totalPages: 1,
-      hasMore: false,
-    });
+    mockFetchPopularMovies.mockResolvedValue([
+      {
+        id: "1",
+        tmdbId: 100,
+        title: "Top Movie",
+        year: 2023,
+        rating: 9.0,
+        genres: [],
+        posterUrl: "url",
+        backdropUrl: "backdrop",
+        overview: "An overview",
+      },
+    ]);
   });
 
-  it("fetches top-rated movies", async () => {
+  it("fetches popular movies", async () => {
     const { result } = renderHook(() => useHeroMovies());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.movies).toHaveLength(1);
-    expect(mockSearchMovies).toHaveBeenCalledWith({
-      sortBy: "rating",
-      order: "desc",
-      limit: 7,
-      page: 1,
-    });
+    expect(mockFetchPopularMovies).toHaveBeenCalled();
   });
 
   it("handles error gracefully", async () => {
-    mockSearchMovies.mockRejectedValueOnce(new Error("Network error"));
+    mockFetchPopularMovies.mockRejectedValueOnce(new Error("Network error"));
 
     const { result } = renderHook(() => useHeroMovies());
 
