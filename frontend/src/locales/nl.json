@@ -114,7 +114,5 @@
   "remove_from_watchlist": "Van kijklijst verwijderen",
   "in_watchlist": "In mijn lijst",
   "watchlist_empty": "Je kijklijst is leeg",
-  "watchlist_empty_detail": "Voeg films toe aan je kijklijst om ze later te bekijken",
-  "profile_picture_required": "Profielfoto",
-  "error_profile_picture_required": "Voeg een profielfoto toe."
+  "watchlist_empty_detail": "Voeg films toe aan je kijklijst om ze later te bekijken"
 }

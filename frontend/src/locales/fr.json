@@ -123,8 +123,6 @@
   "user_not_found": "Utilisateur introuvable",
   "full_name": "Nom complet",
   "saving": "Enregistrement...",
-  "profile_picture_required": "Photo de profil",
-  "error_profile_picture_required": "Veuillez ajouter une photo de profil.",
   "check_email_title": "Vérifie ta boîte mail",
   "check_email_desc": "Nous avons envoyé un lien de vérification à {{email}}. Clique dessus pour activer ton compte.",
   "resend_verification": "Renvoyer l'email de vérification",

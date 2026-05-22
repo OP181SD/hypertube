@@ -114,7 +114,5 @@
   "remove_from_watchlist": "Rimuovi dalla lista",
   "in_watchlist": "Nella lista",
   "watchlist_empty": "La tua lista è vuota",
-  "watchlist_empty_detail": "Aggiungi film alla tua lista per guardarli in seguito",
-  "profile_picture_required": "Foto profilo",
-  "error_profile_picture_required": "Aggiungi una foto profilo."
+  "watchlist_empty_detail": "Aggiungi film alla tua lista per guardarli in seguito"
 }

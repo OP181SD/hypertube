@@ -14,6 +14,8 @@ vi.mock("node:fs/promises", () => ({
 const mockConfig = {
   get: vi.fn((key: string) => {
     if (key === "OPENSUBTITLES_API_KEY") return "test-api-key";
+    if (key === "OPENSUBTITLES_BASE_URL")
+      return "https://api.opensubtitles.com/api/v1";
     if (key === "STORAGE_PATH") return "/tmp/test-videos";
     return "";
   }),
@@ -28,6 +30,8 @@ describe("SubtitleService", () => {
     // Restore the default config implementation in case a previous test overrode it
     mockConfig.get.mockImplementation((key: string) => {
       if (key === "OPENSUBTITLES_API_KEY") return "test-api-key";
+      if (key === "OPENSUBTITLES_BASE_URL")
+        return "https://api.opensubtitles.com/api/v1";
       if (key === "STORAGE_PATH") return "/tmp/test-videos";
       return "";
     });

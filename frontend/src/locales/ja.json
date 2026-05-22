@@ -114,7 +114,5 @@
   "remove_from_watchlist": "ウォッチリストから削除",
   "in_watchlist": "リスト内",
   "watchlist_empty": "ウォッチリストは空です",
-  "watchlist_empty_detail": "後で見るために映画をウォッチリストに追加してください",
-  "profile_picture_required": "プロフィール画像",
-  "error_profile_picture_required": "プロフィール画像を追加してください。"
+  "watchlist_empty_detail": "後で見るために映画をウォッチリストに追加してください"
 }

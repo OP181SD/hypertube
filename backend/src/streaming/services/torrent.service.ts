@@ -11,7 +11,6 @@ interface ActiveTorrent {
   engine: TorrentEngine;
   file: TorrentFile | null;
   progress: number;
-  ready: boolean;
 }
 
 @Injectable()
@@ -42,7 +41,7 @@ export class TorrentService implements OnModuleDestroy {
       ],
     }) as unknown as TorrentEngine;
 
-    const active: ActiveTorrent = { engine, file: null, progress: 0, ready: false };
+    const active: ActiveTorrent = { engine, file: null, progress: 0 };
     this.activeTorrents.set(torrentId, active);
 
     // LOG: Recherche de pairs

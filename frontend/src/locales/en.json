@@ -123,8 +123,6 @@
   "user_not_found": "User not found",
   "full_name": "Full name",
   "saving": "Saving...",
-  "profile_picture_required": "Profile picture",
-  "error_profile_picture_required": "Please add a profile picture.",
   "check_email_title": "Check your email",
   "check_email_desc": "We sent a verification link to {{email}}. Click it to activate your account.",
   "resend_verification": "Resend verification email",

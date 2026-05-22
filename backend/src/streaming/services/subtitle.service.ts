@@ -29,12 +29,11 @@ const LANGUAGE_LABELS: Record<string, string> = {
   tr: "Türkçe",
 };
 
-const OPENSUBTITLES_BASE_URL = "https://api.opensubtitles.com/api/v1";
-
 @Injectable()
 export class SubtitleService {
   private readonly logger = new Logger(SubtitleService.name);
   private readonly apiKey: string;
+  private readonly baseUrl: string;
   private readonly storagePath: string;
   private readonly username: string;
   private readonly password: string;
@@ -44,6 +43,9 @@ export class SubtitleService {
   constructor(private readonly configService: ConfigService) {
     this.apiKey =
       this.configService.get<string>("OPENSUBTITLES_API_KEY") ?? "";
+    this.baseUrl =
+      this.configService.get<string>("OPENSUBTITLES_BASE_URL") ??
+      "https://api.opensubtitles.com/api/v1";
     this.storagePath =
       this.configService.get<string>("STORAGE_PATH") ?? "./data/videos";
     this.username =
@@ -65,7 +67,7 @@ export class SubtitleService {
     }
 
     try {
-      const res = await fetch(`${OPENSUBTITLES_BASE_URL}/login`, {
+      const res = await fetch(`${this.baseUrl}/login`, {
         method: "POST",
         headers: {
           "Api-Key": this.apiKey,
@@ -115,7 +117,7 @@ export class SubtitleService {
       });
 
       const response = await fetch(
-        `${OPENSUBTITLES_BASE_URL}/subtitles?${params}`,
+        `${this.baseUrl}/subtitles?${params}`,
         {
           headers: {
             "Api-Key": this.apiKey,
@@ -189,7 +191,7 @@ export class SubtitleService {
       const timeout = setTimeout(() => controller.abort(), 10_000);
 
       const downloadRes = await fetch(
-        `${OPENSUBTITLES_BASE_URL}/download`,
+        `${this.baseUrl}/download`,
         {
           method: "POST",
           headers: {

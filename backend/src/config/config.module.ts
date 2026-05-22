@@ -70,6 +70,9 @@ import Joi from "joi";
         EZTV_BASE_URL: Joi.string()
           .uri()
           .default("https://eztv.re/api"),
+        OPENSUBTITLES_BASE_URL: Joi.string()
+          .uri()
+          .default("https://api.opensubtitles.com/api/v1"),
 
         // Uploads
         UPLOAD_PATH: Joi.string().default("./data/uploads"),
