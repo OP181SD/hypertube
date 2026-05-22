@@ -33,13 +33,14 @@ describe("Streaming E2E", () => {
     const torrent = await prisma.torrent.create({
       data: {
         movieId: movie.id,
-        hash: "abc123def456",
+        hash: "0123456789abcdef0123456789abcdef01234567",
         quality: "1080p",
         source: "YTS",
         seeds: 100,
         peers: 50,
         sizeBytes: BigInt(1_500_000_000),
-        magnetUrl: "magnet:?xt=urn:btih:abc123def456&dn=The+Matrix",
+        magnetUrl:
+          "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=The+Matrix",
       },
     });
 

@@ -104,12 +104,21 @@ describe("SubtitleService", () => {
     });
 
     it("should return empty array when API key is missing", async () => {
-      mockConfig.get.mockImplementation((key: string) => {
-        if (key === "OPENSUBTITLES_API_KEY") return "";
-        return "/tmp/test-videos";
-      });
+      // The API key is captured in the constructor, so the service must be
+      // rebuilt with an empty key. getAvailableSubtitles then short-circuits
+      // without any network call.
+      mockConfig.get.mockImplementation((key: string) =>
+        key === "OPENSUBTITLES_API_KEY" ? "" : "/tmp/test-videos",
+      );
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          SubtitleService,
+          { provide: ConfigService, useValue: mockConfig },
+        ],
+      }).compile();
+      const serviceWithoutKey = module.get<SubtitleService>(SubtitleService);
 
-      const result = await service.getAvailableSubtitles("tt0133093");
+      const result = await serviceWithoutKey.getAvailableSubtitles("tt0133093");
       expect(result).toEqual([]);
     });
 

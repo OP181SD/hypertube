@@ -4,6 +4,7 @@ import {
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
 import { ValidationPipe } from "@nestjs/common";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import fastifyCookie from "@fastify/cookie";
 import { AppModule } from "../../src/app.module";
 import { AllExceptionsFilter } from "../../src/common/filters/http-exception.filter";
@@ -11,7 +12,12 @@ import { AllExceptionsFilter } from "../../src/common/filters/http-exception.fil
 export async function createTestApp(): Promise<NestFastifyApplication> {
   const moduleRef: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    // Rate limiting must not interfere with E2E tests (registerUser logs in
+    // on every call). Replace the throttler with a pass-through guard.
+    .overrideGuard(ThrottlerGuard)
+    .useValue({ canActivate: () => true })
+    .compile();
 
   const app = moduleRef.createNestApplication<NestFastifyApplication>(
     new FastifyAdapter(),

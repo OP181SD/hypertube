@@ -133,12 +133,14 @@ describe("Movies E2E", () => {
             title: "Action Movie",
             year: 2020,
             genres: ["Action"],
+            posterUrl: "https://example.com/action.jpg",
           },
           {
             imdbId: "tt0002222",
             title: "Comedy Movie",
             year: 2020,
             genres: ["Comedy"],
+            posterUrl: "https://example.com/comedy.jpg",
           },
         ],
       });

@@ -83,6 +83,7 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post("oauth/token")
+  @HttpCode(HttpStatus.OK)
   async token(@Body() dto: OAuthTokenDto) {
     const isValidClient = await this.authService.validateOAuthClient(
       dto.client_id,

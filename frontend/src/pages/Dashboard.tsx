@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mockup } from "@/components/ui/Mockup";
+import { MovieBrowser } from "@/components/ui/MovieBrowser";
 import { DashboardNavbar } from "@/components/dashboard/DashboardNavbar";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tab } from "@/types/ui/Tabs";
@@ -32,7 +32,7 @@ export default function Dashboard() {
       />
 
       <main className="flex-1 max-w-full">
-        {activeTab === "home" && <Mockup search={search} />}
+        {activeTab === "home" && <MovieBrowser search={search} />}
         {activeTab === "watchlist" && (
           <div className="flex flex-col items-center w-full px-3 sm:px-4 md:px-6 lg:px-8 pt-16 md:pt-20">
             <WatchlistPage />

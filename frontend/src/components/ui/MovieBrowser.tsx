@@ -8,7 +8,7 @@ import { MoviesSection } from "@/components/ui/MoviesSection";
 import type { SortTypes } from "./navigation/types/filters";
 import type { SearchMoviesParams } from "@/types/api";
 
-interface MockupProps {
+interface MovieBrowserProps {
   search?: string;
 }
 
@@ -19,7 +19,7 @@ const sortMap: Record<SortTypes, SearchMoviesParams["sortBy"] | undefined> = {
   Rating: "rating",
 };
 
-export const Mockup: React.FC<MockupProps> = ({ search }) => {
+export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search }) => {
   const debouncedSearch = useDebounce(search || "", 300);
   const [selectedGenre, setSelectedGenre] = useState("");
   const [sortBy, setSortBy] = useState<SearchMoviesParams["sortBy"]>();

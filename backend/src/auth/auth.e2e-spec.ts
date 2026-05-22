@@ -31,7 +31,7 @@ describe("Auth E2E", () => {
   });
 
   describe("POST /auth/register", () => {
-    it("should register a new user and return tokens", async () => {
+    it("should register a new user without opening a session", async () => {
       const response = await app.inject({
         method: "POST",
         url: "/auth/register",
@@ -46,10 +46,10 @@ describe("Auth E2E", () => {
 
       expect(response.statusCode).toBe(201);
       const body = JSON.parse(response.body);
-      expect(body.access_token).toBeDefined();
-      expect(body.refresh_token).toBeDefined();
-      expect(body.token_type).toBe("Bearer");
-      expect(body.expires_in).toBe(900);
+      // Email verification is required: registration returns a message,
+      // not tokens. No session is opened until the email is verified.
+      expect(body.message).toBeDefined();
+      expect(body.access_token).toBeUndefined();
     });
 
     it("should reject registration with duplicate email", async () => {
