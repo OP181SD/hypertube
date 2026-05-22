@@ -20,6 +20,8 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
 
   useEffect(() => {
     if (!onLoadMore || !hasMore) return;
@@ -28,7 +30,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loadingRef.current) {
           onLoadMore();
         }
       },
@@ -37,7 +39,7 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [onLoadMore, hasMore, loading]);
+  }, [onLoadMore, hasMore]);
 
   return (
     <section className="w-full max-w-400 mt-6 px-4 sm:px-6">
