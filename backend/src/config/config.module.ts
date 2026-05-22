@@ -66,7 +66,7 @@ import Joi from "joi";
           .default("https://api.themoviedb.org/3"),
         YTS_BASE_URL: Joi.string()
           .uri()
-          .default("https://yts.mx/api/v2"),
+          .default("https://movies-api.accel.li/api/v2"),
         EZTV_BASE_URL: Joi.string()
           .uri()
           .default("https://eztv.re/api"),
