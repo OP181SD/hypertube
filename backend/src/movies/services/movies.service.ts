@@ -68,7 +68,13 @@ export class MoviesService {
 
       result.push({ ...m, id: movie.id });
     }
-    return result;
+
+    const moviesWithTorrents = await this.prisma.movie.findMany({
+      where: { id: { in: result.map((r) => r.id) }, torrents: { some: {} } },
+      select: { id: true },
+    });
+    const idsWithTorrents = new Set(moviesWithTorrents.map((m) => m.id));
+    return result.filter((r) => idsWithTorrents.has(r.id));
   }
 
   async search(params: SearchParams, userId?: string): Promise<PaginatedMovies> {

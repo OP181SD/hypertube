@@ -10,6 +10,7 @@ export class MovieQueryService {
   buildWhereClause(params: SearchParams): Prisma.MovieWhereInput {
     const where: Prisma.MovieWhereInput = {
       NOT: [{ posterUrl: null }, { posterUrl: "" }],
+      torrents: { some: {} },
     };
 
     if (params.query) {
