@@ -30,7 +30,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any, // On met any temporairement pour le log complet
+    profile: any, // untyped: Google's raw profile payload
     done: VerifyCallback,
   ) {
     const emails = profile.emails as Array<{ value: string }>;

@@ -13,7 +13,7 @@ export default function MainContent() {
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Front page : les top films, visibles par tout le monde (sujet III.4) */}
+      {/* Front page: top movies, visible to everyone (subject III.4) */}
       {hero.movies.length > 0 && (
         <HeroSection
           movies={hero.movies}

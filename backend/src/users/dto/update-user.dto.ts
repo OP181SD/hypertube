@@ -28,7 +28,7 @@ export class UpdateUserDto {
 @IsString()
 @MinLength(1)
 @MaxLength(50)
-// Cette regex autorise les lettres (y compris accentuées) et les tirets/espaces
+// Allows letters (including accented ones), spaces and hyphens
 @Matches(/^[\p{L}\p{M} -]+$/u, {
   message: "First name contains invalid characters",
 })

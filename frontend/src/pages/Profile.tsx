@@ -20,7 +20,7 @@ export function Profile() {
 
   if (!user) return null;
 
-  // Avatar fallback unique basé sur le username
+  // Deterministic fallback avatar derived from the username
   const profileSrc = user.profilePictureUrl
     ? `${API_BASE_URL}${user.profilePictureUrl}`
     : getAvatarUrl(user.username);

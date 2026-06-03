@@ -44,7 +44,7 @@ export class TorrentService implements OnModuleDestroy {
     const active: ActiveTorrent = { engine, file: null, progress: 0 };
     this.activeTorrents.set(torrentId, active);
 
-    // LOG: Recherche de pairs
+    // Periodically log peer-discovery progress
     const logPeers = setInterval(() => {
       const swarm = (engine as any).swarm;
       if (swarm) {
@@ -87,12 +87,12 @@ export class TorrentService implements OnModuleDestroy {
       });
     });
 
-    engine.on("download", (pieceIndex: any) => { // On met 'any' ici
-      // On récupère le nombre total de pièces pour le calcul
+    engine.on("download", (pieceIndex: any) => { // 'any': torrent-stream ships no typings here
+      // Total piece count, used to compute progress
       const totalPieces = (engine as any).torrent?.pieces?.length || 1;
       active.progress = Math.round(((pieceIndex + 1) / totalPieces) * 100);
-      
-      // On log toutes les 50 pièces pour ne pas saturer ton terminal
+
+      // Log every 50 pieces to avoid flooding the console
       if (pieceIndex % 50 === 0) {
         this.logger.debug(`[PROGRESS] ${torrentId}: ${active.progress}%`);
       }
