@@ -5,6 +5,7 @@ import {
 } from "@nestjs/platform-fastify";
 import { ValidationPipe } from "@nestjs/common";
 import fastifyCookie from "@fastify/cookie";
+import fastifyHelmet from "@fastify/helmet";
 import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import { join } from "path";
@@ -17,6 +18,13 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter(),
   );
+
+  // Security headers. The SPA runs on a separate origin (Vite / static host),
+  // so avatar images and video streams served from this backend must stay
+  // readable cross-origin — otherwise CORP would block them in the browser.
+  await app.register(fastifyHelmet, {
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  });
 
   await app.register(fastifyCookie, {
     secret: process.env.COOKIE_SECRET,

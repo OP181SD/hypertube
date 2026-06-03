@@ -14,10 +14,6 @@ export class DiscordAuthGuard extends AuthGuard("discord") {
       response.end = (chunk: any) => response.send(chunk);
     }
 
-    try {
-      return (await super.canActivate(context)) as boolean;
-    } catch (err) {
-      throw err;
-    }
+    return (await super.canActivate(context)) as boolean;
   }
 }

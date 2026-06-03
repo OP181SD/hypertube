@@ -14,10 +14,6 @@ export class FtAuthGuard extends AuthGuard("42") {
       response.end = (chunk: any) => response.send(chunk);
     }
 
-    try {
-      return (await super.canActivate(context)) as boolean;
-    } catch (err) {
-      throw err;
-    }
+    return (await super.canActivate(context)) as boolean;
   }
 }

@@ -81,7 +81,7 @@ describe("Users E2E", () => {
 
     it("should return other user profile without email", async () => {
       // Register two users
-      const { tokens: tokens1 } = await registerUser(app);
+      await registerUser(app);
       const { tokens: tokens2 } = await registerUser(app, {
         email: "other@example.com",
         username: "otheruser",
