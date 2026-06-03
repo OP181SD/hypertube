@@ -4,6 +4,7 @@ import { TorrentService } from "./services/torrent.service";
 import { TranscodingService } from "./services/transcoding.service";
 import { SubtitleService } from "./services/subtitle.service";
 import type { DownloadProgress, StreamResult, SubtitleEntry } from "./interfaces";
+import { ERROR_MESSAGES } from "../common/constants/error-messages";
 
 @Injectable()
 export class StreamingService {
@@ -21,7 +22,7 @@ export class StreamingService {
       where: { id: torrentId },
     });
 
-    if (!torrent) throw new NotFoundException("Torrent not found");
+    if (!torrent) throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
 
     if (!this.torrentService.isActive(torrentId)) {
       await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
@@ -52,7 +53,7 @@ export class StreamingService {
       where: { id: torrentId },
     });
 
-    if (!torrent) throw new NotFoundException("Torrent not found");
+    if (!torrent) throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
 
     if (!this.torrentService.isActive(torrentId)) {
       await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
@@ -71,7 +72,7 @@ export class StreamingService {
 
   async getVideoStream(torrentId: string, rangeHeader?: string): Promise<StreamResult> {
     const file = this.torrentService.getFile(torrentId);
-    if (!file) throw new NotFoundException("Video file not available yet");
+    if (!file) throw new NotFoundException(ERROR_MESSAGES.VIDEO_NOT_READY);
 
     if (this.transcodingService.needsTranscoding(file.name)) {
       const inputStream = file.createReadStream();
@@ -94,13 +95,13 @@ export class StreamingService {
 
   async getSubtitlesByMovieId(movieId: string): Promise<SubtitleEntry[]> {
     const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
-    if (!movie) throw new NotFoundException("Movie not found");
+    if (!movie) throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
     return this.subtitleService.getAvailableSubtitles(movie.imdbId);
   }
 
   async getSubtitleFileByMovieId(movieId: string, lang: string): Promise<{ content: string }> {
     const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
-    if (!movie) throw new NotFoundException("Movie not found");
+    if (!movie) throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
 
     // Fast path: serve from disk cache without hitting the API
     const cached = await this.subtitleService.getCachedSubtitle(movieId, lang);
@@ -108,7 +109,7 @@ export class StreamingService {
 
     const subtitles = await this.subtitleService.getAvailableSubtitles(movie.imdbId);
     const entry = subtitles.find((s) => s.lang === lang);
-    if (!entry) throw new NotFoundException(`Subtitle '${lang}' not found`);
+    if (!entry) throw new NotFoundException(ERROR_MESSAGES.SUBTITLE_NOT_FOUND(lang));
 
     const vttContent = await this.subtitleService.downloadSubtitle(entry.fileId, movieId, lang);
 

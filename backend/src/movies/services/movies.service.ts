@@ -7,6 +7,7 @@ import { SubtitleService } from "../../streaming/services/subtitle.service";
 import { MovieCacheService } from "./movie-cache.service";
 import { MovieMapperService } from "./movie-mapper.service";
 import { MovieQueryService } from "./movie-query.service";
+import { ERROR_MESSAGES } from "../../common/constants/error-messages";
 import type {
   PaginatedMovies,
   MovieDetail,
@@ -143,7 +144,7 @@ export class MoviesService {
     });
 
     if (!found) {
-      throw new NotFoundException("Movie not found");
+      throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
     }
 
     let movie = found;

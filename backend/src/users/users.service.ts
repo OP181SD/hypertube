@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service";
+import { ERROR_MESSAGES } from "../common/constants/error-messages";
 import { AuthProvider, Language, User } from "@prisma/client";
 import { MultipartFile } from "@fastify/multipart";
 import { writeFile } from "fs/promises";
@@ -108,12 +109,12 @@ export class UsersService {
   async create(data: CreateUserData): Promise<User> {
     const existingEmail = await this.findByEmail(data.email);
     if (existingEmail) {
-      throw new ConflictException("Email already exists");
+      throw new ConflictException(ERROR_MESSAGES.EMAIL_EXISTS);
     }
 
     const existingUsername = await this.findByUsername(data.username);
     if (existingUsername) {
-      throw new ConflictException("Username already exists");
+      throw new ConflictException(ERROR_MESSAGES.USERNAME_EXISTS);
     }
 
     let passwordHash: string | null = null;
@@ -144,7 +145,7 @@ export class UsersService {
         where: { email: data.email, NOT: { id } },
       });
       if (existing) {
-        throw new ConflictException("Email already exists");
+        throw new ConflictException(ERROR_MESSAGES.EMAIL_EXISTS);
       }
       updateData.email = data.email;
     }
@@ -154,7 +155,7 @@ export class UsersService {
         where: { username: data.username, NOT: { id } },
       });
       if (existing) {
-        throw new ConflictException("Username already exists");
+        throw new ConflictException(ERROR_MESSAGES.USERNAME_EXISTS);
       }
       updateData.username = data.username;
     }
@@ -182,7 +183,7 @@ export class UsersService {
     const signature = IMAGE_SIGNATURES.find((s) => s.matches(buffer));
     if (!signature) {
       throw new BadRequestException(
-        "Invalid image file. Allowed: JPEG, PNG, GIF, WebP",
+        ERROR_MESSAGES.INVALID_IMAGE_FILE,
       );
     }
 

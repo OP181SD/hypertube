@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { ERROR_MESSAGES } from "../common/constants/error-messages";
 
 const authorSelect = { id: true, username: true };
 
@@ -26,7 +27,7 @@ export class CommentsService {
     });
 
     if (!comment) {
-      throw new NotFoundException("Comment not found");
+      throw new NotFoundException(ERROR_MESSAGES.COMMENT_NOT_FOUND);
     }
 
     return comment;
@@ -38,7 +39,7 @@ export class CommentsService {
     });
 
     if (!movie) {
-      throw new NotFoundException("Movie not found");
+      throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
     }
 
     return this.prisma.comment.create({
@@ -53,11 +54,11 @@ export class CommentsService {
     });
 
     if (!comment) {
-      throw new NotFoundException("Comment not found");
+      throw new NotFoundException(ERROR_MESSAGES.COMMENT_NOT_FOUND);
     }
 
     if (comment.authorId !== userId) {
-      throw new ForbiddenException("You can only edit your own comments");
+      throw new ForbiddenException(ERROR_MESSAGES.COMMENT_EDIT_FORBIDDEN);
     }
 
     return this.prisma.comment.update({
@@ -73,11 +74,11 @@ export class CommentsService {
     });
 
     if (!comment) {
-      throw new NotFoundException("Comment not found");
+      throw new NotFoundException(ERROR_MESSAGES.COMMENT_NOT_FOUND);
     }
 
     if (comment.authorId !== userId) {
-      throw new ForbiddenException("You can only delete your own comments");
+      throw new ForbiddenException(ERROR_MESSAGES.COMMENT_DELETE_FORBIDDEN);
     }
 
     await this.prisma.comment.delete({ where: { id } });

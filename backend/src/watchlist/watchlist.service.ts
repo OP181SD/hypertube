@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import type { MovieListItem } from "../movies/interfaces";
+import { ERROR_MESSAGES } from "../common/constants/error-messages";
 
 @Injectable()
 export class WatchlistService {
@@ -8,7 +9,7 @@ export class WatchlistService {
 
   async add(userId: string, movieId: string): Promise<{ message: string }> {
     const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
-    if (!movie) throw new NotFoundException("Movie not found");
+    if (!movie) throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
 
     await this.prisma.watchlist.upsert({
       where: { userId_movieId: { userId, movieId } },
@@ -24,7 +25,7 @@ export class WatchlistService {
       where: { userId_movieId: { userId, movieId } },
     });
 
-    if (!entry) throw new NotFoundException("Not in watchlist");
+    if (!entry) throw new NotFoundException(ERROR_MESSAGES.NOT_IN_WATCHLIST);
 
     await this.prisma.watchlist.delete({
       where: { userId_movieId: { userId, movieId } },

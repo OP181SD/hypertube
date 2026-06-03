@@ -11,6 +11,7 @@ import { RedisService } from "../redis/redis.service";
 import { UsersService, CreateUserData } from "../users/users.service";
 import { MailService } from "../mail/mail.service";
 import { RegisterDto } from "./dto/register.dto";
+import { ERROR_MESSAGES } from "../common/constants/error-messages";
 import { AuthProvider, User } from "@prisma/client";
 import * as argon2 from "argon2";
 import { randomBytes } from "crypto";
@@ -72,13 +73,13 @@ export class AuthService {
     const record = await this.prisma.emailVerification.findUnique({ where: { token } });
 
     if (!record) {
-      throw new BadRequestException("Invalid verification token");
+      throw new BadRequestException(ERROR_MESSAGES.INVALID_VERIFICATION_TOKEN);
     }
     if (record.usedAt) {
-      throw new BadRequestException("Verification token already used");
+      throw new BadRequestException(ERROR_MESSAGES.VERIFICATION_TOKEN_USED);
     }
     if (record.expiresAt < new Date()) {
-      throw new BadRequestException("Verification token expired");
+      throw new BadRequestException(ERROR_MESSAGES.VERIFICATION_TOKEN_EXPIRED);
     }
 
     await this.prisma.$transaction([
@@ -113,16 +114,16 @@ export class AuthService {
     const user = await this.usersService.findByUsername(username);
 
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     const isPasswordValid = await argon2.verify(user.passwordHash, password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     if (!user.emailVerified) {
-      throw new ForbiddenException("Please verify your email before logging in");
+      throw new ForbiddenException(ERROR_MESSAGES.EMAIL_NOT_VERIFIED);
     }
 
     return user;
@@ -162,7 +163,7 @@ export class AuthService {
     });
 
     if (!storedToken || storedToken.revokedAt || storedToken.expiresAt < new Date()) {
-      throw new UnauthorizedException("Invalid refresh token");
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
 
     // Revoke old token (rotation)
@@ -258,15 +259,15 @@ export class AuthService {
     });
 
     if (!passwordReset) {
-      throw new BadRequestException("Invalid reset token");
+      throw new BadRequestException(ERROR_MESSAGES.INVALID_RESET_TOKEN);
     }
 
     if (passwordReset.usedAt) {
-      throw new BadRequestException("Reset token already used");
+      throw new BadRequestException(ERROR_MESSAGES.RESET_TOKEN_USED);
     }
 
     if (passwordReset.expiresAt < new Date()) {
-      throw new BadRequestException("Reset token expired");
+      throw new BadRequestException(ERROR_MESSAGES.RESET_TOKEN_EXPIRED);
     }
 
     const passwordHash = await argon2.hash(newPassword);

@@ -10,12 +10,14 @@ import {
   HttpStatus,
   UnauthorizedException,
   BadRequestException,
+  Logger,
 } from "@nestjs/common";
 import type { TokenPair } from "./auth.service";
 import { ConfigService } from "@nestjs/config";
 import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthService } from "./auth.service";
+import { ERROR_MESSAGES } from "../common/constants/error-messages";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { OAuthTokenDto, GrantType } from "./dto/oauth-token.dto";
@@ -33,6 +35,8 @@ import { User } from "@prisma/client";
 
 @Controller()
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
@@ -91,14 +95,14 @@ export class AuthController {
     );
 
     if (!isValidClient) {
-      throw new UnauthorizedException("Invalid client credentials");
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CLIENT_CREDENTIALS);
     }
 
     switch (dto.grant_type) {
       case GrantType.PASSWORD: {
         if (!dto.username || !dto.password) {
           throw new BadRequestException(
-            "username and password are required for password grant",
+            ERROR_MESSAGES.PASSWORD_GRANT_FIELDS_REQUIRED,
           );
         }
         const user = await this.authService.validateLocalUser(
@@ -111,14 +115,14 @@ export class AuthController {
       case GrantType.REFRESH_TOKEN: {
         if (!dto.refresh_token) {
           throw new BadRequestException(
-            "refresh_token is required for refresh_token grant",
+            ERROR_MESSAGES.REFRESH_GRANT_FIELD_REQUIRED,
           );
         }
         return this.authService.refreshTokens(dto.refresh_token);
       }
 
       default:
-        throw new BadRequestException("Unsupported grant type");
+        throw new BadRequestException(ERROR_MESSAGES.UNSUPPORTED_GRANT_TYPE);
     }
   }
 
@@ -177,7 +181,7 @@ export class AuthController {
   ) {
     const rt = (req.cookies as Record<string, string>)?.refresh_token;
     if (!rt) {
-      throw new UnauthorizedException("No refresh token");
+      throw new UnauthorizedException(ERROR_MESSAGES.NO_REFRESH_TOKEN);
     }
     const tokens = await this.authService.refreshTokens(rt);
     this.setCookies(res, tokens);
@@ -212,7 +216,8 @@ export class AuthController {
       const tokens = await this.authService.generateTokens(user.id);
       this.setCookies(res, tokens);
       return res.status(302).redirect(`${frontendUrl}/auth/callback`);
-    } catch {
+    } catch (err) {
+      this.logger.error(`OAuth redirect failed for user ${user.id}: ${err}`);
       return res.status(500).send({ message: "Internal server error during redirection" });
     }
   }

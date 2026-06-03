@@ -15,6 +15,7 @@ import { FastifyRequest } from "fastify";
 import { UsersService } from "./users.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { ERROR_MESSAGES } from "../common/constants/error-messages";
 import { User } from "@prisma/client";
 
 const ALLOWED_MIME_TYPES = [
@@ -53,7 +54,7 @@ export class UsersController {
   ) {
     const user = await this.usersService.findById(id);
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const isOwnProfile = currentUser.id === user.id;
@@ -76,12 +77,12 @@ export class UsersController {
     @CurrentUser() currentUser: User,
   ) {
     if (currentUser.id !== id) {
-      throw new ForbiddenException("You can only update your own profile");
+      throw new ForbiddenException(ERROR_MESSAGES.PROFILE_FORBIDDEN);
     }
 
     const user = await this.usersService.findById(id);
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     return this.usersService.update(id, updateUserDto);
@@ -94,17 +95,17 @@ export class UsersController {
     @CurrentUser() currentUser: User,
   ) {
     if (currentUser.id !== id) {
-      throw new ForbiddenException("You can only update your own profile");
+      throw new ForbiddenException(ERROR_MESSAGES.PROFILE_FORBIDDEN);
     }
 
     const file = await req.file();
     if (!file) {
-      throw new BadRequestException("No file uploaded");
+      throw new BadRequestException(ERROR_MESSAGES.NO_FILE_UPLOADED);
     }
 
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
       throw new BadRequestException(
-        "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
+        ERROR_MESSAGES.INVALID_FILE_TYPE,
       );
     }
 
