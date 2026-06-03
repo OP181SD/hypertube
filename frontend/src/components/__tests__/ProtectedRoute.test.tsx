@@ -8,7 +8,6 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 
 import { useAuth } from "@/contexts/AuthContext";
-import { updateUser } from "@/api/users.api";
 
 const mockUseAuth = vi.mocked(useAuth);
 

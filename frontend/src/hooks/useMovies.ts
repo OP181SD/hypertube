@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { searchMovies } from "@/api/movies.api";
 import type { MovieListItem, SearchMoviesParams } from "@/types/api";
 
@@ -20,23 +20,23 @@ export function useMovies(params: UseMoviesParams = {}) {
 
   // Stable key representing filter params (excludes page)
   const filterKey = JSON.stringify({ genre, sortBy, query, minRating, minYear, maxYear });
-  const prevFilterKey = useRef(filterKey);
+
+  // When the filters change, reset pagination and clear stale results during
+  // render rather than in the fetch effect, so old movies never flash.
+  const [seededFilterKey, setSeededFilterKey] = useState(filterKey);
+  if (filterKey !== seededFilterKey) {
+    setSeededFilterKey(filterKey);
+    setPage(1);
+    setMovies([]);
+  }
 
   useEffect(() => {
     let cancelled = false;
 
-    const isFilterChange = prevFilterKey.current !== filterKey;
-
-    if (isFilterChange) {
-      prevFilterKey.current = filterKey;
-      setMovies([]); // Clear stale results immediately so old movies don't show
-      if (page !== 1) {
-        setPage(1);
-        return;
-      }
-    }
-
     const fetchPage = page;
+    // Flag the in-flight request before awaiting; this is the canonical
+    // data-fetching pattern, not a cascading-render bug.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
     const apiParams: SearchMoviesParams = { page: fetchPage, limit: 20 };

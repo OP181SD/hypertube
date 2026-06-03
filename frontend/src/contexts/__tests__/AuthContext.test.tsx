@@ -38,20 +38,23 @@ const USER = {
   language: "EN" as const,
 };
 
-let authRef!: ReturnType<typeof useAuth>;
+const authRef = { current: null as unknown as ReturnType<typeof useAuth> };
 
 function TestConsumer() {
-  authRef = useAuth();
+  // Test-only escape hatch: expose the hook value so assertions can call its
+  // methods outside the component tree.
+  // eslint-disable-next-line react-hooks/immutability
+  authRef.current = useAuth();
   return (
     <div>
-      <span data-testid="loading">{String(authRef.loading)}</span>
+      <span data-testid="loading">{String(authRef.current.loading)}</span>
       <span data-testid="authenticated">
-        {String(authRef.isAuthenticated)}
+        {String(authRef.current.isAuthenticated)}
       </span>
       <span data-testid="user">
-        {authRef.user ? authRef.user.username : "null"}
+        {authRef.current.user ? authRef.current.user.username : "null"}
       </span>
-      <span data-testid="error">{authRef.error || "null"}</span>
+      <span data-testid="error">{authRef.current.error || "null"}</span>
     </div>
   );
 }
@@ -115,7 +118,7 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await authRef.login("john", "Password1");
+      await authRef.current.login("john", "Password1");
     });
 
     expect(authApi.login).toHaveBeenCalledWith({
@@ -132,7 +135,7 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await expect(authRef.login("john", "bad")).rejects.toBeDefined();
+      await expect(authRef.current.login("john", "bad")).rejects.toBeDefined();
     });
 
     expect(screen.getByTestId("error").textContent).toBe("Invalid credentials");
@@ -143,7 +146,7 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await authRef.register({
+      await authRef.current.register({
         email: "t@t.com",
         username: "test",
         firstName: "T",
@@ -163,7 +166,7 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await authRef.verifyEmail("valid-token");
+      await authRef.current.verifyEmail("valid-token");
     });
 
     expect(authApi.verifyEmail).toHaveBeenCalledWith("valid-token");
@@ -177,7 +180,7 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await expect(authRef.verifyEmail("bad")).rejects.toBeDefined();
+      await expect(authRef.current.verifyEmail("bad")).rejects.toBeDefined();
     });
 
     expect(screen.getByTestId("error").textContent).toBe(
@@ -192,7 +195,7 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await authRef.resendVerification("t@t.com");
+      await authRef.current.resendVerification("t@t.com");
     });
 
     expect(authApi.resendVerification).toHaveBeenCalledWith("t@t.com");
@@ -204,8 +207,8 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await authRef.forgotPassword("t@t.com");
-      await authRef.resetPassword("token", "NewPass1");
+      await authRef.current.forgotPassword("t@t.com");
+      await authRef.current.resetPassword("token", "NewPass1");
     });
 
     expect(authApi.forgotPassword).toHaveBeenCalledWith("t@t.com");
@@ -220,7 +223,7 @@ describe("AuthContext", () => {
     });
 
     await act(async () => {
-      await authRef.updateUser({ username: "john2" });
+      await authRef.current.updateUser({ username: "john2" });
     });
 
     expect(usersApi.updateUser).toHaveBeenCalledWith("user-1", {
@@ -237,7 +240,7 @@ describe("AuthContext", () => {
     });
 
     await act(async () => {
-      await authRef.refreshUser();
+      await authRef.current.refreshUser();
     });
 
     expect(usersApi.getUser).toHaveBeenCalledWith("user-1");
@@ -249,7 +252,7 @@ describe("AuthContext", () => {
     vi.mocked(authApi.logout).mockResolvedValueOnce({ message: "out" });
 
     await act(async () => {
-      await authRef.logout();
+      await authRef.current.logout();
     });
 
     expect(screen.getByTestId("authenticated").textContent).toBe("false");
@@ -263,12 +266,12 @@ describe("AuthContext", () => {
     await renderReady();
 
     await act(async () => {
-      await expect(authRef.login("x", "y")).rejects.toBeDefined();
+      await expect(authRef.current.login("x", "y")).rejects.toBeDefined();
     });
     expect(screen.getByTestId("error").textContent).toBe("Invalid credentials");
 
     await act(async () => {
-      authRef.clearError();
+      authRef.current.clearError();
     });
     expect(screen.getByTestId("error").textContent).toBe("null");
   });

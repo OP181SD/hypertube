@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadProfilePicture } from "@/api/users.api";
@@ -23,16 +23,18 @@ export function useProfileForm() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<ProfileMessage | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      setForm({
-        username: user.username ?? "",
-        firstName: user.firstName ?? "",
-        lastName: user.lastName ?? "",
-        email: user.email ?? "",
-      });
-    }
-  }, [user]);
+  // Re-seed the form whenever the authenticated user changes, without an
+  // effect (https://react.dev/learn/you-might-not-need-an-effect).
+  const [seededUser, setSeededUser] = useState<typeof user>(null);
+  if (user && user !== seededUser) {
+    setSeededUser(user);
+    setForm({
+      username: user.username ?? "",
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
+      email: user.email ?? "",
+    });
+  }
 
   const handleChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));

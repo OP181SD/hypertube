@@ -21,7 +21,12 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
   const { t } = useTranslation();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
-  loadingRef.current = loading;
+
+  // Keep the latest `loading` value in a ref so the IntersectionObserver
+  // callback reads it without re-subscribing on every change.
+  useEffect(() => {
+    loadingRef.current = loading;
+  });
 
   useEffect(() => {
     if (!onLoadMore || !hasMore) return;

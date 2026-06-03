@@ -24,9 +24,7 @@ import type {
   RegisterRequest,
   MessageResponse,
 } from "@/types/api";
-import { LANG_TO_I18N, I18N_TO_LANG } from "@/constants/language";
-
-export { I18N_TO_LANG };
+import { LANG_TO_I18N } from "@/constants/language";
 
 interface AuthContextValue {
   user: UserPublic | null;
@@ -57,7 +55,10 @@ function syncLanguage(user: UserPublic) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserPublic | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Only block on session restore when a session cookie is actually present.
+  const [loading, setLoading] = useState(() =>
+    document.cookie.includes("has_session=1"),
+  );
   const [error, setError] = useState<string | null>(null);
 
   const clearAuth = useCallback(() => {
@@ -67,8 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const restoreSession = useCallback(async () => {
+    // `loading` already starts false when there is no session cookie, so the
+    // early return here needs no synchronous state update.
     if (!document.cookie.includes("has_session=1")) {
-      setLoading(false);
       return;
     }
     try {
@@ -83,6 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearAuth]);
 
   useEffect(() => {
+    // One-shot async session restore on mount; state updates happen after the
+    // awaited network call, not synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     restoreSession();
   }, [restoreSession]);
 
@@ -240,6 +245,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// The hook is intentionally co-located with its provider; fast-refresh of this
+// file falls back to a full reload, which is acceptable for a context module.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {

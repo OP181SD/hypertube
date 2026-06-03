@@ -36,8 +36,15 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
   const { t, i18n } = useTranslation();
   const [status, setStatus] = useState<StreamStatus | null>(null);
 
-  useEffect(() => {
+  // Reset status synchronously when switching torrents so the loading overlay
+  // shows immediately, without an effect.
+  const [polledTorrentId, setPolledTorrentId] = useState(torrentId);
+  if (torrentId !== polledTorrentId) {
+    setPolledTorrentId(torrentId);
     setStatus(null);
+  }
+
+  useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 

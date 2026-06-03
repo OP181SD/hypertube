@@ -22,8 +22,9 @@ const MoviePresentationWrapper: React.FC = () => {
       try {
         const data = await getMovie(id);
         if (!cancelled) setMovie(data);
-      } catch (err: any) {
-        if (!cancelled) setError(err.message || "Impossible de récupérer le film");
+      } catch (err: unknown) {
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Failed to load movie");
       } finally {
         if (!cancelled) setLoading(false);
       }

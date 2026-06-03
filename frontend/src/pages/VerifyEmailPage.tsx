@@ -12,7 +12,7 @@ export default function VerifyEmailPage() {
   const { verifyEmail, resendVerification } = useAuth();
 
   const token = searchParams.get("token") || "";
-  const [status, setStatus] = useState<Status>("verifying");
+  const [status, setStatus] = useState<Status>(token ? "verifying" : "error");
   const [resendEmail, setResendEmail] = useState("");
   const [resendMessage, setResendMessage] = useState("");
   // The token is single-use: guard against React StrictMode double-invocation.
@@ -22,10 +22,8 @@ export default function VerifyEmailPage() {
     if (startedRef.current) return;
     startedRef.current = true;
 
-    if (!token) {
-      setStatus("error");
-      return;
-    }
+    // No token: status is already "error" from the initial state.
+    if (!token) return;
 
     verifyEmail(token)
       .then(() => {

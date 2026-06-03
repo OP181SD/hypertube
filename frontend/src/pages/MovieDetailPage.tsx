@@ -69,8 +69,6 @@ export default function MovieDetailPage() {
 
   if (!movie) return null;
 
-  const rating = movie.imdbRating?.toFixed(1) ?? "N/A";
-
   return (
     <div className="min-h-screen bg-black">
       <div className="relative">
