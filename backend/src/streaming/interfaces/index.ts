@@ -50,8 +50,15 @@ export interface VideoInfo {
 
 export interface TorrentEngine {
   files: TorrentFile[];
+  // Populated by torrent-stream at runtime; absent until the swarm/metadata exist.
+  swarm?: { connections?: unknown[]; wired?: unknown[] };
+  torrent?: { pieces?: unknown[] };
   destroy: (cb?: () => void) => void;
-  on: (event: string, cb: (...args: unknown[]) => void) => void;
+  // Typed overloads for the events we actually consume; the catch-all keeps the
+  // remaining torrent-stream events usable without forcing `any` at call sites.
+  on(event: "download", cb: (pieceIndex: number) => void): void;
+  on(event: "error", cb: (err: Error) => void): void;
+  on(event: string, cb: (...args: unknown[]) => void): void;
   remove: (keepPieces: boolean, cb?: () => void) => void;
 }
 

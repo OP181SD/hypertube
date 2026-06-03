@@ -58,8 +58,8 @@ export class StreamingController {
         .header("Accept-Ranges", "none")
         .header("Content-Type", result.mimeType)
         .send(result.stream);
-    } catch (error: any) {
-      this.logger.error(`[Stream] ${error?.message}`);
+    } catch (error) {
+      this.logger.error(`[Stream] ${error instanceof Error ? error.message : error}`);
       return reply.status(503).send({ message: "Stream temporarily unavailable" });
     }
   }

@@ -35,8 +35,10 @@ export class StreamingService {
           create: { userId, movieId: torrent.movieId },
           update: { watchedAt: new Date() },
         });
-      } catch (e: any) {
-        this.logger.warn(`Could not update watch history: ${e.message}`);
+      } catch (e) {
+        this.logger.warn(
+          `Could not update watch history: ${e instanceof Error ? e.message : e}`,
+        );
       }
     }
 
