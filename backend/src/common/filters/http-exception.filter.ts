@@ -4,11 +4,14 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from "@nestjs/common";
 import { FastifyReply } from "fastify";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new Logger(AllExceptionsFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<FastifyReply>();
@@ -18,13 +21,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      // Only log unexpected server errors — 4xx are normal client errors
-      if (status >= 500) {
-        console.error("--- 🔥 SERVER ERROR ---");
-        console.error(exception);
-        if (exception instanceof Error) console.error("Stack:", exception.stack);
-        console.error("----------------------");
-      }
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === "string") {
@@ -33,6 +29,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const responseObj = exceptionResponse as Record<string, unknown>;
         message = (responseObj.message as string | string[]) || message;
       }
+    }
+
+    // Log anything that isn't the client's fault: unexpected (non-HTTP) errors
+    // all default to 500 here, and any genuine 5xx. Normal 4xx client errors
+    // are left unlogged to keep the console clean.
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logger.error(
+        exception instanceof Error ? exception.message : String(exception),
+        exception instanceof Error ? exception.stack : undefined,
+      );
     }
 
     response.status(status).send({

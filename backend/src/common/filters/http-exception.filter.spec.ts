@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   HttpException,
   HttpStatus,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from "@nestjs/common";
 import type { ArgumentsHost } from "@nestjs/common";
 import { AllExceptionsFilter } from "./http-exception.filter";
@@ -19,9 +20,18 @@ function mockHost() {
 
 describe("AllExceptionsFilter", () => {
   let filter: AllExceptionsFilter;
+  let errorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     filter = new AllExceptionsFilter();
+    // Suppress and observe server-error logging in every test.
+    errorSpy = vi
+      .spyOn(Logger.prototype, "error")
+      .mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
   });
 
   it("formats an HttpException with its status and string message", () => {
@@ -72,15 +82,29 @@ describe("AllExceptionsFilter", () => {
 
   it("logs 5xx HttpExceptions to the server console", () => {
     const { host } = mockHost();
-    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     filter.catch(
       new HttpException("upstream failed", HttpStatus.BAD_GATEWAY),
       host,
     );
 
-    expect(errSpy).toHaveBeenCalled();
-    errSpy.mockRestore();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it("logs unexpected non-HttpException errors", () => {
+    const { host } = mockHost();
+
+    filter.catch(new Error("boom"), host);
+
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it("does not log normal 4xx client errors", () => {
+    const { host } = mockHost();
+
+    filter.catch(new NotFoundException("nope"), host);
+
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   it("includes a valid ISO timestamp in the response", () => {

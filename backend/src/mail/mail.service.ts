@@ -35,7 +35,8 @@ export class MailService {
       const templateSource = readFileSync(templatePath, "utf-8");
       const template = handlebars.compile(templateSource);
       return template(data);
-    } catch {
+    } catch (err) {
+      this.logger.error(`Failed to render email template "${templateName}": ${err}`);
       return `<p>Error loading email template.</p>`;
     }
   }
