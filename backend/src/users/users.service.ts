@@ -1,13 +1,37 @@
-import { Injectable, ConflictException } from "@nestjs/common";
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthProvider, Language, User } from "@prisma/client";
 import { MultipartFile } from "@fastify/multipart";
-import { createWriteStream } from "fs";
-import { join, extname } from "path";
-import { pipeline } from "stream/promises";
+import { writeFile } from "fs/promises";
+import { join } from "path";
 import { randomUUID } from "crypto";
 import * as argon2 from "argon2";
+
+// Real file-signature ("magic bytes") checks. The client-declared mime-type and
+// filename are not trusted: a malicious upload could send a .php payload renamed
+// to .png. We sniff the actual bytes and derive the stored extension ourselves.
+const IMAGE_SIGNATURES: { ext: string; matches: (b: Buffer) => boolean }[] = [
+  { ext: ".jpg", matches: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  {
+    ext: ".png",
+    matches: (b) =>
+      b
+        .subarray(0, 8)
+        .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  },
+  { ext: ".gif", matches: (b) => /^GIF8[79]a$/.test(b.subarray(0, 6).toString("ascii")) },
+  {
+    ext: ".webp",
+    matches: (b) =>
+      b.subarray(0, 4).toString("ascii") === "RIFF" &&
+      b.subarray(8, 12).toString("ascii") === "WEBP",
+  },
+];
 
 export interface CreateUserData {
   email: string;
@@ -152,11 +176,20 @@ export class UsersService {
   }
 
   async saveAvatar(userId: string, file: MultipartFile): Promise<string> {
-    const ext = extname(file.filename).toLowerCase() || ".jpg";
-    const filename = `${randomUUID()}${ext}`;
+    // Buffer the upload (capped to 5 MB by the multipart limit) and validate it
+    // by its real signature before anything touches the disk.
+    const buffer = await file.toBuffer();
+    const signature = IMAGE_SIGNATURES.find((s) => s.matches(buffer));
+    if (!signature) {
+      throw new BadRequestException(
+        "Invalid image file. Allowed: JPEG, PNG, GIF, WebP",
+      );
+    }
+
+    const filename = `${randomUUID()}${signature.ext}`;
     const filePath = join(this.uploadPath, "avatars", filename);
 
-    await pipeline(file.file, createWriteStream(filePath));
+    await writeFile(filePath, buffer);
 
     const profilePictureUrl = `/uploads/avatars/${filename}`;
 

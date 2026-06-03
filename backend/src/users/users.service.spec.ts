@@ -13,12 +13,9 @@ vi.mock("argon2", () => ({
   verify: vi.fn().mockResolvedValue(true),
 }));
 
-// Mock fs and stream/promises for saveAvatar
-vi.mock("fs", () => ({
-  createWriteStream: vi.fn().mockReturnValue({ on: vi.fn() }),
-}));
-vi.mock("stream/promises", () => ({
-  pipeline: vi.fn().mockResolvedValue(undefined),
+// Mock fs/promises for saveAvatar (avoid touching the disk)
+vi.mock("fs/promises", () => ({
+  writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
 const mockPrismaService = {
@@ -273,11 +270,17 @@ describe("UsersService", () => {
   });
 
   describe("saveAvatar", () => {
+    // A buffer that starts with the real JPEG signature (FF D8 FF).
+    const validJpeg = Buffer.concat([
+      Buffer.from([0xff, 0xd8, 0xff]),
+      Buffer.alloc(16),
+    ]);
+
     it("should save file and update user profilePictureUrl", async () => {
       const mockFile = {
         filename: "photo.jpg",
         mimetype: "image/jpeg",
-        file: { pipe: vi.fn() },
+        toBuffer: vi.fn().mockResolvedValue(validJpeg),
       } as any;
 
       mockPrismaService.user.update.mockResolvedValue({
@@ -292,6 +295,20 @@ describe("UsersService", () => {
         where: { id: mockDbUser.id },
         data: { profilePictureUrl: expect.stringMatching(/^\/uploads\/avatars\/.+\.jpg$/) },
       });
+    });
+
+    it("should reject a file whose content is not a real image", async () => {
+      // A .png filename / image mime-type, but the bytes are plain text.
+      const mockFile = {
+        filename: "evil.png",
+        mimetype: "image/png",
+        toBuffer: vi.fn().mockResolvedValue(Buffer.from("<?php echo 'pwned'; ?>")),
+      } as any;
+
+      await expect(service.saveAvatar(mockDbUser.id, mockFile)).rejects.toThrow(
+        "Invalid image file",
+      );
+      expect(mockPrismaService.user.update).not.toHaveBeenCalled();
     });
   });
 });
