@@ -2,7 +2,6 @@ export enum AuthPage {
   IDENTIFY = "IDENTIFY",
   LOGIN = "LOGIN",
   SIGNUP = "SIGNUP",
-  PROFILE_PICTURE = "PROFILE_PICTURE",
   FORGOT_PASSWORD = "FORGOT_PASSWORD",
 }
 
@@ -12,13 +11,11 @@ export type Action =
   | { type: AuthPage.IDENTIFY }
   | { type: AuthPage.LOGIN }
   | { type: AuthPage.SIGNUP }
-  | { type: AuthPage.PROFILE_PICTURE }
   | { type: AuthPage.FORGOT_PASSWORD };
 
 export const goToIdentify = (): Action => ({ type: AuthPage.IDENTIFY });
 export const goToLogin = (): Action => ({ type: AuthPage.LOGIN });
 export const goToSignup = (): Action => ({ type: AuthPage.SIGNUP });
-export const goToProfilePicture = (): Action => ({ type: AuthPage.PROFILE_PICTURE });
 export const goToForgotPassword = (): Action => ({ type: AuthPage.FORGOT_PASSWORD });
 
 const transitions: Record<AuthPage, AuthPage[]> = {
@@ -38,12 +35,7 @@ const transitions: Record<AuthPage, AuthPage[]> = {
   ],
 
   [AuthPage.SIGNUP]: [
-    AuthPage.PROFILE_PICTURE,
     AuthPage.IDENTIFY,
-  ],
-
-  [AuthPage.PROFILE_PICTURE]: [
-    AuthPage.LOGIN,
   ],
 };
 

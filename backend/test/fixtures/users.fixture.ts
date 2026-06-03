@@ -8,14 +8,6 @@ export const validUser = {
   password: "SecurePass123!",
 };
 
-export const validUser2 = {
-  email: "test2@example.com",
-  username: "testuser2",
-  firstName: "Test2",
-  lastName: "User2",
-  password: "SecurePass456!",
-};
-
 export const oauthProfile42 = {
   id: "12345",
   username: "ftuser",
@@ -23,15 +15,6 @@ export const oauthProfile42 = {
   firstName: "Forty",
   lastName: "Two",
   profilePictureUrl: "https://cdn.42.fr/photo.jpg",
-};
-
-export const oauthProfileGoogle = {
-  id: "67890",
-  username: "google_user",
-  email: "googleuser@gmail.com",
-  firstName: "Google",
-  lastName: "User",
-  profilePictureUrl: "https://lh3.googleusercontent.com/photo.jpg",
 };
 
 export const mockDbUser = {

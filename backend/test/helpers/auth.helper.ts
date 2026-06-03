@@ -57,13 +57,3 @@ export async function registerUser(
 
   return { user: userData, response, tokens };
 }
-
-export async function getAuthHeaders(
-  app: NestFastifyApplication,
-  overrides: Record<string, string> = {},
-) {
-  const { tokens } = await registerUser(app, overrides);
-  return {
-    authorization: `Bearer ${tokens.access_token}`,
-  };
-}
