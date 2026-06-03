@@ -13,7 +13,7 @@ import { MailService } from "../mail/mail.service";
 import { RegisterDto } from "./dto/register.dto";
 import { AuthProvider, User } from "@prisma/client";
 import * as argon2 from "argon2";
-import { randomBytes, timingSafeEqual } from "crypto";
+import { randomBytes } from "crypto";
 
 export interface TokenPair {
   access_token: string;
@@ -175,38 +175,34 @@ export class AuthService {
   }
 
   async validateOAuthUser(profile: OAuthProfile, provider: AuthProvider): Promise<User> {
-    try {
-      let user = await this.usersService.findByProviderId(provider, profile.id);
-      if (user) {
-        return user;
-      }
-
-      user = await this.usersService.findByEmail(profile.email);
-      if (user) {
-        return await this.prisma.user.update({
-          where: { id: user.id },
-          data: {
-            authProvider: provider,
-            providerId: profile.id,
-          },
-        });
-      }
-
-      const createData: CreateUserData = {
-        email: profile.email,
-        username: profile.username || `user_${Date.now()}`,
-        firstName: profile.firstName || "Prenom",
-        lastName: profile.lastName || "Nom",
-        authProvider: provider,
-        providerId: profile.id,
-        profilePictureUrl: profile.profilePictureUrl,
-        emailVerified: true,
-      };
-
-      return await this.usersService.create(createData);
-    } catch (error) {
-      throw error;
+    let user = await this.usersService.findByProviderId(provider, profile.id);
+    if (user) {
+      return user;
     }
+
+    user = await this.usersService.findByEmail(profile.email);
+    if (user) {
+      return await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          authProvider: provider,
+          providerId: profile.id,
+        },
+      });
+    }
+
+    const createData: CreateUserData = {
+      email: profile.email,
+      username: profile.username || `user_${Date.now()}`,
+      firstName: profile.firstName || "Prenom",
+      lastName: profile.lastName || "Nom",
+      authProvider: provider,
+      providerId: profile.id,
+      profilePictureUrl: profile.profilePictureUrl,
+      emailVerified: true,
+    };
+
+    return await this.usersService.create(createData);
   }
 
   async validateOAuthClient(clientId: string, clientSecret: string): Promise<boolean> {
@@ -218,14 +214,11 @@ export class AuthService {
       return false;
     }
 
-    const storedBuf = Buffer.from(client.clientSecret, "utf8");
-    const providedBuf = Buffer.from(clientSecret, "utf8");
-
-    if (storedBuf.length !== providedBuf.length) {
+    try {
+      return await argon2.verify(client.clientSecret, clientSecret);
+    } catch {
       return false;
     }
-
-    return timingSafeEqual(storedBuf, providedBuf);
   }
 
   async forgotPassword(email: string): Promise<void> {

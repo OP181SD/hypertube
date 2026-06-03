@@ -450,8 +450,9 @@ describe("AuthService", () => {
     it("should return true for valid client credentials", async () => {
       mockPrismaService.oAuthClient.findUnique.mockResolvedValue({
         clientId: "test-client",
-        clientSecret: "test-secret",
+        clientSecret: "$argon2id$hashed-real-secret",
       });
+      vi.mocked(argon2.verify).mockResolvedValueOnce(true);
 
       const result = await service.validateOAuthClient(
         "test-client",
@@ -459,6 +460,10 @@ describe("AuthService", () => {
       );
 
       expect(result).toBe(true);
+      expect(argon2.verify).toHaveBeenCalledWith(
+        "$argon2id$hashed-real-secret",
+        "test-secret",
+      );
     });
 
     it("should return false for invalid client", async () => {
@@ -475,12 +480,28 @@ describe("AuthService", () => {
     it("should return false for wrong secret", async () => {
       mockPrismaService.oAuthClient.findUnique.mockResolvedValue({
         clientId: "test-client",
-        clientSecret: "real-secret",
+        clientSecret: "$argon2id$hashed-real-secret",
       });
+      vi.mocked(argon2.verify).mockResolvedValueOnce(false);
 
       const result = await service.validateOAuthClient(
         "test-client",
         "wrong-secret",
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it("should return false when argon2.verify throws", async () => {
+      mockPrismaService.oAuthClient.findUnique.mockResolvedValue({
+        clientId: "test-client",
+        clientSecret: "not-a-valid-hash",
+      });
+      vi.mocked(argon2.verify).mockRejectedValueOnce(new Error("bad hash"));
+
+      const result = await service.validateOAuthClient(
+        "test-client",
+        "test-secret",
       );
 
       expect(result).toBe(false);

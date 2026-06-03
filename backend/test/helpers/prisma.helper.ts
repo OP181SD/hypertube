@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import * as argon2 from "argon2";
 
 const pool = new Pool({
   connectionString:
@@ -23,10 +24,11 @@ export async function cleanDatabase() {
 }
 
 export async function createOAuthClient() {
+  const clientSecretHash = await argon2.hash("test-secret");
   return prisma.oAuthClient.create({
     data: {
       clientId: "test-client",
-      clientSecret: "test-secret",
+      clientSecret: clientSecretHash,
       name: "Test Client",
     },
   });

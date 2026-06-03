@@ -10,12 +10,13 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // Seed OAuth client for development
+  const oauthClientSecretHash = await argon2.hash("hypertube-web-secret");
   await prisma.oAuthClient.upsert({
     where: { clientId: "hypertube-web" },
-    update: {},
+    update: { clientSecret: oauthClientSecretHash },
     create: {
       clientId: "hypertube-web",
-      clientSecret: "hypertube-web-secret",
+      clientSecret: oauthClientSecretHash,
       name: "Hypertube Web Client",
     },
   });
