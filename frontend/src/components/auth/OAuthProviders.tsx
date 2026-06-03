@@ -1,10 +1,9 @@
 import React from "react";
+import { API_BASE_URL as apiUrl } from "@/constants/api";
 
 interface OAuthProvidersProps {
   className?: string;
 }
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const providers = [
   {

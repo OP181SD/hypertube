@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useProfileForm } from "@/hooks/useProfileForm";
 import { API_BASE_URL } from "@/constants/api";
+import { getAvatarUrl } from "@/constants/avatar";
 
 export function Profile() {
   const { t } = useTranslation();
@@ -22,9 +23,7 @@ export function Profile() {
   // Avatar fallback unique basé sur le username
   const profileSrc = user.profilePictureUrl
     ? `${API_BASE_URL}${user.profilePictureUrl}`
-    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-        user.username
-      )}`;
+    : getAvatarUrl(user.username);
 
   return (
     <div className="min-h-screen bg-black text-white px-6 sm:px-10 md:px-20 pt-16 flex flex-col items-center">

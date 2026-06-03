@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE_URL } from "@/constants/api";
+import { getAvatarUrl } from "@/constants/avatar";
 
 interface ProfileIconProps {
   onClick?: () => void;
@@ -10,11 +11,7 @@ export function ProfileIcon({ onClick }: ProfileIconProps) {
 
   const profileSrc = user?.profilePictureUrl
     ? `${API_BASE_URL}${user.profilePictureUrl}`
-    : user
-    ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-        user.username
-      )}`
-    : "https://api.dicebear.com/7.x/avataaars/svg?seed=guest";
+    : getAvatarUrl(user?.username ?? "guest");
 
   return (
     <div onClick={onClick} className="relative group cursor-pointer">

@@ -9,6 +9,8 @@ import type {
   HeroMovie,
 } from "../interfaces";
 
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p";
+
 const TMDB_GENRE_MAP: Record<number, string> = {
   28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
   99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
@@ -169,7 +171,7 @@ export class TmdbService {
     size: string = "w500",
   ): string | null {
     if (!posterPath) return null;
-    return `https://image.tmdb.org/t/p/${size}${posterPath}`;
+    return `${TMDB_IMAGE_BASE}/${size}${posterPath}`;
   }
 
   getBackdropUrl(
@@ -177,6 +179,6 @@ export class TmdbService {
     size: string = "w1280",
   ): string | null {
     if (!backdropPath) return null;
-    return `https://image.tmdb.org/t/p/${size}${backdropPath}`;
+    return `${TMDB_IMAGE_BASE}/${size}${backdropPath}`;
   }
 }
