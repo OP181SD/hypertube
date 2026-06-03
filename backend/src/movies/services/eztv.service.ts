@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { fetchWithTimeout } from "../../common/http/fetch-with-timeout";
 import type { EztvListResponse, EztvTorrent } from "../interfaces";
 
 export interface EztvSearchParams {
@@ -31,13 +32,7 @@ export class EztvService {
     if (params.imdbId) url.searchParams.set("imdb_id", params.imdbId);
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(url.toString(), {
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      const response = await fetchWithTimeout(url.toString());
 
       if (!response.ok) {
         this.logger.warn(`EZTV API returned ${response.status}`);

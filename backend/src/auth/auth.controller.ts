@@ -25,10 +25,12 @@ import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { ResendVerificationDto } from "./dto/resend-verification.dto";
-import { FtAuthGuard } from "./guards/ft-auth.guard";
-import { GoogleAuthGuard } from "./guards/google-auth.guard";
-import { GithubAuthGuard } from "./guards/github-auth.guard";
-import { DiscordAuthGuard } from "./guards/discord-auth.guard";
+import {
+  FtAuthGuard,
+  GoogleAuthGuard,
+  GithubAuthGuard,
+  DiscordAuthGuard,
+} from "./guards/oauth-auth.guard";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { User } from "@prisma/client";

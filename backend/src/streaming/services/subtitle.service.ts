@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { fetchWithTimeout } from "../../common/http/fetch-with-timeout";
 import { mkdir, writeFile, readFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import type {
@@ -104,9 +105,6 @@ export class SubtitleService {
     }
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10_000);
-
       // Filter to principal languages, sorted by download count (best quality first)
       const params = new URLSearchParams({
         imdb_id: imdbId,
@@ -116,17 +114,15 @@ export class SubtitleService {
         per_page: "100",
       });
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${this.baseUrl}/subtitles?${params}`,
         {
           headers: {
             "Api-Key": this.apiKey,
             "Content-Type": "application/json",
           },
-          signal: controller.signal,
         },
       );
-      clearTimeout(timeout);
 
       if (!response.ok) {
         this.logger.warn(
@@ -187,10 +183,8 @@ export class SubtitleService {
 
       // Request download link from OpenSubtitles
       const token = await this.getUserToken();
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10_000);
 
-      const downloadRes = await fetch(
+      const downloadRes = await fetchWithTimeout(
         `${this.baseUrl}/download`,
         {
           method: "POST",
@@ -200,10 +194,8 @@ export class SubtitleService {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({ file_id: Number(fileId) }),
-          signal: controller.signal,
         },
       );
-      clearTimeout(timeout);
 
       if (!downloadRes.ok) {
         this.logger.warn(`OpenSubtitles download returned ${downloadRes.status}`);

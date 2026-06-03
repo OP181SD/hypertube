@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { fetchWithTimeout } from "../../common/http/fetch-with-timeout";
 import type { YtsListResponse, YtsMovie } from "../interfaces";
 
 export interface YtsSearchParams {
@@ -39,13 +40,7 @@ export class YtsService {
     if (params.limit) url.searchParams.set("limit", String(params.limit));
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(url.toString(), {
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      const response = await fetchWithTimeout(url.toString());
 
       if (!response.ok) {
         this.logger.warn(`YTS API returned ${response.status}`);

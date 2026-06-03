@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { fetchWithTimeout } from "../../common/http/fetch-with-timeout";
 import type {
   TmdbSearchResponse,
   TmdbSearchResult,
@@ -45,14 +46,7 @@ export class TmdbService {
     if (year) url.searchParams.set("year", String(year));
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(url.toString(), {
-
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      const response = await fetchWithTimeout(url.toString());
 
       if (!response.ok) {
         this.logger.warn(`TMDb search returned ${response.status}`);
@@ -73,14 +67,7 @@ export class TmdbService {
     url.searchParams.set("append_to_response", "credits");
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(url.toString(), {
-
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      const response = await fetchWithTimeout(url.toString());
 
       if (!response.ok) {
         this.logger.warn(`TMDb movie details returned ${response.status}`);
@@ -99,14 +86,7 @@ export class TmdbService {
     url.searchParams.set("external_source", "imdb_id");
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(url.toString(), {
-
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      const response = await fetchWithTimeout(url.toString());
 
       if (!response.ok) {
         this.logger.warn(`TMDb find returned ${response.status}`);
@@ -131,14 +111,7 @@ export class TmdbService {
     url.searchParams.set("page", String(page));
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(url.toString(), {
-
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      const response = await fetchWithTimeout(url.toString());
 
       if (!response.ok) {
         this.logger.warn(`TMDb popular returned ${response.status}`);
