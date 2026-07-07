@@ -30,16 +30,16 @@ export class MovieCacheService {
             year: yts.year,
             imdbRating: yts.rating,
             runtime: yts.runtime,
-            posterUrl: yts.medium_cover_image,
-            backdropUrl: yts.background_image || null,
+            posterUrl: yts.medium_cover_image?.trim() || null,
+            backdropUrl: yts.background_image?.trim() || null,
             summary: yts.summary || null,
             genres: yts.genres ?? [],
             mediaType: "movie",
           },
           update: {
             imdbRating: yts.rating,
-            posterUrl: yts.medium_cover_image,
-            backdropUrl: yts.background_image || undefined,
+            posterUrl: yts.medium_cover_image?.trim() || undefined,
+            backdropUrl: yts.background_image?.trim() || undefined,
           },
         });
 

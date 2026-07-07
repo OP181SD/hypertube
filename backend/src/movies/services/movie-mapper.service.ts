@@ -21,8 +21,8 @@ export class MovieMapperService {
       title: movie.title,
       year: movie.year,
       imdbRating: movie.imdbRating,
-      posterUrl: movie.posterUrl,
-      backdropUrl: movie.backdropUrl,
+      posterUrl: this.normalizeUrl(movie.posterUrl),
+      backdropUrl: this.normalizeUrl(movie.backdropUrl),
       genres: movie.genres,
       watched: watchedIds.has(movie.id),
       inWatchlist: watchlistIds.has(movie.id),
@@ -62,8 +62,8 @@ export class MovieMapperService {
       imdbRating: movie.imdbRating,
       runtime: movie.runtime,
       summary: movie.summary,
-      posterUrl: movie.posterUrl,
-      backdropUrl: movie.backdropUrl,
+      posterUrl: this.normalizeUrl(movie.posterUrl),
+      backdropUrl: this.normalizeUrl(movie.backdropUrl),
       genres: movie.genres,
       director: movie.director,
       producer: movie.producer,
@@ -83,5 +83,10 @@ export class MovieMapperService {
     const match = label?.match(/^S(\d+)E(\d+)$/i);
     if (!match) return { season: null, episode: null };
     return { season: Number(match[1]), episode: Number(match[2]) };
+  }
+
+  private normalizeUrl(url: string | null | undefined): string | null {
+    const trimmed = url?.trim();
+    return trimmed ? trimmed : null;
   }
 }
