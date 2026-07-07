@@ -99,7 +99,6 @@ export class AuthService {
   async resendVerification(email: string): Promise<void> {
     const user = await this.usersService.findByEmail(email);
 
-    // Always return silently to avoid leaking info
     if (!user || user.authProvider !== AuthProvider.LOCAL) {
       return;
     }
@@ -166,7 +165,6 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
 
-    // Revoke old token (rotation)
     await this.prisma.refreshToken.update({
       where: { id: storedToken.id },
       data: { revokedAt: new Date() },
@@ -225,12 +223,10 @@ export class AuthService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usersService.findByEmail(email);
 
-    // Don't reveal if email exists - always return success
     if (!user) {
       return;
     }
 
-    // Don't send reset for OAuth users without password
     if (user.authProvider !== AuthProvider.LOCAL) {
       return;
     }
@@ -281,7 +277,7 @@ export class AuthService {
         where: { id: passwordReset.id },
         data: { usedAt: new Date() },
       }),
-      // Revoke all refresh tokens for security
+
       this.prisma.refreshToken.updateMany({
         where: { userId: passwordReset.userId, revokedAt: null },
         data: { revokedAt: new Date() },

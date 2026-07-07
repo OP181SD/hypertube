@@ -1,4 +1,4 @@
-// NavigationMobile.tsx
+
 import { useState } from "react";
 import { SortTypes } from "./types/filters";
 
@@ -64,10 +64,10 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
             className="w-full text-left px-3 py-2.5 text-[11px] sm:text-xs font-medium text-white/50 hover:text-white/90 uppercase tracking-widest transition-all duration-200 flex items-center justify-between border-b border-white/8"
           >
             <span>Genres</span>
-            <svg 
+            <svg
               className={`w-4 h-4 transition-transform duration-300 ${openGenres ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -91,10 +91,10 @@ export const NavigationMobile: React.FC<NavigationMobileProps> = ({
             className="w-full text-left px-3 py-2.5 text-[11px] sm:text-xs font-medium text-white/50 hover:text-white/90 uppercase tracking-widest transition-all duration-200 flex items-center justify-between border-b border-white/8"
           >
             <span>Category</span>
-            <svg 
+            <svg
               className={`w-4 h-4 transition-transform duration-300 ${openCategory ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

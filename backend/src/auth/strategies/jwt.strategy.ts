@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: FastifyRequest, payload: { sub: string }) {
-    // Extract token from header or query param for blacklist check
+
     const authHeader = req.headers.authorization;
     const token = authHeader
       ? authHeader.replace("Bearer ", "")

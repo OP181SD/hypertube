@@ -9,7 +9,7 @@ const adapter = new PrismaPg(pool as any);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // Seed OAuth client for development
+
   const oauthClientSecretHash = await argon2.hash("hypertube-web-secret");
   await prisma.oAuthClient.upsert({
     where: { clientId: "hypertube-web" },
@@ -21,7 +21,6 @@ async function main() {
     },
   });
 
-  // Seed a demo user
   const passwordHash = await argon2.hash("DemoPass123!");
   await prisma.user.upsert({
     where: { email: "demo@hypertube.dev" },

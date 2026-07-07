@@ -1,4 +1,4 @@
-// ── Auth ──
+
 
 export interface RegisterRequest {
   email: string;
@@ -12,8 +12,6 @@ export interface MessageResponse {
   message: string;
 }
 
-// ── Users ──
-
 export interface UserPublic {
   id: string;
   username: string;
@@ -23,8 +21,6 @@ export interface UserPublic {
   language: string;
   email?: string;
 }
-
-// ── Movies ──
 
 export interface MovieListItem {
   id: string;
@@ -85,8 +81,6 @@ export interface MovieDetail {
   inWatchlist: boolean;
 }
 
-// ── Comments ──
-
 export interface CommentAuthor {
   id: string;
   username: string;
@@ -101,8 +95,6 @@ export interface Comment {
   updatedAt: string;
 }
 
-// ── Stream ──
-
 export interface StreamStatus {
   status: string;
   progress: number;
@@ -110,8 +102,6 @@ export interface StreamStatus {
   fileSize?: number;
   mimeType?: string;
 }
-
-// ── Hero ──
 
 export interface HeroMovie {
   id: string;
@@ -124,8 +114,6 @@ export interface HeroMovie {
   backdropUrl: string;
   overview: string;
 }
-
-// ── Search params ──
 
 export interface SearchMoviesParams {
   query?: string;

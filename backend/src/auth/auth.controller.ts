@@ -60,7 +60,7 @@ export class AuthController {
       maxAge: 7 * 24 * 3600,
       path: "/",
     });
-    // Readable from JS to avoid a blind /users/me call when not logged in
+
     res.setCookie("has_session", "1", {
       httpOnly: false,
       secure: isProd,
@@ -205,7 +205,6 @@ export class AuthController {
     return { message: "Logged out successfully" };
   }
 
-  // --- HELPER REDIRECTION ---
   private async handleOAuthRedirect(req: FastifyRequest, res: FastifyReply) {
     const user = req.user as User;
     const frontendUrl = this.configService.get<string>("FRONTEND_URL")!;
@@ -224,7 +223,6 @@ export class AuthController {
     }
   }
 
-  // OAuth - 42
   @Public()
   @UseGuards(FtAuthGuard)
   @Get("auth/42")
@@ -237,7 +235,6 @@ export class AuthController {
     return this.handleOAuthRedirect(req, res);
   }
 
-  // OAuth - Google
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get("auth/google")
@@ -250,7 +247,6 @@ export class AuthController {
     return this.handleOAuthRedirect(req, res);
   }
 
-  // OAuth - GitHub
   @Public()
   @UseGuards(GithubAuthGuard)
   @Get("auth/github")
@@ -263,7 +259,6 @@ export class AuthController {
     return this.handleOAuthRedirect(req, res);
   }
 
-  // OAuth - Discord
   @Public()
   @UseGuards(DiscordAuthGuard)
   @Get("auth/discord")

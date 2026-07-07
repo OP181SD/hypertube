@@ -13,8 +13,7 @@ export async function createTestApp(): Promise<NestFastifyApplication> {
   const moduleRef: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   })
-    // Rate limiting must not interfere with E2E tests (registerUser logs in
-    // on every call). Replace the throttler with a pass-through guard.
+
     .overrideGuard(ThrottlerGuard)
     .useValue({ canActivate: () => true })
     .compile();

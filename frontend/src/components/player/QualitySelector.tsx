@@ -24,7 +24,6 @@ export const QualitySelector: FC<QualitySelectorProps> = ({
 
   if (torrents.length === 0) return null;
 
-  // Series torrents carry an episode label; present the picker as episodes.
   const isSeries = torrents.some((torrent) => torrent.episodeLabel);
 
   return (

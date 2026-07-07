@@ -59,10 +59,10 @@ export function useSignupForm() {
     try {
       const { username, firstName, lastName, email, password } = fields;
       await register({ email, username, firstName, lastName, password });
-      // Account created — the user must now verify their email.
+
       setRegistered(true);
     } catch {
-      // register() failed — authError is set by AuthContext
+
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export function useSignupForm() {
     try {
       await resendVerification(fields.email);
     } catch {
-      // Response is intentionally generic regardless of outcome.
+
     }
     setResendMessage(t("resend_verification_done"));
   };

@@ -43,7 +43,6 @@ export class EztvService {
 
       let torrents = data.torrents ?? [];
 
-      // EZTV doesn't have a query param — filter client-side by title
       if (params.query) {
         const q = params.query.toLowerCase();
         torrents = torrents.filter((t) => t.title.toLowerCase().includes(q));
@@ -59,9 +58,6 @@ export class EztvService {
     }
   }
 
-  // Fetch every torrent of a show by paging through EZTV (100/page is the API
-  // max) until a short page, capped to avoid pathological shows. Used lazily
-  // when a series detail is opened so the whole catalogue is available.
   async getAllTorrentsByImdb(imdbId: string): Promise<EztvTorrent[]> {
     const PAGE_SIZE = 100;
     const MAX_PAGES = 10;
@@ -74,7 +70,7 @@ export class EztvService {
         limit: PAGE_SIZE,
       });
       all.push(...torrents);
-      if (torrents.length < PAGE_SIZE) break; // last page reached
+      if (torrents.length < PAGE_SIZE) break;
     }
 
     return all;

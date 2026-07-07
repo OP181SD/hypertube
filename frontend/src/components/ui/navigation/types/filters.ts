@@ -7,7 +7,6 @@ export type Genders =
     | "Thriller"
     | "Romance"
 
-
 export const genres: Genders[] = [
     "Action",
     "Comedy",

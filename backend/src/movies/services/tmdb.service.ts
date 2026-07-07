@@ -21,7 +21,7 @@ const TMDB_GENRE_MAP: Record<number, string> = {
   99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
   27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance",
   878: "Sci-Fi", 10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western",
-  // TV-specific genre ids (TMDb uses a separate set for series)
+
   10759: "Action & Adventure", 10762: "Kids", 10763: "News", 10764: "Reality",
   10765: "Sci-Fi & Fantasy", 10766: "Soap", 10767: "Talk", 10768: "War & Politics",
 };
@@ -104,7 +104,6 @@ export class TmdbService {
 
       if (data.movie_results.length === 0) return null;
 
-      // Get full details including credits
       return this.getMovieDetails(data.movie_results[0].id);
     } catch (error) {
       this.logger.error("TMDb find failed", (error as Error).message);
@@ -112,9 +111,6 @@ export class TmdbService {
     }
   }
 
-  // TMDb is used for series metadata only (it is not a video source). The
-  // series page is seeded from popular/searched TV shows, then matched to EZTV
-  // torrents by imdb id.
   private toSeriesShow(tv: TmdbTvResult): SeriesShow {
     return {
       tmdbId: tv.id,

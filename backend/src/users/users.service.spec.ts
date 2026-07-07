@@ -7,13 +7,11 @@ import { AuthProvider, Language } from "@prisma/client";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mockDbUser, mockDbUser2 } from "../../test/fixtures/users.fixture";
 
-// Mock argon2
 vi.mock("argon2", () => ({
   hash: vi.fn().mockResolvedValue("$argon2id$hashed"),
   verify: vi.fn().mockResolvedValue(true),
 }));
 
-// Mock fs/promises for saveAvatar (avoid touching the disk)
 vi.mock("fs/promises", () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
@@ -270,7 +268,7 @@ describe("UsersService", () => {
   });
 
   describe("saveAvatar", () => {
-    // A buffer that starts with the real JPEG signature (FF D8 FF).
+
     const validJpeg = Buffer.concat([
       Buffer.from([0xff, 0xd8, 0xff]),
       Buffer.alloc(16),
@@ -298,7 +296,7 @@ describe("UsersService", () => {
     });
 
     it("should reject a file whose content is not a real image", async () => {
-      // A .png filename / image mime-type, but the bytes are plain text.
+
       const mockFile = {
         filename: "evil.png",
         mimetype: "image/png",

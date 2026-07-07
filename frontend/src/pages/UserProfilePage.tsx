@@ -24,24 +24,22 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (!id) return;
 
-    // If viewing own profile, redirect to dashboard profile tab
     if (currentUser && currentUser.id === id) {
       navigate("/dashboard", { replace: true });
       return;
     }
 
-    let ignore = false; // Flag to prevent race conditions
+    let ignore = false;
 
     const fetchUserProfile = async () => {
-      // 1. Reset state before fetching (wrapped in the async function)
+
       setLoading(true);
       setError(null);
 
       try {
-        // 2. Await the API call
+
         const data = await getUser(id);
-        
-        // 3. Only update state if the component hasn't unmounted or id hasn't changed
+
         if (!ignore) {
           setProfile(data);
         }
@@ -58,9 +56,8 @@ export default function UserProfilePage() {
 
     fetchUserProfile();
 
-    // Cleanup function runs when the component unmounts or when the dependencies (like `id`) change
     return () => {
-      ignore = true; 
+      ignore = true;
     };
   }, [id, t, currentUser, navigate]);
 

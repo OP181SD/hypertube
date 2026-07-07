@@ -36,8 +36,6 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
   const { t, i18n } = useTranslation();
   const [status, setStatus] = useState<StreamStatus | null>(null);
 
-  // Reset status synchronously when switching torrents so the loading overlay
-  // shows immediately, without an effect.
   const [polledTorrentId, setPolledTorrentId] = useState(torrentId);
   if (torrentId !== polledTorrentId) {
     setPolledTorrentId(torrentId);
@@ -87,7 +85,6 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
 
-      {/* Player — only mounted when the stream is identified and ready */}
       {isReady && (
         <div className="absolute inset-0 [&_.plyr]:h-full [&_.plyr]:w-full [&_video]:h-full [&_video]:w-full">
         <PlyrErrorBoundary>
@@ -121,7 +118,6 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
         </div>
       )}
 
-      {/* Loading overlay */}
       {!isReady && !isError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black">
           <div className="flex items-center gap-2 text-white/60 text-sm">
@@ -142,7 +138,6 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
         </div>
       )}
 
-      {/* Error overlay */}
       {isError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black">
           <span className="text-red-400 text-sm">{t("stream_error")}</span>

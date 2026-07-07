@@ -6,7 +6,7 @@ interface PosterImageProps {
   alt: string;
   className?: string;
   placeholderClassName?: string;
-  /** `label` shows translated text; `silent` is a plain dark block (hero/backdrop). */
+
   placeholder?: "label" | "silent";
 }
 

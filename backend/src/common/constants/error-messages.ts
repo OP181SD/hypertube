@@ -1,12 +1,6 @@
-/**
- * Centralised error messages.
- *
- * Keeping every user-facing error string in one place avoids duplication,
- * guarantees consistent wording, and provides a single source of truth to
- * plug into i18n later. Group constants by domain.
- */
+
 export const ERROR_MESSAGES = {
-  // Auth
+
   INVALID_CLIENT_CREDENTIALS: "Invalid client credentials",
   PASSWORD_GRANT_FIELDS_REQUIRED:
     "username and password are required for password grant",
@@ -25,7 +19,6 @@ export const ERROR_MESSAGES = {
   RESET_TOKEN_EXPIRED: "Reset token expired",
   TOKEN_REVOKED: "Token has been revoked",
 
-  // Users
   USER_NOT_FOUND: "User not found",
   EMAIL_EXISTS: "Email already exists",
   USERNAME_EXISTS: "Username already exists",
@@ -34,19 +27,15 @@ export const ERROR_MESSAGES = {
   INVALID_FILE_TYPE: "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
   INVALID_IMAGE_FILE: "Invalid image file. Allowed: JPEG, PNG, GIF, WebP",
 
-  // Movies
   MOVIE_NOT_FOUND: "Movie not found",
 
-  // Comments
   COMMENT_NOT_FOUND: "Comment not found",
   COMMENT_EDIT_FORBIDDEN: "You can only edit your own comments",
   COMMENT_DELETE_FORBIDDEN: "You can only delete your own comments",
 
-  // Streaming
   TORRENT_NOT_FOUND: "Torrent not found",
   VIDEO_NOT_READY: "Video file not available yet",
   SUBTITLE_NOT_FOUND: (lang: string) => `Subtitle '${lang}' not found`,
 
-  // Watchlist
   NOT_IN_WATCHLIST: "Not in watchlist",
 } as const;

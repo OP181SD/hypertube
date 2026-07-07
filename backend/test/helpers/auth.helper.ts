@@ -1,9 +1,6 @@
 import { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { prisma } from "./prisma.helper";
 
-/**
- * Logs a user in and returns the tokens issued via the auth cookies.
- */
 export async function loginUser(
   app: NestFastifyApplication,
   username: string,
@@ -23,12 +20,6 @@ export async function loginUser(
   };
 }
 
-/**
- * Registers a user for E2E tests. Registration now requires email
- * verification before login, so the account is marked verified directly
- * in the database (skipping the email round-trip) and then logged in to
- * obtain real tokens.
- */
 export async function registerUser(
   app: NestFastifyApplication,
   overrides: Record<string, string> = {},

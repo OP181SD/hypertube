@@ -31,9 +31,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
-    // Log anything that isn't the client's fault: unexpected (non-HTTP) errors
-    // all default to 500 here, and any genuine 5xx. Normal 4xx client errors
-    // are left unlogged to keep the console clean.
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
         exception instanceof Error ? exception.message : String(exception),

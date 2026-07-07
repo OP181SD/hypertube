@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 
-// We need to mock the PrismaClient at module level since PrismaService extends it
 vi.mock("@prisma/client", () => {
   return {
     PrismaClient: class MockPrismaClient {
@@ -18,7 +17,6 @@ vi.mock("@prisma/adapter-pg", () => ({
   PrismaPg: class MockPrismaPg {},
 }));
 
-// Import after mocks are set up
 import { PrismaService } from "./prisma.service";
 
 describe("PrismaService", () => {

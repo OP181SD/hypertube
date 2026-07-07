@@ -18,7 +18,6 @@ import pl from "./locales/pl.json";
 import sv from "./locales/sv.json";
 import tr from "./locales/tr.json";
 
-
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)

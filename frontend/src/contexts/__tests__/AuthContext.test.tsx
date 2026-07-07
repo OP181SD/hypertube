@@ -41,9 +41,7 @@ const USER = {
 const authRef = { current: null as unknown as ReturnType<typeof useAuth> };
 
 function TestConsumer() {
-  // Test-only escape hatch: expose the hook value so assertions can call its
-  // methods outside the component tree.
-  // eslint-disable-next-line react-hooks/immutability
+
   authRef.current = useAuth();
   return (
     <div>

@@ -95,7 +95,7 @@ describe("MoviesService", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    // Reset mock implementations that use fn().mockResolvedValue
+
     mockMovieCacheService.cacheYtsMovies.mockResolvedValue(undefined);
     mockMovieCacheService.cacheSeries.mockResolvedValue(undefined);
     mockTmdbService.getPopularSeries.mockResolvedValue([]);
@@ -204,7 +204,7 @@ describe("MoviesService", () => {
       );
 
       expect(mockYtsService.searchMovies).toHaveBeenCalled();
-      // Movies page never hits the series source
+
       expect(mockEztvService.searchTorrents).not.toHaveBeenCalled();
       expect(mockMovieCacheService.cacheYtsMovies).toHaveBeenCalledWith([ytsMovie, ytsMovie2]);
       expect(mockMovieCacheService.cacheSeries).not.toHaveBeenCalled();
@@ -231,7 +231,7 @@ describe("MoviesService", () => {
 
       expect(mockTmdbService.searchSeries).toHaveBeenCalledWith("breaking bad");
       expect(mockTmdbService.getTvImdbId).toHaveBeenCalledWith(seriesShow.tmdbId);
-      // EZTV is queried by the resolved imdb (without the tt prefix)
+
       expect(mockEztvService.searchTorrents).toHaveBeenCalledWith({ imdbId: "0903747" });
       expect(mockMovieCacheService.cacheSeries).toHaveBeenCalledWith(
         expect.objectContaining({ imdbId: "tt0903747", tmdbId: seriesShow.tmdbId }),
@@ -430,8 +430,8 @@ describe("MoviesService", () => {
         torrents: [],
       };
       mockPrisma.movie.findUnique
-        .mockResolvedValueOnce(seriesMovie) // initial load
-        .mockResolvedValueOnce({ ...seriesMovie, torrents: [mockDbTorrent] }); // after fetch
+        .mockResolvedValueOnce(seriesMovie)
+        .mockResolvedValueOnce({ ...seriesMovie, torrents: [mockDbTorrent] });
       mockEztvService.getAllTorrentsByImdb.mockResolvedValue([eztvTorrent]);
       mockPrisma.comment.count.mockResolvedValue(0);
       mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
@@ -439,7 +439,6 @@ describe("MoviesService", () => {
 
       const result = await service.findById("series-uuid", "user-id");
 
-      // EZTV queried by imdb without the tt prefix, episodes cached, flag set
       expect(mockEztvService.getAllTorrentsByImdb).toHaveBeenCalledWith("0944947");
       expect(mockMovieCacheService.addSeriesEpisodes).toHaveBeenCalledWith(
         "series-uuid",

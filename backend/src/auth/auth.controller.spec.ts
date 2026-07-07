@@ -64,8 +64,7 @@ describe("AuthController", () => {
         { provide: ConfigService, useValue: mockConfigService },
       ],
     })
-      // ThrottlerGuard needs ThrottlerModule's providers — not relevant to
-      // controller unit tests, so replace it with a pass-through.
+
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
       .compile();

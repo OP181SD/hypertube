@@ -23,8 +23,6 @@ export function useProfileForm() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<ProfileMessage | null>(null);
 
-  // Re-seed the form whenever the authenticated user changes, without an
-  // effect (https://react.dev/learn/you-might-not-need-an-effect).
   const [seededUser, setSeededUser] = useState<typeof user>(null);
   if (user && user !== seededUser) {
     setSeededUser(user);

@@ -5,7 +5,6 @@ import { NavigationDesktop } from "./NavigationDesktop";
 import { SortTypes } from "./types/filters";
 import { NavigationMobile } from "./NavigationMobile";
 
-
 interface NavigationGenderProps {
   onSelectGenre: (genreName: string) => void;
   onSelectSort: (sortType: SortTypes) => void;
@@ -51,7 +50,6 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
 
   const translatedGenres = genres.map((genre) => t(`genres.${genre}`));
 
-
   return (
     <div className="relative w-full my-4 py-4 bg-white/3 backdrop-blur-sm border-y border-white/6">
       <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/5 to-transparent pointer-events-none" />
@@ -61,7 +59,7 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
         openCategory={openCategory}
         setOpenGenres={setOpenGenres}
         setOpenCategory={setOpenCategory}
-        // genres={genres}
+
         genres={translatedGenres}
         sortTypes={sortTypes}
         onSelectGenre={onSelectGenre}
@@ -73,7 +71,7 @@ export const NavigationGender: React.FC<NavigationGenderProps> = ({
         openCategory={openCategory}
         setOpenGenres={setOpenGenres}
         setOpenCategory={setOpenCategory}
-        // genres={genres}
+
         genres={translatedGenres}
         sortTypes={sortTypes}
         onSelectGenre={onSelectGenre}

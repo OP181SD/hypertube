@@ -1,12 +1,6 @@
 import { Injectable, ExecutionContext, mixin, Type } from "@nestjs/common";
 import { AuthGuard, IAuthGuard } from "@nestjs/passport";
 
-/**
- * Builds a Passport AuthGuard for the given strategy, with a Fastify shim:
- * Passport expects Express-style res.setHeader/res.end, so we bridge them to
- * Fastify's equivalents. All OAuth providers share the exact same behaviour,
- * so the named guards below are produced from this single factory.
- */
 function createOAuthGuard(strategy: string): Type<IAuthGuard> {
   @Injectable()
   class OAuthGuard extends AuthGuard(strategy) {

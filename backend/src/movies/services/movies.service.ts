@@ -80,11 +80,8 @@ export class MoviesService {
       params.genre = "Sci-Fi";
     }
 
-    // Each library page maps to a single external source: movies → YTS,
-    // series → EZTV. Default (no mediaType) keeps the movie source.
     if (params.mediaType === "series") {
-      // Seed from TMDb (popular or searched TV shows) for a recognizable
-      // catalogue with posters, then match each show to its EZTV episodes.
+
       const shows = params.query
         ? await this.tmdbService.searchSeries(params.query)
         : await this.tmdbService.getPopularSeries(page);
@@ -113,7 +110,7 @@ export class MoviesService {
     }
 
     const where = this.movieQuery.buildWhereClause(params);
-    // Subject requires results sorted by name when a search query is present
+
     const effectiveSortBy = params.query && !params.sortBy ? "title" : params.sortBy;
     const orderBy = this.movieQuery.buildOrderBy(effectiveSortBy, params.order);
 
@@ -161,8 +158,6 @@ export class MoviesService {
 
     let movie = found;
 
-    // First time a series detail is opened, pull in its full episode list from
-    // EZTV (the grid only seeds a partial page per show). Done once per series.
     if (
       found.mediaType === "series" &&
       !found.episodesFetched &&

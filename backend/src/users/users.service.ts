@@ -13,9 +13,6 @@ import { join } from "path";
 import { randomUUID } from "crypto";
 import * as argon2 from "argon2";
 
-// Real file-signature ("magic bytes") checks. The client-declared mime-type and
-// filename are not trusted: a malicious upload could send a .php payload renamed
-// to .png. We sniff the actual bytes and derive the stored extension ourselves.
 const IMAGE_SIGNATURES: { ext: string; matches: (b: Buffer) => boolean }[] = [
   { ext: ".jpg", matches: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   {
@@ -177,8 +174,7 @@ export class UsersService {
   }
 
   async saveAvatar(userId: string, file: MultipartFile): Promise<string> {
-    // Buffer the upload (capped to 5 MB by the multipart limit) and validate it
-    // by its real signature before anything touches the disk.
+
     const buffer = await file.toBuffer();
     const signature = IMAGE_SIGNATURES.find((s) => s.matches(buffer));
     if (!signature) {

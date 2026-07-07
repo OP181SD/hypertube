@@ -15,14 +15,13 @@ export default function VerifyEmailPage() {
   const [status, setStatus] = useState<Status>(token ? "verifying" : "error");
   const [resendEmail, setResendEmail] = useState("");
   const [resendMessage, setResendMessage] = useState("");
-  // The token is single-use: guard against React StrictMode double-invocation.
+
   const startedRef = useRef(false);
 
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
 
-    // No token: status is already "error" from the initial state.
     if (!token) return;
 
     verifyEmail(token)
@@ -38,7 +37,7 @@ export default function VerifyEmailPage() {
     try {
       await resendVerification(resendEmail);
     } catch {
-      // Response is intentionally generic regardless of outcome.
+
     }
     setResendMessage(t("resend_verification_done"));
   };

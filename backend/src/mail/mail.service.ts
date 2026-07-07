@@ -18,8 +18,7 @@ export class MailService {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>("SMTP_HOST"),
       port: this.configService.get<number>("SMTP_PORT"),
-      // auth is attached only when credentials are provided — local mail
-      // catchers (mailpit, etc.) accept mail without authentication.
+
       ...(user ? { auth: { user, pass } } : {}),
     });
 

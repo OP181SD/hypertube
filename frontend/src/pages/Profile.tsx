@@ -19,7 +19,6 @@ export function Profile() {
 
   if (!user) return null;
 
-  // Deterministic fallback avatar derived from the username
   return (
     <div className="min-h-screen bg-black text-white px-6 sm:px-10 md:px-20 pt-16 flex flex-col items-center">
       <div className="flex flex-col items-center mb-10">

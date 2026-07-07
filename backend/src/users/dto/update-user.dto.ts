@@ -28,7 +28,6 @@ export class UpdateUserDto {
 @IsString()
 @MinLength(1)
 @MaxLength(50)
-// Allows letters (including accented ones), spaces and hyphens
 @Matches(/^[\p{L}\p{M} -]+$/u, {
   message: "First name contains invalid characters",
 })

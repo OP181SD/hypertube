@@ -17,7 +17,7 @@ export function useWatchlist(movieId: string, initialState: boolean) {
         setInWatchlist(true);
       }
     } catch {
-      // keep current state on error
+
     } finally {
       setWatchlistLoading(false);
     }

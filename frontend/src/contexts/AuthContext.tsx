@@ -55,7 +55,7 @@ function syncLanguage(user: UserPublic) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserPublic | null>(null);
-  // Only block on session restore when a session cookie is actually present.
+
   const [loading, setLoading] = useState(() =>
     document.cookie.includes("has_session=1"),
   );
@@ -68,8 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const restoreSession = useCallback(async () => {
-    // `loading` already starts false when there is no session cookie, so the
-    // early return here needs no synchronous state update.
+
     if (!document.cookie.includes("has_session=1")) {
       return;
     }
@@ -85,9 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearAuth]);
 
   useEffect(() => {
-    // One-shot async session restore on mount; state updates happen after the
-    // awaited network call, not synchronously.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     restoreSession();
   }, [restoreSession]);
 
@@ -144,8 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (data: RegisterRequest) => {
       setError(null);
       try {
-        // Backend creates the account and sends a verification email.
-        // No session is opened until the user verifies their address.
+
         await registerApi(data);
       } catch (err: unknown) {
         const axiosErr = err as {
@@ -163,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyEmail = useCallback(async (token: string) => {
     setError(null);
     try {
-      // Backend validates the token and sets the session cookies.
+
       await verifyEmailApi(token);
       const u = await getMe();
       setUser(u);
@@ -189,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logoutApi();
     } catch {
-      // still clear local state
+
     }
     clearAuth();
   }, [clearAuth]);
@@ -245,9 +241,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// The hook is intentionally co-located with its provider; fast-refresh of this
-// file falls back to a full reload, which is acceptable for a context module.
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {

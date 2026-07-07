@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PosterImage } from "@/components/ui/PosterImage";
 import type { MovieListItem } from "@/types/api";
+
+interface MoviesSectionProps {
+  movies: MovieListItem[];
   loading?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
@@ -20,8 +23,6 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(loading);
 
-  // Keep the latest `loading` value in a ref so the IntersectionObserver
-  // callback reads it without re-subscribing on every change.
   useEffect(() => {
     loadingRef.current = loading;
   });

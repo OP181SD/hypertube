@@ -26,7 +26,7 @@ export function WatchlistPage() {
       await removeFromWatchlist(movieId);
       setMovies((prev) => prev.filter((m) => m.id !== movieId));
     } catch {
-      // silently ignore, UI already reset via finally
+
     } finally {
       setRemoving(null);
     }

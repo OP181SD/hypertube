@@ -11,7 +11,6 @@ function mockContext(): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
-// super.canActivate() lives on the AuthGuard("jwt") prototype that JwtAuthGuard extends.
 const parentCanActivate = vi.spyOn(
   Object.getPrototypeOf(JwtAuthGuard.prototype) as { canActivate: unknown },
   "canActivate",

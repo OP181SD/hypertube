@@ -9,8 +9,6 @@ export default function Navbar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
 
-  // Opened when redirected from a protected route (?auth=login): derive the
-  // open state during render, then strip the query param in an effect.
   const authRedirect = searchParams.get("auth");
   if (authRedirect && !isModalOpen) {
     setIsOpenModal(true);

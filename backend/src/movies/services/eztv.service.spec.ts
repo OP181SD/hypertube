@@ -123,7 +123,7 @@ describe("EztvService", () => {
       }));
 
     it("should page until a short page and concatenate results", async () => {
-      // page 1 full (100), page 2 short (5) → stops after page 2
+
       global.fetch = vi
         .fn()
         .mockResolvedValueOnce({ ok: true, json: async () => ({ torrents: makePage(100), torrents_count: 105 }) })

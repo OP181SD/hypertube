@@ -248,7 +248,7 @@ describe("AuthService", () => {
     });
 
     it("should throw ForbiddenException when email is not verified", async () => {
-      mockUsersService.findByUsername.mockResolvedValue(mockDbUser); // emailVerified: false
+      mockUsersService.findByUsername.mockResolvedValue(mockDbUser);
       vi.mocked(argon2.verify).mockResolvedValue(true);
 
       await expect(
@@ -342,7 +342,7 @@ describe("AuthService", () => {
 
       expect(result).toHaveProperty("access_token");
       expect(result).toHaveProperty("refresh_token");
-      // Old token should be revoked
+
       expect(mockPrismaService.refreshToken.update).toHaveBeenCalledWith({
         where: { id: "token-id" },
         data: { revokedAt: expect.any(Date) },
@@ -371,7 +371,7 @@ describe("AuthService", () => {
     it("should throw UnauthorizedException for expired refresh token", async () => {
       mockPrismaService.refreshToken.findUnique.mockResolvedValue({
         revokedAt: null,
-        expiresAt: new Date(Date.now() - 86400000), // expired yesterday
+        expiresAt: new Date(Date.now() - 86400000),
       });
 
       await expect(
@@ -594,7 +594,7 @@ describe("AuthService", () => {
     it("should throw BadRequestException for expired token", async () => {
       mockPrismaService.passwordReset.findUnique.mockResolvedValue({
         usedAt: null,
-        expiresAt: new Date(Date.now() - 3600000), // expired
+        expiresAt: new Date(Date.now() - 3600000),
       });
 
       await expect(

@@ -24,7 +24,7 @@ describe("AllExceptionsFilter", () => {
 
   beforeEach(() => {
     filter = new AllExceptionsFilter();
-    // Suppress and observe server-error logging in every test.
+
     errorSpy = vi
       .spyOn(Logger.prototype, "error")
       .mockImplementation(() => {});

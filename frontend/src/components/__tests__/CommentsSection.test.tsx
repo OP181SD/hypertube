@@ -77,12 +77,10 @@ describe("CommentsSection", () => {
   it("shows edit/delete buttons only for own comments", () => {
     render(<MemoryRouter><CommentsSection movieId="movie-1" comments={mockComments} onCommentChange={vi.fn()} /></MemoryRouter>);
 
-    // alice's comment (user-1 = current user) should have edit/delete
     const aliceComment = screen.getByText("Great movie!").closest("[data-comment-id]")!;
     expect(aliceComment.querySelector("[aria-label='edit_comment']")).toBeInTheDocument();
     expect(aliceComment.querySelector("[aria-label='delete_comment']")).toBeInTheDocument();
 
-    // bob's comment should NOT have edit/delete
     const bobComment = screen.getByText("Not bad.").closest("[data-comment-id]")!;
     expect(bobComment.querySelector("[aria-label='edit_comment']")).toBeNull();
     expect(bobComment.querySelector("[aria-label='delete_comment']")).toBeNull();

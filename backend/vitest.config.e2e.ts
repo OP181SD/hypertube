@@ -12,8 +12,7 @@ export default defineConfig({
     fileParallelism: false,
     sequence: { concurrent: false },
     setupFiles: ["./test/setup.e2e.ts"],
-    // E2E tests must not depend on a developer's real API keys or hit the
-    // live OpenSubtitles service — force the "no key" path deterministically.
+
     env: { OPENSUBTITLES_API_KEY: "" },
   },
   resolve: {

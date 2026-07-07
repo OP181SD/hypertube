@@ -13,8 +13,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    // Send anonymous visitors back to the public home page and signal the
-    // Navbar to open the auth modal (sign-up / sign-in funnel).
+
     return <Navigate to="/?auth=login" replace />;
   }
 

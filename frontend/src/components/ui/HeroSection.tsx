@@ -29,7 +29,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
     setActiveIndex((activeIndex - 1 + movies.length) % movies.length);
   }, [activeIndex, movies.length, setActiveIndex]);
 
-  // Auto-rotation
   useEffect(() => {
     if (movies.length <= 1) return;
 
@@ -55,7 +54,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
   const handleSelect = (index: number) => {
     setActiveIndex(index);
-    // Reset timer on manual navigation
+
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       if (!pausedRef.current) goNext();
@@ -74,7 +73,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
       onMouseLeave={handleMouseLeave}
     >
       <div className="relative w-full h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)]">
-        {/* Stacked images with crossfade */}
+
         {movies.map((m, index) => {
           const img = m.backdropUrl ?? m.posterUrl;
           return (
@@ -99,11 +98,9 @@ export const HeroSection: FC<HeroSectionProps> = ({
           );
         })}
 
-        {/* Gradient overlays */}
         <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
         <div className="absolute inset-0 bg-linear-to-r from-black/60 via-transparent to-transparent" />
 
-        {/* Movie info */}
         <div
           className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-14 pb-14 sm:pb-16 text-white cursor-pointer"
           onClick={() => navigate(`/movies/preview/${movie.id}`)}
@@ -131,7 +128,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
           )}
         </div>
 
-        {/* Left arrow */}
         {movies.length > 1 && (
           <button
             onClick={(e: React.MouseEvent) => { e.stopPropagation(); goPrev(); }}
@@ -144,7 +140,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
           </button>
         )}
 
-        {/* Right arrow */}
         {movies.length > 1 && (
           <button
             onClick={(e: React.MouseEvent) => { e.stopPropagation(); goNext(); }}
@@ -157,7 +152,6 @@ export const HeroSection: FC<HeroSectionProps> = ({
           </button>
         )}
 
-        {/* Dots indicator */}
         {movies.length > 1 && (
           <div className="absolute bottom-4 sm:bottom-6 inset-x-0 flex justify-center">
             <ul className="flex gap-1.5 sm:gap-2 items-center px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-sm">

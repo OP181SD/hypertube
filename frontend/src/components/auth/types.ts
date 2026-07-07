@@ -39,8 +39,6 @@ const transitions: Record<AuthPage, AuthPage[]> = {
   ],
 };
 
-
-
 export function reducer(state: AuthState, action: Action): AuthState {
   return transitions[state].includes(action.type)
     ? action.type

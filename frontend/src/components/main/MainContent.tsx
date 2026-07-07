@@ -13,7 +13,7 @@ export default function MainContent() {
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Front page: top movies, visible to everyone (subject III.4) */}
+
       {hero.movies.length > 0 && (
         <HeroSection
           movies={hero.movies}
@@ -22,7 +22,6 @@ export default function MainContent() {
         />
       )}
 
-      {/* Content */}
       <div className="flex flex-1 justify-center items-center px-4">
         <div className="flex flex-col items-center text-center max-w-4xl mt-10">
           <h1

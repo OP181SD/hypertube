@@ -28,8 +28,7 @@ export default function MovieDetailPage() {
           setMovie(movieData);
           if (movieData.torrents.length > 0) {
             const isSeries = movieData.torrents.some((tor) => tor.season != null);
-            // Series default to the latest episode's best release; movies to the
-            // most-seeded torrent.
+
             const best = [...movieData.torrents].sort((a, b) =>
               isSeries
                 ? (b.season ?? -1) - (a.season ?? -1) ||

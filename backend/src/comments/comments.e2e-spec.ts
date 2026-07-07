@@ -116,7 +116,6 @@ describe("Comments E2E", () => {
       const { tokens } = await registerUser(app);
       const movie = await seedMovie();
 
-      // Create a comment
       await app.inject({
         method: "POST",
         url: "/comments",
@@ -281,7 +280,6 @@ describe("Comments E2E", () => {
 
       expect(response.statusCode).toBe(204);
 
-      // Verify it's gone
       const getRes = await app.inject({
         method: "GET",
         url: `/comments/${created.id}`,

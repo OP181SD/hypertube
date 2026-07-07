@@ -29,8 +29,6 @@ export function DashboardNavbar({
   const { t } = useTranslation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-
-
   return (
     <header>
       <div
@@ -101,7 +99,6 @@ export function DashboardNavbar({
               {t("logout")}
             </button>
 
-            {/* Mobile search toggle */}
             <button
               onClick={() => {
                 setMobileSearchOpen((prev) => !prev);

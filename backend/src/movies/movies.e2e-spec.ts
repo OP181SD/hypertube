@@ -57,7 +57,6 @@ describe("Movies E2E", () => {
     it("should return movies with correct fields", async () => {
       const { tokens } = await registerUser(app);
 
-      // Seed a movie directly
       await prisma.movie.create({
         data: {
           imdbId: "tt0133093",
@@ -155,7 +154,7 @@ describe("Movies E2E", () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      // At minimum, DB-seeded Comedy movie should appear
+
       const comedyMovies = body.data.filter(
         (m: { title: string }) => m.title === "Comedy Movie",
       );

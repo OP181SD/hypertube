@@ -33,7 +33,7 @@ export const AuthLogin: React.FC<Props> = ({ dispatch }) => {
       await login(username, password);
       navigate("/dashboard");
     } catch {
-      // authError is set by AuthContext
+
     } finally {
       setLoading(false);
     }

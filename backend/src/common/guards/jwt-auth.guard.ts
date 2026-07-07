@@ -16,11 +16,11 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     ]);
 
     if (isPublic) {
-      // Try to authenticate but don't fail if no token
+
       try {
         await super.canActivate(context);
       } catch {
-        // Ignore auth errors on public routes — user stays undefined
+
       }
       return true;
     }

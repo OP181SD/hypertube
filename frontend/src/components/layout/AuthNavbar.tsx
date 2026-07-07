@@ -13,7 +13,7 @@ export default function AuthNavbar() {
     try {
       await logout();
     } catch {
-      // logout clears local state internally regardless
+
     }
     navigate("/");
   };

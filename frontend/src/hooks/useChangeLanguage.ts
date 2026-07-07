@@ -15,7 +15,7 @@ export function useChangeLanguage() {
         try {
           await updateUser({ language: backendLang as "EN" | "FR" | "ES" | "IT" | "PT" | "DE" | "RU" | "JA" | "KO" | "ZH" | "AR" | "NL" | "PL" | "SV" | "TR" });
         } catch {
-          // Language sync failure is non-critical
+
         }
       }
     },

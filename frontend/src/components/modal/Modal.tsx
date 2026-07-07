@@ -26,7 +26,7 @@ export const Modal = ({ isOpen, onClose }: ModalProps) => {
         </button>
         <div className="border-8">
             <AuthStep />
-        </div>  
+        </div>
       </div>
     </div>
   );

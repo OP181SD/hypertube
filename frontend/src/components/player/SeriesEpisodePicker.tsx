@@ -22,7 +22,6 @@ export const SeriesEpisodePicker: FC<SeriesEpisodePickerProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Group torrents into season → episode → releases (releases sorted by seeds).
   const { seasons, bySeason, other } = useMemo(() => {
     const bySeason = new Map<number, Map<number, TorrentItem[]>>();
     const other: TorrentItem[] = [];
@@ -73,7 +72,6 @@ export const SeriesEpisodePicker: FC<SeriesEpisodePickerProps> = ({
     <div className="flex flex-col gap-3">
       <h3 className="text-sm font-medium text-white/70">{t("episodes")}</h3>
 
-      {/* Season selector — horizontal scroll handles shows with many seasons */}
       {seasons.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
           {seasons.map((s) => (
@@ -102,7 +100,6 @@ export const SeriesEpisodePicker: FC<SeriesEpisodePickerProps> = ({
         </div>
       )}
 
-      {/* Episodes of the selected season */}
       <div className="flex flex-col gap-1.5">
         {season != null &&
           episodes.map((ep) => {
@@ -149,7 +146,6 @@ export const SeriesEpisodePicker: FC<SeriesEpisodePickerProps> = ({
             );
           })}
 
-        {/* Releases without a parseable SxxExx (e.g. date-based shows) */}
         {season === null &&
           other.map((r) => (
             <button

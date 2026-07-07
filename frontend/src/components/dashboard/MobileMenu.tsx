@@ -12,7 +12,6 @@ interface Props {
 export function MobileMenu({ menuOpen, setMenuOpen, activeTab, setActiveTab, handleLogout }: Props) {
   const { t } = useTranslation();
 
-  // The "home" tab is the movies library; label it accordingly.
   const tabLabel: Record<Tab, string> = {
     home: "movies",
     series: "series",

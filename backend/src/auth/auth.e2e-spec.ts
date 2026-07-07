@@ -46,14 +46,13 @@ describe("Auth E2E", () => {
 
       expect(response.statusCode).toBe(201);
       const body = JSON.parse(response.body);
-      // Email verification is required: registration returns a message,
-      // not tokens. No session is opened until the email is verified.
+
       expect(body.message).toBeDefined();
       expect(body.access_token).toBeUndefined();
     });
 
     it("should reject registration with duplicate email", async () => {
-      // First register
+
       await app.inject({
         method: "POST",
         url: "/auth/register",
@@ -66,7 +65,6 @@ describe("Auth E2E", () => {
         },
       });
 
-      // Second register with same email
       const response = await app.inject({
         method: "POST",
         url: "/auth/register",
@@ -83,7 +81,7 @@ describe("Auth E2E", () => {
     });
 
     it("should reject registration with duplicate username", async () => {
-      // First register
+
       await app.inject({
         method: "POST",
         url: "/auth/register",
@@ -96,7 +94,6 @@ describe("Auth E2E", () => {
         },
       });
 
-      // Second register with same username
       const response = await app.inject({
         method: "POST",
         url: "/auth/register",
@@ -247,7 +244,6 @@ describe("Auth E2E", () => {
       const { tokens } = await registerUser(app);
       await createOAuthClient();
 
-      // Use the refresh token once
       await app.inject({
         method: "POST",
         url: "/oauth/token",
@@ -259,7 +255,6 @@ describe("Auth E2E", () => {
         },
       });
 
-      // Try again
       const response = await app.inject({
         method: "POST",
         url: "/oauth/token",

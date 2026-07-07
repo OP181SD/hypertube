@@ -19,9 +19,6 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
 
-  // Security headers. The SPA runs on a separate origin (Vite / static host),
-  // so avatar images and video streams served from this backend must stay
-  // readable cross-origin — otherwise CORP would block them in the browser.
   await app.register(fastifyHelmet, {
     crossOriginResourcePolicy: { policy: "cross-origin" },
   });
@@ -32,7 +29,7 @@ async function bootstrap() {
 
   await app.register(fastifyMultipart, {
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5 MB
+      fileSize: 5 * 1024 * 1024,
       files: 1,
     },
   });
@@ -57,20 +54,20 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   app.enableCors({
-    // Frontend origin, falling back to localhost in dev
+
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'Range', // Required for streaming
+      'Content-Type',
+      'Authorization',
+      'Range',
       'X-Requested-With',
       'Accept'
     ],
     exposedHeaders: [
-      'Content-Range', // Lets the player track its position
-      'Accept-Ranges', // Tells the browser it can seek (scrub)
+      'Content-Range',
+      'Accept-Ranges',
       'Content-Length'
     ],
   });

@@ -23,7 +23,7 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
   onSelectGenre,
   onSelectSort,
 }) => {
-  const { t } = useTranslation(); 
+  const { t } = useTranslation();
 
   const [activeGenre, setActiveGenre] = useState<string>("");
   const [activeSort, setActiveSort] = useState<SortTypes>("Popular");
@@ -42,7 +42,6 @@ export const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
   genres.forEach((genre) => {
     genreLabels[genre] = t(`genres.${genre}`);
   });
-
 
   return (
     <div className="hidden lg:flex relative justify-center flex-nowrap items-center gap-3 px-4 sm:px-6 md:px-8 lg:px-10 overflow-x-auto no-scrollbar">

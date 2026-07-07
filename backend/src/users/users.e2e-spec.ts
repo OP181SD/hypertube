@@ -38,7 +38,7 @@ describe("Users E2E", () => {
       expect(body.length).toBe(1);
       expect(body[0]).toHaveProperty("id");
       expect(body[0]).toHaveProperty("username", "testuser");
-      // Should NOT include sensitive fields
+
       expect(body[0]).not.toHaveProperty("email");
       expect(body[0]).not.toHaveProperty("passwordHash");
     });
@@ -57,7 +57,6 @@ describe("Users E2E", () => {
     it("should return own profile with email", async () => {
       const { tokens } = await registerUser(app);
 
-      // First get the user list to find our ID
       const listResponse = await app.inject({
         method: "GET",
         url: "/users",
@@ -80,14 +79,13 @@ describe("Users E2E", () => {
     });
 
     it("should return other user profile without email", async () => {
-      // Register two users
+
       await registerUser(app);
       const { tokens: tokens2 } = await registerUser(app, {
         email: "other@example.com",
         username: "otheruser",
       });
 
-      // Get user list
       const listResponse = await app.inject({
         method: "GET",
         url: "/users",
@@ -98,7 +96,6 @@ describe("Users E2E", () => {
         (u: { username: string }) => u.username === "testuser",
       );
 
-      // User2 views user1's profile
       const response = await app.inject({
         method: "GET",
         url: `/users/${otherUser.id}`,

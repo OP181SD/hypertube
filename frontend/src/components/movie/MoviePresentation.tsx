@@ -51,7 +51,6 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
         />
         <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/90" />
 
-        {/* Back button */}
         <button
           onClick={() => navigate(-1)}
           className="absolute top-3 left-3 sm:left-8 z-10 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-300 hover:scale-105"
@@ -94,7 +93,6 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
             </button>
           </div>
 
-    
           <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6 min-w-0">
             <p className="text-xs sm:text-base leading-relaxed drop-shadow-lg line-clamp-4 sm:line-clamp-none">
               {displayedSynopsis}

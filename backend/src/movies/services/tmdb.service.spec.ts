@@ -148,7 +148,6 @@ describe("TmdbService", () => {
       expect(result).not.toBeNull();
       expect(result!.title).toBe("The Matrix");
 
-      // First call: find by external ID
       const findUrl = (global.fetch as ReturnType<typeof vi.fn>).mock
         .calls[0][0] as string;
       expect(findUrl).toContain("find/tt0133093");
@@ -208,7 +207,7 @@ describe("TmdbService", () => {
       const url = (global.fetch as ReturnType<typeof vi.fn>).mock
         .calls[0][0] as string;
       expect(url).toContain("/tv/popular");
-      expect(shows).toHaveLength(1); // the no-poster show is filtered out
+      expect(shows).toHaveLength(1);
       expect(shows[0].name).toBe("Breaking Bad");
       expect(shows[0].year).toBe(2008);
       expect(shows[0].genres).toEqual(["Crime", "Drama"]);
@@ -274,7 +273,6 @@ describe("TmdbService", () => {
 
       const results = await service.getPopularMovies();
 
-      // Should filter out the movie without backdrop_path
       expect(results).toHaveLength(2);
       expect(results[0].title).toBe("The Matrix");
       expect(results[0].backdropUrl).toBe(

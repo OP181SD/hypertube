@@ -1,4 +1,4 @@
-// YTS API types
+
 
 export interface YtsTorrent {
   url: string;
@@ -42,8 +42,6 @@ export interface YtsListResponse {
   };
 }
 
-// EZTV API types
-
 export interface EztvTorrent {
   id: number;
   hash: string;
@@ -69,8 +67,6 @@ export interface EztvListResponse {
   page: number;
   torrents?: EztvTorrent[];
 }
-
-// TMDb API types
 
 export interface TmdbSearchResult {
   id: number;
@@ -155,7 +151,6 @@ export interface TmdbTvExternalIds {
   imdb_id: string | null;
 }
 
-// A TV show resolved from TMDb (metadata only), used to seed the series page.
 export interface SeriesShow {
   tmdbId: number;
   name: string;
@@ -184,8 +179,6 @@ export interface HeroMovie {
   backdropUrl: string;
   overview: string;
 }
-
-// Internal paginated result
 
 export interface PaginatedMovies {
   data: MovieListItem[];
@@ -237,12 +230,12 @@ export interface MovieDetail {
 export interface TorrentItem {
   id: string;
   quality: string;
-  episodeLabel: string | null; // e.g. "S02E06" for series, null for movies
-  season: number | null; // parsed from episodeLabel, for grouping series
+  episodeLabel: string | null;
+  season: number | null;
   episode: number | null;
   seeds: number;
   peers: number;
-  sizeBytes: string; // BigInt serialized as string
+  sizeBytes: string;
   magnetUrl: string;
 }
 

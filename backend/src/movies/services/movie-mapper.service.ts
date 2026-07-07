@@ -51,7 +51,7 @@ export class MovieMapperService {
           magnetUrl: t.magnetUrl,
         };
       })
-      // Show the most recent episode first (zero-padded SxxExx sorts lexically).
+
       .sort((a, b) => (b.episodeLabel ?? "").localeCompare(a.episodeLabel ?? ""));
 
     return {
