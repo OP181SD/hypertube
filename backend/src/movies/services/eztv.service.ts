@@ -58,4 +58,25 @@ export class EztvService {
       return { torrents: [], torrentsCount: 0 };
     }
   }
+
+  // Fetch every torrent of a show by paging through EZTV (100/page is the API
+  // max) until a short page, capped to avoid pathological shows. Used lazily
+  // when a series detail is opened so the whole catalogue is available.
+  async getAllTorrentsByImdb(imdbId: string): Promise<EztvTorrent[]> {
+    const PAGE_SIZE = 100;
+    const MAX_PAGES = 10;
+    const all: EztvTorrent[] = [];
+
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const { torrents } = await this.searchTorrents({
+        imdbId,
+        page,
+        limit: PAGE_SIZE,
+      });
+      all.push(...torrents);
+      if (torrents.length < PAGE_SIZE) break; // last page reached
+    }
+
+    return all;
+  }
 }

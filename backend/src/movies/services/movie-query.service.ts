@@ -12,6 +12,10 @@ export class MovieQueryService {
       NOT: [{ posterUrl: null }, { posterUrl: "" }],
     };
 
+    if (params.mediaType) {
+      where.mediaType = params.mediaType;
+    }
+
     if (params.query) {
       where.AND = [
         {

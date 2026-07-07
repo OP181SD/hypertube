@@ -36,16 +36,23 @@ export class MovieMapperService {
     inWatchlist: boolean,
     subtitles: SubtitleInfo[] = [],
   ): MovieDetail {
-    const torrents = movie.torrents.map(
-      (t): TorrentItem => ({
-        id: t.id,
-        quality: t.quality,
-        seeds: t.seeds,
-        peers: t.peers,
-        sizeBytes: t.sizeBytes.toString(),
-        magnetUrl: t.magnetUrl,
-      }),
-    );
+    const torrents = movie.torrents
+      .map((t): TorrentItem => {
+        const { season, episode } = this.parseEpisode(t.episodeLabel);
+        return {
+          id: t.id,
+          quality: t.quality,
+          episodeLabel: t.episodeLabel,
+          season,
+          episode,
+          seeds: t.seeds,
+          peers: t.peers,
+          sizeBytes: t.sizeBytes.toString(),
+          magnetUrl: t.magnetUrl,
+        };
+      })
+      // Show the most recent episode first (zero-padded SxxExx sorts lexically).
+      .sort((a, b) => (b.episodeLabel ?? "").localeCompare(a.episodeLabel ?? ""));
 
     return {
       id: movie.id,
@@ -67,5 +74,14 @@ export class MovieMapperService {
       watched,
       inWatchlist,
     };
+  }
+
+  private parseEpisode(label: string | null): {
+    season: number | null;
+    episode: number | null;
+  } {
+    const match = label?.match(/^S(\d+)E(\d+)$/i);
+    if (!match) return { season: null, episode: null };
+    return { season: Number(match[1]), episode: Number(match[2]) };
   }
 }

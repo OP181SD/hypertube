@@ -77,6 +77,7 @@ describe("MovieMapperService", () => {
           {
             id: "t1",
             quality: "1080p",
+            episodeLabel: null,
             seeds: 120,
             peers: 30,
             sizeBytes: 1_500_000_000n,
@@ -95,6 +96,9 @@ describe("MovieMapperService", () => {
         {
           id: "t1",
           quality: "1080p",
+          episodeLabel: null,
+          season: null,
+          episode: null,
           seeds: 120,
           peers: 30,
           sizeBytes: "1500000000",
@@ -102,6 +106,29 @@ describe("MovieMapperService", () => {
         },
       ]);
       expect(detail.subtitles).toEqual([]);
+    });
+
+    it("parses season/episode from a series torrent's episode label", () => {
+      const movie = {
+        ...baseMovie,
+        torrents: [
+          {
+            id: "t1",
+            quality: "1080p",
+            episodeLabel: "S02E06",
+            seeds: 10,
+            peers: 2,
+            sizeBytes: 900_000_000n,
+            magnetUrl: "m",
+          },
+        ],
+      };
+
+      const detail = service.toDetail(movie as never, 0, false, false);
+
+      expect(detail.torrents[0].episodeLabel).toBe("S02E06");
+      expect(detail.torrents[0].season).toBe(2);
+      expect(detail.torrents[0].episode).toBe(6);
     });
 
     it("stringifies the torrent sizeBytes (BigInt) for JSON safety", () => {

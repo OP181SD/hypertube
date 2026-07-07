@@ -3,6 +3,7 @@ import type {
   YtsListResponse,
   EztvTorrent,
   EztvListResponse,
+  SeriesShow,
   TmdbMovieDetail,
   TmdbSearchResponse,
   TmdbFindResponse,
@@ -128,6 +129,16 @@ export const eztvListResponse: EztvListResponse = {
   torrents: [eztvTorrent],
 };
 
+export const seriesShow: SeriesShow = {
+  tmdbId: 1396,
+  name: "Breaking Bad",
+  year: 2008,
+  posterUrl: "https://image.tmdb.org/t/p/w500/poster.jpg",
+  backdropUrl: "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+  rating: 8.9,
+  genres: ["Crime", "Drama"],
+};
+
 export const eztvEmptyResponse: EztvListResponse = {
   torrents_count: 0,
   limit: 30,
@@ -200,6 +211,7 @@ export const tmdbFindResponse: TmdbFindResponse = {
       popularity: 79.309,
     },
   ],
+  tv_results: [],
 };
 
 export const tmdbPopularResponse: TmdbPopularResponse = {

@@ -14,6 +14,7 @@ import {
   ytsMovie,
   ytsMovie2,
   eztvTorrent,
+  seriesShow,
   tmdbMovieDetail,
   mockDbMovie,
   mockDbMovie2,
@@ -26,12 +27,16 @@ const mockYtsService = {
 
 const mockEztvService = {
   searchTorrents: vi.fn(),
+  getAllTorrentsByImdb: vi.fn().mockResolvedValue([]),
 };
 
 const mockTmdbService = {
   findByImdbId: vi.fn(),
   getMovieDetails: vi.fn(),
   getPopularMovies: vi.fn(),
+  getPopularSeries: vi.fn().mockResolvedValue([]),
+  searchSeries: vi.fn().mockResolvedValue([]),
+  getTvImdbId: vi.fn().mockResolvedValue(null),
   getPosterUrl: vi.fn((path: string | null) =>
     path ? `https://image.tmdb.org/t/p/w500${path}` : null,
   ),
@@ -46,7 +51,8 @@ const mockSubtitleService = {
 
 const mockMovieCacheService = {
   cacheYtsMovies: vi.fn().mockResolvedValue(undefined),
-  cacheEztvTorrents: vi.fn().mockResolvedValue(undefined),
+  cacheSeries: vi.fn().mockResolvedValue(undefined),
+  addSeriesEpisodes: vi.fn().mockResolvedValue(undefined),
 };
 
 const mockMovieMapperService = new MovieMapperService();
@@ -91,7 +97,12 @@ describe("MoviesService", () => {
     vi.clearAllMocks();
     // Reset mock implementations that use fn().mockResolvedValue
     mockMovieCacheService.cacheYtsMovies.mockResolvedValue(undefined);
-    mockMovieCacheService.cacheEztvTorrents.mockResolvedValue(undefined);
+    mockMovieCacheService.cacheSeries.mockResolvedValue(undefined);
+    mockTmdbService.getPopularSeries.mockResolvedValue([]);
+    mockTmdbService.searchSeries.mockResolvedValue([]);
+    mockTmdbService.getTvImdbId.mockResolvedValue(null);
+    mockEztvService.getAllTorrentsByImdb.mockResolvedValue([]);
+    mockMovieCacheService.addSeriesEpisodes.mockResolvedValue(undefined);
     mockMovieQueryService.buildWhereClause.mockReturnValue({});
     mockMovieQueryService.buildOrderBy.mockReturnValue({ imdbRating: "desc" });
     mockMovieQueryService.mapSortField.mockReturnValue(undefined);
@@ -179,14 +190,10 @@ describe("MoviesService", () => {
   });
 
   describe("search", () => {
-    it("should call YTS and EZTV in parallel and return paginated results", async () => {
+    it("should query YTS for movies (default) and return paginated results", async () => {
       mockYtsService.searchMovies.mockResolvedValue({
         movies: [ytsMovie, ytsMovie2],
         movieCount: 2,
-      });
-      mockEztvService.searchTorrents.mockResolvedValue({
-        torrents: [],
-        torrentsCount: 0,
       });
       mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie, mockDbMovie2]);
       mockPrisma.movie.count.mockResolvedValue(2);
@@ -197,13 +204,57 @@ describe("MoviesService", () => {
       );
 
       expect(mockYtsService.searchMovies).toHaveBeenCalled();
-      expect(mockEztvService.searchTorrents).toHaveBeenCalled();
+      // Movies page never hits the series source
+      expect(mockEztvService.searchTorrents).not.toHaveBeenCalled();
       expect(mockMovieCacheService.cacheYtsMovies).toHaveBeenCalledWith([ytsMovie, ytsMovie2]);
-      expect(mockMovieCacheService.cacheEztvTorrents).toHaveBeenCalledWith([]);
+      expect(mockMovieCacheService.cacheSeries).not.toHaveBeenCalled();
       expect(result.data).toHaveLength(2);
       expect(result.page).toBe(1);
       expect(result.total).toBe(2);
       expect(result.hasMore).toBe(false);
+    });
+
+    it("should seed series from TMDb search → EZTV episodes, skipping the movie source", async () => {
+      mockTmdbService.searchSeries.mockResolvedValue([seriesShow]);
+      mockTmdbService.getTvImdbId.mockResolvedValue("tt0903747");
+      mockEztvService.searchTorrents.mockResolvedValue({
+        torrents: [eztvTorrent],
+        torrentsCount: 1,
+      });
+      mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie]);
+      mockPrisma.movie.count.mockResolvedValue(1);
+
+      await service.search(
+        { query: "breaking bad", mediaType: "series", page: 1, limit: 20 },
+        "user-id",
+      );
+
+      expect(mockTmdbService.searchSeries).toHaveBeenCalledWith("breaking bad");
+      expect(mockTmdbService.getTvImdbId).toHaveBeenCalledWith(seriesShow.tmdbId);
+      // EZTV is queried by the resolved imdb (without the tt prefix)
+      expect(mockEztvService.searchTorrents).toHaveBeenCalledWith({ imdbId: "0903747" });
+      expect(mockMovieCacheService.cacheSeries).toHaveBeenCalledWith(
+        expect.objectContaining({ imdbId: "tt0903747", tmdbId: seriesShow.tmdbId }),
+        [eztvTorrent],
+      );
+      expect(mockYtsService.searchMovies).not.toHaveBeenCalled();
+      expect(mockMovieCacheService.cacheYtsMovies).not.toHaveBeenCalled();
+      expect(mockMovieQueryService.buildWhereClause).toHaveBeenCalledWith(
+        expect.objectContaining({ mediaType: "series" }),
+      );
+    });
+
+    it("should use TMDb popular series when browsing without a query", async () => {
+      mockTmdbService.getPopularSeries.mockResolvedValue([seriesShow]);
+      mockTmdbService.getTvImdbId.mockResolvedValue("tt0903747");
+      mockEztvService.searchTorrents.mockResolvedValue({ torrents: [eztvTorrent] });
+      mockPrisma.movie.findMany.mockResolvedValue([mockDbMovie]);
+      mockPrisma.movie.count.mockResolvedValue(1);
+
+      await service.search({ mediaType: "series", page: 1, limit: 20 }, "user-id");
+
+      expect(mockTmdbService.getPopularSeries).toHaveBeenCalledWith(1);
+      expect(mockTmdbService.searchSeries).not.toHaveBeenCalled();
     });
 
     it("should mark watched movies", async () => {
@@ -285,7 +336,7 @@ describe("MoviesService", () => {
       await service.search({ query: "matrix", page: 1, limit: 20 }, "user-id");
 
       expect(mockMovieCacheService.cacheYtsMovies).toHaveBeenCalledWith([ytsMovie]);
-      expect(mockMovieCacheService.cacheEztvTorrents).toHaveBeenCalledWith([]);
+      expect(mockMovieCacheService.cacheSeries).not.toHaveBeenCalled();
     });
 
     it("should apply sorting and filtering via MovieQueryService", async () => {
@@ -367,6 +418,55 @@ describe("MoviesService", () => {
       await expect(
         service.findById("nonexistent-id", "user-id"),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should deep-fetch all episodes the first time a series is opened", async () => {
+      const seriesMovie = {
+        ...mockDbMovie,
+        id: "series-uuid",
+        imdbId: "tt0944947",
+        mediaType: "series",
+        episodesFetched: false,
+        torrents: [],
+      };
+      mockPrisma.movie.findUnique
+        .mockResolvedValueOnce(seriesMovie) // initial load
+        .mockResolvedValueOnce({ ...seriesMovie, torrents: [mockDbTorrent] }); // after fetch
+      mockEztvService.getAllTorrentsByImdb.mockResolvedValue([eztvTorrent]);
+      mockPrisma.comment.count.mockResolvedValue(0);
+      mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
+      mockPrisma.watchlist.findUnique.mockResolvedValue(null);
+
+      const result = await service.findById("series-uuid", "user-id");
+
+      // EZTV queried by imdb without the tt prefix, episodes cached, flag set
+      expect(mockEztvService.getAllTorrentsByImdb).toHaveBeenCalledWith("0944947");
+      expect(mockMovieCacheService.addSeriesEpisodes).toHaveBeenCalledWith(
+        "series-uuid",
+        [eztvTorrent],
+      );
+      expect(mockPrisma.movie.update).toHaveBeenCalledWith({
+        where: { id: "series-uuid" },
+        data: { episodesFetched: true },
+      });
+      expect(result.torrents).toHaveLength(1);
+    });
+
+    it("should not re-fetch episodes once a series is marked fetched", async () => {
+      const seriesMovie = {
+        ...mockDbMovie,
+        mediaType: "series",
+        episodesFetched: true,
+        torrents: [mockDbTorrent],
+      };
+      mockPrisma.movie.findUnique.mockResolvedValue(seriesMovie);
+      mockPrisma.comment.count.mockResolvedValue(0);
+      mockPrisma.watchHistory.findUnique.mockResolvedValue(null);
+      mockPrisma.watchlist.findUnique.mockResolvedValue(null);
+
+      await service.findById(mockDbMovie.id, "user-id");
+
+      expect(mockEztvService.getAllTorrentsByImdb).not.toHaveBeenCalled();
     });
 
     it("should mark movie as watched when user has seen it", async () => {

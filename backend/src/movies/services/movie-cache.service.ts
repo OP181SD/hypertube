@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import type { YtsMovie, EztvTorrent } from "../interfaces";
+import type { YtsMovie, EztvTorrent, SeriesShow } from "../interfaces";
 
 const YTS_TRACKERS = [
   "udp://open.demonii.com:1337/announce",
@@ -34,6 +34,7 @@ export class MovieCacheService {
             backdropUrl: yts.background_image || null,
             summary: yts.summary || null,
             genres: yts.genres ?? [],
+            mediaType: "movie",
           },
           update: {
             imdbRating: yts.rating,
@@ -71,49 +72,90 @@ export class MovieCacheService {
     }
   }
 
-  async cacheEztvTorrents(torrents: EztvTorrent[]): Promise<void> {
-    for (const eztv of torrents) {
-      if (!eztv.imdb_id) continue;
+  // Persist a TMDb-resolved series (poster/title/genres) together with its EZTV
+  // episode torrents. A show with no episodes is skipped so the listing never
+  // shows an empty series.
+  async cacheSeries(
+    show: SeriesShow & { imdbId: string },
+    torrents: EztvTorrent[],
+  ): Promise<void> {
+    if (torrents.length === 0) return;
 
-      const imdbId = eztv.imdb_id.startsWith("tt")
-        ? eztv.imdb_id
-        : `tt${eztv.imdb_id}`;
+    try {
+      const movie = await this.prisma.movie.upsert({
+        where: { imdbId: show.imdbId },
+        create: {
+          imdbId: show.imdbId,
+          title: show.name,
+          year: show.year,
+          imdbRating: show.rating,
+          posterUrl: show.posterUrl,
+          backdropUrl: show.backdropUrl,
+          genres: show.genres,
+          tmdbId: show.tmdbId,
+          mediaType: "series",
+        },
+        update: {
+          posterUrl: show.posterUrl,
+          imdbRating: show.rating,
+        },
+      });
 
-      try {
-        const movie = await this.prisma.movie.upsert({
-          where: { imdbId },
-          create: {
-            imdbId,
-            title: eztv.title.replace(/\s*S\d+E\d+.*$/i, "").trim(),
-            posterUrl: eztv.large_screenshot || null,
-          },
-          update: {},
-        });
-
-        await this.prisma.torrent.upsert({
-          where: { hash: eztv.hash },
-          create: {
-            movieId: movie.id,
-            hash: eztv.hash,
-            quality: this.extractQuality(eztv.filename),
-            source: "EZTV",
-            seeds: eztv.seeds,
-            peers: eztv.peers,
-            sizeBytes: BigInt(eztv.size_bytes),
-            magnetUrl: eztv.magnet_url,
-          },
-          update: {
-            seeds: eztv.seeds,
-            peers: eztv.peers,
-          },
-        });
-      } catch (error) {
-        this.logger.warn(
-          `Failed to cache EZTV torrent ${eztv.hash}`,
-          (error as Error).message,
-        );
-      }
+      await this.upsertEpisodes(movie.id, torrents);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to cache series ${show.imdbId}`,
+        (error as Error).message,
+      );
     }
+  }
+
+  // Add (or refresh) episode torrents for an already-cached series. Used when a
+  // series detail is opened to pull in the show's full episode list.
+  async addSeriesEpisodes(
+    movieId: string,
+    torrents: EztvTorrent[],
+  ): Promise<void> {
+    try {
+      await this.upsertEpisodes(movieId, torrents);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to add episodes for ${movieId}`,
+        (error as Error).message,
+      );
+    }
+  }
+
+  private async upsertEpisodes(
+    movieId: string,
+    torrents: EztvTorrent[],
+  ): Promise<void> {
+    for (const eztv of torrents) {
+      await this.prisma.torrent.upsert({
+        where: { hash: eztv.hash },
+        create: {
+          movieId,
+          hash: eztv.hash,
+          quality: this.extractQuality(eztv.filename),
+          episodeLabel: this.extractEpisode(eztv.title || eztv.filename),
+          source: "EZTV",
+          seeds: eztv.seeds,
+          peers: eztv.peers,
+          sizeBytes: BigInt(eztv.size_bytes),
+          magnetUrl: eztv.magnet_url,
+        },
+        update: {
+          seeds: eztv.seeds,
+          peers: eztv.peers,
+        },
+      });
+    }
+  }
+
+  private extractEpisode(text: string): string | null {
+    const match = text.match(/S(\d{1,2})E(\d{1,2})/i);
+    if (!match) return null;
+    return `S${match[1].padStart(2, "0")}E${match[2].padStart(2, "0")}`;
   }
 
   private buildMagnetUrl(hash: string, title: string): string {

@@ -5,6 +5,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 import {
   ytsMovie,
   eztvTorrent,
+  seriesShow,
   mockDbMovie,
 } from "../../../test/fixtures/movies.fixture";
 
@@ -83,54 +84,87 @@ describe("MovieCacheService", () => {
     });
   });
 
-  describe("cacheEztvTorrents", () => {
-    it("should upsert show and torrent to DB", async () => {
-      mockPrisma.movie.upsert.mockResolvedValue({ ...mockDbMovie, id: "eztv-id" });
+  describe("cacheSeries", () => {
+    const show = { ...seriesShow, imdbId: "tt0903747" };
+
+    it("should upsert the series (TMDb metadata) and its episode torrents", async () => {
+      mockPrisma.movie.upsert.mockResolvedValue({ ...mockDbMovie, id: "series-id" });
       mockPrisma.torrent.upsert.mockResolvedValue({});
 
-      await service.cacheEztvTorrents([eztvTorrent]);
+      await service.cacheSeries(show, [eztvTorrent]);
 
-      expect(mockPrisma.movie.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { imdbId: "tt0903747" },
-        }),
-      );
+      const movieCall = mockPrisma.movie.upsert.mock.calls[0][0];
+      expect(movieCall.where).toEqual({ imdbId: "tt0903747" });
+      expect(movieCall.create.title).toBe(show.name);
+      expect(movieCall.create.posterUrl).toBe(show.posterUrl);
+      expect(movieCall.create.genres).toEqual(show.genres);
+      expect(movieCall.create.mediaType).toBe("series");
       expect(mockPrisma.torrent.upsert).toHaveBeenCalledTimes(1);
     });
 
-    it("should prepend tt prefix when imdb_id lacks it", async () => {
-      mockPrisma.movie.upsert.mockResolvedValue({ ...mockDbMovie, id: "eztv-id" });
-      mockPrisma.torrent.upsert.mockResolvedValue({});
-
-      await service.cacheEztvTorrents([eztvTorrent]); // imdb_id is "0903747"
-
-      const movieCall = mockPrisma.movie.upsert.mock.calls[0][0];
-      expect(movieCall.where.imdbId).toBe("tt0903747");
-    });
-
-    it("should skip torrent when imdb_id is missing", async () => {
-      const noImdb = { ...eztvTorrent, imdb_id: "" };
-
-      await service.cacheEztvTorrents([noImdb]);
+    it("should skip a show with no episodes (never list an empty series)", async () => {
+      await service.cacheSeries(show, []);
 
       expect(mockPrisma.movie.upsert).not.toHaveBeenCalled();
+      expect(mockPrisma.torrent.upsert).not.toHaveBeenCalled();
     });
 
-    it("should extract quality from filename", async () => {
-      mockPrisma.movie.upsert.mockResolvedValue({ ...mockDbMovie, id: "eztv-id" });
+    it("should label torrents with the parsed episode (SxxExx)", async () => {
+      mockPrisma.movie.upsert.mockResolvedValue({ ...mockDbMovie, id: "series-id" });
       mockPrisma.torrent.upsert.mockResolvedValue({});
 
-      await service.cacheEztvTorrents([eztvTorrent]); // filename has 1080p
+      // eztvTorrent.title is "Breaking Bad S01E01 1080p BluRay x264"
+      await service.cacheSeries(show, [eztvTorrent]);
 
       const torrentCall = mockPrisma.torrent.upsert.mock.calls[0][0];
+      expect(torrentCall.create.episodeLabel).toBe("S01E01");
       expect(torrentCall.create.quality).toBe("1080p");
+      expect(torrentCall.create.source).toBe("EZTV");
+    });
+
+    it("should upsert every episode of the show", async () => {
+      mockPrisma.movie.upsert.mockResolvedValue({ ...mockDbMovie, id: "series-id" });
+      mockPrisma.torrent.upsert.mockResolvedValue({});
+
+      await service.cacheSeries(show, [
+        eztvTorrent,
+        { ...eztvTorrent, hash: "EP2_HASH_0000000000000000000000", title: "Breaking Bad S01E02 720p" },
+      ]);
+
+      expect(mockPrisma.movie.upsert).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.torrent.upsert).toHaveBeenCalledTimes(2);
     });
 
     it("should log warning and continue on upsert error", async () => {
       mockPrisma.movie.upsert.mockRejectedValue(new Error("DB error"));
 
       await expect(
-        service.cacheEztvTorrents([eztvTorrent]),
+        service.cacheSeries(show, [eztvTorrent]),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe("addSeriesEpisodes", () => {
+    it("should upsert episode torrents for an existing series", async () => {
+      mockPrisma.torrent.upsert.mockResolvedValue({});
+
+      await service.addSeriesEpisodes("series-id", [
+        eztvTorrent,
+        { ...eztvTorrent, hash: "EP2_0000000000000000000000", title: "Breaking Bad S01E02 720p" },
+      ]);
+
+      expect(mockPrisma.movie.upsert).not.toHaveBeenCalled(); // movie already exists
+      expect(mockPrisma.torrent.upsert).toHaveBeenCalledTimes(2);
+      const firstCreate = mockPrisma.torrent.upsert.mock.calls[0][0].create;
+      expect(firstCreate.movieId).toBe("series-id");
+      expect(firstCreate.episodeLabel).toBe("S01E01");
+    });
+
+    it("should swallow errors", async () => {
+      mockPrisma.torrent.upsert.mockRejectedValue(new Error("DB error"));
+
+      await expect(
+        service.addSeriesEpisodes("series-id", [eztvTorrent]),
       ).resolves.toBeUndefined();
     });
   });

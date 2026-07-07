@@ -127,8 +127,43 @@ export interface TmdbMovieDetail {
   };
 }
 
+export interface TmdbTvResult {
+  id: number;
+  name: string;
+  original_name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date: string;
+  vote_average: number;
+  genre_ids: number[];
+}
+
 export interface TmdbFindResponse {
   movie_results: TmdbSearchResult[];
+  tv_results: TmdbTvResult[];
+}
+
+export interface TmdbTvListResponse {
+  page: number;
+  results: TmdbTvResult[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface TmdbTvExternalIds {
+  imdb_id: string | null;
+}
+
+// A TV show resolved from TMDb (metadata only), used to seed the series page.
+export interface SeriesShow {
+  tmdbId: number;
+  name: string;
+  year: number | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  rating: number | null;
+  genres: string[];
 }
 
 export interface TmdbPopularResponse {
@@ -202,6 +237,9 @@ export interface MovieDetail {
 export interface TorrentItem {
   id: string;
   quality: string;
+  episodeLabel: string | null; // e.g. "S02E06" for series, null for movies
+  season: number | null; // parsed from episodeLabel, for grouping series
+  episode: number | null;
   seeds: number;
   peers: number;
   sizeBytes: string; // BigInt serialized as string
@@ -211,6 +249,7 @@ export interface TorrentItem {
 export interface SearchParams {
   query?: string;
   genre?: string;
+  mediaType?: "movie" | "series";
   sortBy?: string;
   order?: string;
   minRating?: number;

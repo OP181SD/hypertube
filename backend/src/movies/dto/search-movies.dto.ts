@@ -22,6 +22,10 @@ export class SearchMoviesDto {
   genre?: string;
 
   @IsOptional()
+  @IsEnum(["movie", "series"])
+  mediaType?: "movie" | "series";
+
+  @IsOptional()
   @IsEnum(["title", "year", "rating", "seeds"])
   sortBy?: "title" | "year" | "rating" | "seeds";
 

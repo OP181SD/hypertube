@@ -158,11 +158,110 @@ describe("TmdbService", () => {
     it("should return null when no movie found for IMDb ID", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ movie_results: [] }),
+        json: async () => ({ movie_results: [], tv_results: [] }),
       });
 
       const result = await service.findByImdbId("tt9999999");
       expect(result).toBeNull();
+    });
+  });
+
+  describe("getPopularSeries / searchSeries", () => {
+    const tvListResponse = {
+      page: 1,
+      total_pages: 1,
+      total_results: 2,
+      results: [
+        {
+          id: 1396,
+          name: "Breaking Bad",
+          original_name: "Breaking Bad",
+          overview: "A chemistry teacher turns to crime.",
+          poster_path: "/poster.jpg",
+          backdrop_path: "/backdrop.jpg",
+          first_air_date: "2008-01-20",
+          vote_average: 9.5,
+          genre_ids: [80, 18],
+        },
+        {
+          id: 999,
+          name: "No Poster Show",
+          original_name: "No Poster Show",
+          overview: "",
+          poster_path: null,
+          backdrop_path: null,
+          first_air_date: "2020-01-01",
+          vote_average: 5,
+          genre_ids: [10764],
+        },
+      ],
+    };
+
+    it("getPopularSeries should map TV shows and drop those without a poster", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => tvListResponse,
+      });
+
+      const shows = await service.getPopularSeries(1);
+
+      const url = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as string;
+      expect(url).toContain("/tv/popular");
+      expect(shows).toHaveLength(1); // the no-poster show is filtered out
+      expect(shows[0].name).toBe("Breaking Bad");
+      expect(shows[0].year).toBe(2008);
+      expect(shows[0].genres).toEqual(["Crime", "Drama"]);
+      expect(shows[0].posterUrl).toContain("/poster.jpg");
+    });
+
+    it("searchSeries should query /search/tv", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => tvListResponse,
+      });
+
+      await service.searchSeries("breaking bad");
+
+      const url = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as string;
+      expect(url).toContain("/search/tv");
+      expect(url).toContain("query=breaking");
+    });
+
+    it("getPopularSeries should return empty on API error", async () => {
+      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      expect(await service.getPopularSeries()).toEqual([]);
+    });
+  });
+
+  describe("getTvImdbId", () => {
+    it("should return the imdb id from external_ids", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ imdb_id: "tt0903747" }),
+      });
+
+      const imdb = await service.getTvImdbId(1396);
+
+      const url = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as string;
+      expect(url).toContain("/tv/1396/external_ids");
+      expect(imdb).toBe("tt0903747");
+    });
+
+    it("should return null when imdb id is absent", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ imdb_id: null }),
+      });
+
+      expect(await service.getTvImdbId(1396)).toBeNull();
+    });
+
+    it("should return null on API error", async () => {
+      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+      expect(await service.getTvImdbId(1396)).toBeNull();
     });
   });
 

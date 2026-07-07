@@ -69,7 +69,7 @@ import Joi from "joi";
           .default("https://movies-api.accel.li/api/v2"),
         EZTV_BASE_URL: Joi.string()
           .uri()
-          .default("https://eztv.re/api"),
+          .default("https://eztvx.to/api"),
         OPENSUBTITLES_BASE_URL: Joi.string()
           .uri()
           .default("https://api.opensubtitles.com/api/v1"),

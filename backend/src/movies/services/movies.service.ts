@@ -80,8 +80,27 @@ export class MoviesService {
       params.genre = "Sci-Fi";
     }
 
-    const [ytsResult, eztvResult] = await Promise.all([
-      this.ytsService.searchMovies({
+    // Each library page maps to a single external source: movies → YTS,
+    // series → EZTV. Default (no mediaType) keeps the movie source.
+    if (params.mediaType === "series") {
+      // Seed from TMDb (popular or searched TV shows) for a recognizable
+      // catalogue with posters, then match each show to its EZTV episodes.
+      const shows = params.query
+        ? await this.tmdbService.searchSeries(params.query)
+        : await this.tmdbService.getPopularSeries(page);
+
+      await Promise.all(
+        shows.map(async (show) => {
+          const imdbId = await this.tmdbService.getTvImdbId(show.tmdbId);
+          if (!imdbId) return;
+          const eztv = await this.eztvService.searchTorrents({
+            imdbId: imdbId.replace(/^tt/, ""),
+          });
+          await this.movieCache.cacheSeries({ ...show, imdbId }, eztv.torrents);
+        }),
+      );
+    } else {
+      const ytsResult = await this.ytsService.searchMovies({
         query: params.query,
         genre: params.genre?.toLowerCase().replace(" ", "-"),
         sortBy: this.movieQuery.mapSortField(params.sortBy),
@@ -89,16 +108,9 @@ export class MoviesService {
         minRating: params.minRating,
         page,
         limit,
-      }),
-      this.eztvService.searchTorrents({
-        query: params.query,
-        page,
-        limit: Math.min(limit, 100),
-      }),
-    ]);
-
-    await this.movieCache.cacheYtsMovies(ytsResult.movies);
-    await this.movieCache.cacheEztvTorrents(eztvResult.torrents);
+      });
+      await this.movieCache.cacheYtsMovies(ytsResult.movies);
+    }
 
     const where = this.movieQuery.buildWhereClause(params);
     // Subject requires results sorted by name when a search query is present
@@ -148,7 +160,30 @@ export class MoviesService {
     }
 
     let movie = found;
-    if (found.torrents.length === 0 && found.imdbId && !found.imdbId.startsWith("tmdb-")) {
+
+    // First time a series detail is opened, pull in its full episode list from
+    // EZTV (the grid only seeds a partial page per show). Done once per series.
+    if (
+      found.mediaType === "series" &&
+      !found.episodesFetched &&
+      found.imdbId.startsWith("tt")
+    ) {
+      const torrents = await this.eztvService.getAllTorrentsByImdb(
+        found.imdbId.replace(/^tt/, ""),
+      );
+      await this.movieCache.addSeriesEpisodes(found.id, torrents);
+      await this.prisma.movie.update({
+        where: { id },
+        data: { episodesFetched: true },
+      });
+      movie =
+        (await this.prisma.movie.findUnique({ where: { id }, include: { torrents: true } })) ??
+        found;
+    } else if (
+      found.torrents.length === 0 &&
+      found.imdbId &&
+      !found.imdbId.startsWith("tmdb-")
+    ) {
       const ytsResult = await this.ytsService.searchMovies({ query: found.imdbId, limit: 1 });
       if (ytsResult.movies.length > 0) {
         await this.movieCache.cacheYtsMovies(ytsResult.movies);

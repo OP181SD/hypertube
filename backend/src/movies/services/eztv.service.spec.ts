@@ -114,4 +114,37 @@ describe("EztvService", () => {
       expect(result.torrentsCount).toBe(0);
     });
   });
+
+  describe("getAllTorrentsByImdb", () => {
+    const makePage = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        ...eztvListResponse.torrents![0],
+        hash: `hash-${i}-${Math.random()}`,
+      }));
+
+    it("should page until a short page and concatenate results", async () => {
+      // page 1 full (100), page 2 short (5) → stops after page 2
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ torrents: makePage(100), torrents_count: 105 }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ torrents: makePage(5), torrents_count: 105 }) });
+
+      const all = await service.getAllTorrentsByImdb("0903747");
+
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(all).toHaveLength(105);
+    });
+
+    it("should stop after the first page when it is already short", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ torrents: makePage(12), torrents_count: 12 }),
+      });
+
+      const all = await service.getAllTorrentsByImdb("0903747");
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(all).toHaveLength(12);
+    });
+  });
 });
