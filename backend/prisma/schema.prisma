@@ -137,6 +137,8 @@ model Movie {
   director   String?
   producer   String?
   cast       String[] @default([])
+  mediaType  String   @default("movie") @map("media_type")
+  episodesFetched Boolean @default(false) @map("episodes_fetched")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -149,6 +151,7 @@ model Movie {
   @@index([title])
   @@index([imdbRating])
   @@index([year])
+  @@index([mediaType])
   @@map("movies")
 }
 
@@ -157,6 +160,7 @@ model Torrent {
   movieId        String    @map("movie_id")
   hash           String    @unique
   quality        String
+  episodeLabel   String?   @map("episode_label")
   source         String
   seeds          Int       @default(0)
   peers          Int       @default(0)
