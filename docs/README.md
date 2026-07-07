@@ -12,6 +12,7 @@ Ce dossier est la **source de vérité** du projet. En cas de contradiction avec
 |---|---|
 | [**status.md**](./status.md) | État du projet : fait, en cours (non commité), reste à faire |
 | [**decisions.md**](./decisions.md) | Choix actés vs options gardées de côté |
+| [**handoff-torrent-engine.md**](./handoff-torrent-engine.md) | **Briefing agent** — démarrer le moteur BitTorrent maison |
 | [**torrent-engine.md**](./torrent-engine.md) | Plan du moteur BitTorrent maison (M1→M8) — chantier bloquant |
 | [**subject-compliance.md**](./subject-compliance.md) | Règles du sujet et points de vigilance éliminatoires |
 | [**api-restful.md**](./api-restful.md) | Guide REST pour la soutenance (curl + arguments) |
