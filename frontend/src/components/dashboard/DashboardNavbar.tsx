@@ -57,7 +57,15 @@ export function DashboardNavbar({
                 activeTab === "home" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
               }`}
             >
-              {t("home")}
+              {t("movies")}
+            </button>
+            <button
+              onClick={() => setActiveTab("series")}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === "series" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
+              }`}
+            >
+              {t("series")}
             </button>
             <button
               onClick={() => setActiveTab("watchlist")}

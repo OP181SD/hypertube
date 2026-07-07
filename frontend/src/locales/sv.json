@@ -114,5 +114,10 @@
   "remove_from_watchlist": "Ta bort från bevakningslista",
   "in_watchlist": "I min lista",
   "watchlist_empty": "Din bevakningslista är tom",
-  "watchlist_empty_detail": "Lägg till filmer i din bevakningslista för att titta på dem senare"
+  "watchlist_empty_detail": "Lägg till filmer i din bevakningslista för att titta på dem senare",
+  "movies": "Filmer",
+  "series": "Serier",
+  "episodes": "Avsnitt",
+  "other": "Övrigt",
+  "releases": "utgåvor"
 }

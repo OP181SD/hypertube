@@ -5,6 +5,7 @@ import { getMovie } from "@/api/movies.api";
 import { getComments } from "@/api/comments.api";
 import { VideoPlayer } from "@/components/player/VideoPlayer";
 import { QualitySelector } from "@/components/player/QualitySelector";
+import { SeriesEpisodePicker } from "@/components/player/SeriesEpisodePicker";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import type { MovieDetail, Comment } from "@/types/api";
 
@@ -26,7 +27,16 @@ export default function MovieDetailPage() {
         if (!cancelled) {
           setMovie(movieData);
           if (movieData.torrents.length > 0) {
-            const best = [...movieData.torrents].sort((a, b) => b.seeds - a.seeds)[0];
+            const isSeries = movieData.torrents.some((tor) => tor.season != null);
+            // Series default to the latest episode's best release; movies to the
+            // most-seeded torrent.
+            const best = [...movieData.torrents].sort((a, b) =>
+              isSeries
+                ? (b.season ?? -1) - (a.season ?? -1) ||
+                  (b.episode ?? -1) - (a.episode ?? -1) ||
+                  b.seeds - a.seeds
+                : b.seeds - a.seeds,
+            )[0];
             setSelectedTorrentId(best.id);
           }
         }
@@ -158,11 +168,19 @@ export default function MovieDetailPage() {
               </p>
             )}
 
-            <QualitySelector
-              torrents={movie.torrents}
-              selectedId={selectedTorrentId}
-              onSelect={setSelectedTorrentId}
-            />
+            {movie.torrents.some((tor) => tor.season != null) ? (
+              <SeriesEpisodePicker
+                torrents={movie.torrents}
+                selectedId={selectedTorrentId}
+                onSelect={setSelectedTorrentId}
+              />
+            ) : (
+              <QualitySelector
+                torrents={movie.torrents}
+                selectedId={selectedTorrentId}
+                onSelect={setSelectedTorrentId}
+              />
+            )}
           </div>
 
           <div className="lg:w-80 space-y-3 text-sm text-white/70">

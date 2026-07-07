@@ -114,5 +114,10 @@
   "remove_from_watchlist": "从观看列表移除",
   "in_watchlist": "在我的列表中",
   "watchlist_empty": "您的观看列表为空",
-  "watchlist_empty_detail": "将电影添加到观看列表以便稍后观看"
+  "watchlist_empty_detail": "将电影添加到观看列表以便稍后观看",
+  "movies": "电影",
+  "series": "剧集",
+  "episodes": "剧集",
+  "other": "其他",
+  "releases": "版本"
 }

@@ -24,9 +24,14 @@ export const QualitySelector: FC<QualitySelectorProps> = ({
 
   if (torrents.length === 0) return null;
 
+  // Series torrents carry an episode label; present the picker as episodes.
+  const isSeries = torrents.some((torrent) => torrent.episodeLabel);
+
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium text-white/70">{t("quality")}</h3>
+      <h3 className="text-sm font-medium text-white/70">
+        {isSeries ? t("episodes") : t("quality")}
+      </h3>
       <div className="flex flex-wrap gap-2">
         {torrents.map((torrent) => (
           <button
@@ -38,7 +43,11 @@ export const QualitySelector: FC<QualitySelectorProps> = ({
                 : "bg-white/10 text-white/80 hover:bg-white/20"
             }`}
           >
-            <span>{torrent.quality}</span>
+            <span>
+              {torrent.episodeLabel
+                ? `${torrent.episodeLabel} · ${torrent.quality}`
+                : torrent.quality}
+            </span>
             <span className="ml-2 text-xs text-white/50">
               {formatSize(torrent.sizeBytes)} · {torrent.seeds} {t("seeds")}
             </span>

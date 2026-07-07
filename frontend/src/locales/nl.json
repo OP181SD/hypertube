@@ -114,5 +114,10 @@
   "remove_from_watchlist": "Van kijklijst verwijderen",
   "in_watchlist": "In mijn lijst",
   "watchlist_empty": "Je kijklijst is leeg",
-  "watchlist_empty_detail": "Voeg films toe aan je kijklijst om ze later te bekijken"
+  "watchlist_empty_detail": "Voeg films toe aan je kijklijst om ze later te bekijken",
+  "movies": "Films",
+  "series": "Series",
+  "episodes": "Afleveringen",
+  "other": "Overige",
+  "releases": "releases"
 }

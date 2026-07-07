@@ -114,5 +114,10 @@
   "remove_from_watchlist": "İzleme listesinden kaldır",
   "in_watchlist": "Listemde",
   "watchlist_empty": "İzleme listen boş",
-  "watchlist_empty_detail": "Daha sonra izlemek için filmleri listene ekle"
+  "watchlist_empty_detail": "Daha sonra izlemek için filmleri listene ekle",
+  "movies": "Filmler",
+  "series": "Diziler",
+  "episodes": "Bölümler",
+  "other": "Diğer",
+  "releases": "sürümler"
 }

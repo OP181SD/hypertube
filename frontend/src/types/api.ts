@@ -50,6 +50,9 @@ export interface PaginatedMovies {
 export interface TorrentItem {
   id: string;
   quality: string;
+  episodeLabel: string | null;
+  season: number | null;
+  episode: number | null;
   seeds: number;
   peers: number;
   sizeBytes: string;
@@ -127,6 +130,7 @@ export interface HeroMovie {
 export interface SearchMoviesParams {
   query?: string;
   genre?: string;
+  mediaType?: "movie" | "series";
   sortBy?: "title" | "year" | "rating" | "seeds";
   order?: "asc" | "desc";
   minRating?: number;

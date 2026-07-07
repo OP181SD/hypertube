@@ -132,5 +132,10 @@
   "verify_email_success": "Your email is verified. Redirecting…",
   "verify_email_failed": "Verification failed. The link is invalid or has expired.",
   "verify_email_resend_prompt": "Enter your email address to get a new link:",
-  "error_email_not_verified": "Please verify your email before logging in."
+  "error_email_not_verified": "Please verify your email before logging in.",
+  "movies": "Movies",
+  "series": "Series",
+  "episodes": "Episodes",
+  "other": "Other",
+  "releases": "releases"
 }

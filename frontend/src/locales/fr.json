@@ -132,5 +132,10 @@
   "verify_email_success": "Ton email est vérifié. Redirection…",
   "verify_email_failed": "Échec de la vérification. Le lien est invalide ou a expiré.",
   "verify_email_resend_prompt": "Saisis ton adresse email pour recevoir un nouveau lien :",
-  "error_email_not_verified": "Vérifie ton adresse email avant de te connecter."
+  "error_email_not_verified": "Vérifie ton adresse email avant de te connecter.",
+  "movies": "Films",
+  "series": "Séries",
+  "episodes": "Épisodes",
+  "other": "Autres",
+  "releases": "versions"
 }

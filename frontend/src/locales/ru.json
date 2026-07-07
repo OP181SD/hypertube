@@ -114,5 +114,10 @@
   "remove_from_watchlist": "Удалить из списка",
   "in_watchlist": "В моём списке",
   "watchlist_empty": "Ваш список просмотра пуст",
-  "watchlist_empty_detail": "Добавьте фильмы в список, чтобы посмотреть их позже"
+  "watchlist_empty_detail": "Добавьте фильмы в список, чтобы посмотреть их позже",
+  "movies": "Фильмы",
+  "series": "Сериалы",
+  "episodes": "Серии",
+  "other": "Другое",
+  "releases": "релизы"
 }

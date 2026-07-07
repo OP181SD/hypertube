@@ -43,6 +43,9 @@ const mockMovie: MovieDetail = {
     {
       id: "t-720",
       quality: "720p",
+      episodeLabel: null,
+      season: null,
+      episode: null,
       seeds: 50,
       peers: 10,
       sizeBytes: "800000000",
@@ -51,6 +54,9 @@ const mockMovie: MovieDetail = {
     {
       id: "t-1080",
       quality: "1080p",
+      episodeLabel: null,
+      season: null,
+      episode: null,
       seeds: 120,
       peers: 30,
       sizeBytes: "1500000000",

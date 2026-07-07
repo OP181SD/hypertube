@@ -10,6 +10,7 @@ import type { SearchMoviesParams } from "@/types/api";
 
 interface MovieBrowserProps {
   search?: string;
+  mediaType?: SearchMoviesParams["mediaType"];
 }
 
 const sortMap: Record<SortTypes, SearchMoviesParams["sortBy"] | undefined> = {
@@ -19,8 +20,9 @@ const sortMap: Record<SortTypes, SearchMoviesParams["sortBy"] | undefined> = {
   Rating: "rating",
 };
 
-export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search }) => {
+export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search, mediaType = "movie" }) => {
   const debouncedSearch = useDebounce(search || "", 300);
+  const isSeries = mediaType === "series";
   const [selectedGenre, setSelectedGenre] = useState("");
   const [sortBy, setSortBy] = useState<SearchMoviesParams["sortBy"]>();
   const [minRating, setMinRating] = useState<number>();
@@ -35,6 +37,7 @@ export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search }) => {
     genre: selectedGenre || undefined,
     sortBy: effectiveSortBy,
     query: debouncedSearch || undefined,
+    mediaType,
     minRating,
     minYear: yearRange[0],
     maxYear: yearRange[1],
@@ -44,13 +47,16 @@ export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search }) => {
     setSortBy(sortMap[type]);
   };
 
-  const hasHero = hero.movies.length > 0;
   const isSearching = debouncedSearch.length > 0;
+  // The hero showcases popular movies, so it only applies to the movies page.
+  const showHero = !isSearching && !isSeries;
+  const hasHero = showHero && hero.movies.length > 0;
+  const heroLoading = showHero && hero.loading;
 
   return (
     <section className="flex flex-col w-full pt-14 md:pt-16">
-      {/* Hero — hidden during search */}
-      {!isSearching && (
+      {/* Hero — movies only, hidden during search */}
+      {showHero && (
         <>
           {hero.loading && (
             <div className="w-full h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-gray-900/50 animate-pulse" />
@@ -68,7 +74,7 @@ export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search }) => {
       {/* Content */}
       <div
         className={`flex flex-col items-center w-full px-3 sm:px-4 md:px-6 lg:px-8 ${
-          isSearching || (!hasHero && !hero.loading) ? "pt-16 md:pt-20" : ""
+          isSearching || (!hasHero && !heroLoading) ? "pt-16 md:pt-20" : ""
         }`}
       >
         <NavigationGender

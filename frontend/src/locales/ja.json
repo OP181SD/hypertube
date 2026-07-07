@@ -114,5 +114,10 @@
   "remove_from_watchlist": "ウォッチリストから削除",
   "in_watchlist": "リスト内",
   "watchlist_empty": "ウォッチリストは空です",
-  "watchlist_empty_detail": "後で見るために映画をウォッチリストに追加してください"
+  "watchlist_empty_detail": "後で見るために映画をウォッチリストに追加してください",
+  "movies": "映画",
+  "series": "シリーズ",
+  "episodes": "エピソード",
+  "other": "その他",
+  "releases": "リリース"
 }

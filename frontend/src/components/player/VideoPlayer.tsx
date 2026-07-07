@@ -93,7 +93,7 @@ export const VideoPlayer: FC<VideoPlayerProps> = ({ torrentId, movieId, subtitle
         <PlyrErrorBoundary>
         <Plyr
           key={torrentId}
-          crossOrigin="anonymous"
+          crossOrigin="use-credentials"
           source={{
             type: "video",
             title: movieId,

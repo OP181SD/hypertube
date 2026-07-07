@@ -114,5 +114,10 @@
   "remove_from_watchlist": "Usuń z listy",
   "in_watchlist": "Na mojej liście",
   "watchlist_empty": "Twoja lista jest pusta",
-  "watchlist_empty_detail": "Dodaj filmy do swojej listy, aby obejrzeć je później"
+  "watchlist_empty_detail": "Dodaj filmy do swojej listy, aby obejrzeć je później",
+  "movies": "Filmy",
+  "series": "Seriale",
+  "episodes": "Odcinki",
+  "other": "Inne",
+  "releases": "wersje"
 }

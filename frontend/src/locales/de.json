@@ -114,5 +114,10 @@
   "remove_from_watchlist": "Von der Merkliste entfernen",
   "in_watchlist": "Auf meiner Liste",
   "watchlist_empty": "Deine Merkliste ist leer",
-  "watchlist_empty_detail": "Füge Filme zu deiner Merkliste hinzu, um sie später zu schauen"
+  "watchlist_empty_detail": "Füge Filme zu deiner Merkliste hinzu, um sie später zu schauen",
+  "movies": "Filme",
+  "series": "Serien",
+  "episodes": "Folgen",
+  "other": "Andere",
+  "releases": "Releases"
 }

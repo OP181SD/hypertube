@@ -114,5 +114,10 @@
   "remove_from_watchlist": "찜 목록에서 제거",
   "in_watchlist": "목록에 있음",
   "watchlist_empty": "찜 목록이 비어 있습니다",
-  "watchlist_empty_detail": "나중에 보기 위해 영화를 찜 목록에 추가하세요"
+  "watchlist_empty_detail": "나중에 보기 위해 영화를 찜 목록에 추가하세요",
+  "movies": "영화",
+  "series": "시리즈",
+  "episodes": "에피소드",
+  "other": "기타",
+  "releases": "릴리스"
 }

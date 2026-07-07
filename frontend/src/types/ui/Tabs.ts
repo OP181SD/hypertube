@@ -1,1 +1,1 @@
-export type Tab = "home" | "profile" | "watchlist" | "settings";
+export type Tab = "home" | "series" | "profile" | "watchlist" | "settings";

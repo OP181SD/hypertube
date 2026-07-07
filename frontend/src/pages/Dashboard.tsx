@@ -32,7 +32,8 @@ export default function Dashboard() {
       />
 
       <main className="flex-1 max-w-full">
-        {activeTab === "home" && <MovieBrowser search={search} />}
+        {activeTab === "home" && <MovieBrowser search={search} mediaType="movie" />}
+        {activeTab === "series" && <MovieBrowser search={search} mediaType="series" />}
         {activeTab === "watchlist" && (
           <div className="flex flex-col items-center w-full px-3 sm:px-4 md:px-6 lg:px-8 pt-16 md:pt-20">
             <WatchlistPage />
