@@ -14,6 +14,8 @@ Ce dossier est la **source de vérité** du projet. En cas de contradiction avec
 | [**decisions.md**](./decisions.md) | Choix actés vs options gardées de côté |
 | [**torrent-engine.md**](./torrent-engine.md) | Plan du moteur BitTorrent maison (M1→M8) — chantier bloquant |
 | [**subject-compliance.md**](./subject-compliance.md) | Règles du sujet et points de vigilance éliminatoires |
+| [**api-restful.md**](./api-restful.md) | Guide REST pour la soutenance (curl + arguments) |
+| [**defense-checklist.md**](./defense-checklist.md) | Checklist console 0 erreur + navigateurs |
 | [**archive/**](./archive/) | Anciens handoffs et transcripts (référence historique uniquement) |
 
 ---

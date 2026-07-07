@@ -49,7 +49,7 @@
 | Search field + thumbnails | ✅ | |
 | Résultats triés par nom si recherche | ✅ | |
 | Popular si pas de recherche | ✅ | |
-| Thumbnail : nom, année (si dispo), note (si dispo), **cover** | 🟡 | Grille : placeholder OK ; fiche détail : pas de fallback |
+| Thumbnail : nom, année (si dispo), note (si dispo), **cover** | ✅ | `PosterImage` avec placeholder sur grille, fiche détail et preview |
 | Watched / unwatched différenciés | ✅ | |
 | Pagination scroll infini (pas de lien) | ✅ | |
 | Tri / filtres (nom, genre, note, année…) | ✅ | |
@@ -58,7 +58,7 @@
 
 | Exigence | État | Notes |
 |---|---|---|
-| Détails vidéo (player, résumé, casting, année, durée, note, cover…) | ✅ | |
+| Détails vidéo (player, résumé, casting, année, durée, note, cover…) | ✅ | Cover via `PosterImage` sur fiche lecture |
 | Commentaires | ✅ | |
 | Lancer torrent si pas DL, stream dès assez de données, non-bloquant | ✅* | *via lib interdite |
 | Film complet sauvé, **pas de re-download** | ✅ | `ensurePlayback` + branche disque dans `TorrentService` |
@@ -73,7 +73,7 @@
 | REST + OAuth2 | ✅ |
 | Routes documentées dans le sujet | ✅ |
 | Autres routes rejetées | ✅ |
-| Preuve RESTful en soutenance | À préparer |
+| Preuve API RESTful | ✅ | [api-restful.md](./api-restful.md) |
 
 ### Ch. IV — Bonus
 
@@ -90,7 +90,7 @@
 - L'année et la note ont « (if available) » — **pas la cover**.
 - **Ne pas filtrer** les contenus sans poster TMDb.
 - **Afficher un placeholder** local si `poster_path === null` (éviter 404 console sur URL invalide).
-- État actuel : grille OK (`MoviesSection`), fiche détail à compléter (`MovieDetailPage`).
+- État actuel : grille, fiche détail et preview utilisent `PosterImage` (placeholder local + `onError`)
 
 ### Sources
 

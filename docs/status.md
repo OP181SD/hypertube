@@ -120,7 +120,9 @@
 
 | # | Tâche | Priorité |
 |---|---|---|
-| 5 | Placeholder poster sur **fiche détail** (`MovieDetailPage` n’en a pas, contrairement à la grille) | Moyenne |
+| 5 | ~~Placeholder poster fiche détail~~ | ✅ `PosterImage` + `AvatarImage` partagés |
+| 5b | Console 0 erreur | ✅ garde-fous code + [defense-checklist.md](./defense-checklist.md) à exécuter avant soutenance |
+| 5c | Preuve API RESTful | ✅ [api-restful.md](./api-restful.md) |
 | 6 | Grisage releases 0-seed | Basse (UX, pas mandatory) |
 | 7 | Mettre à jour les specs streaming après M8 | Après moteur |
 
