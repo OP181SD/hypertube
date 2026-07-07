@@ -2,332 +2,194 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { promises as fs } from "node:fs";
+import { EventEmitter } from "node:events";
 import { TorrentService } from "./torrent.service";
 import { PrismaService } from "../../prisma/prisma.service";
-
-// Mock torrent-stream module
-const mockCreateReadStream = vi.fn();
-const mockFileSelect = vi.fn();
-const mockFile = {
-  name: "Movie.mp4",
-  path: "Movie.mp4",
-  length: 1_000_000_000,
-  createReadStream: mockCreateReadStream,
-  select: mockFileSelect,
-  deselect: vi.fn(),
+import type { TorrentFileHandle } from "../torrent/torrent-download";
+const mockFileHandle: TorrentFileHandle = {
+    name: "Movie.mp4",
+    path: "/tmp/test-videos/abc123/Movie.mp4",
+    length: 1000000000,
+    createReadStream: vi.fn(),
 };
-
-const mockEngine = {
-  files: [mockFile],
-  destroy: vi.fn((cb?: () => void) => cb?.()),
-  on: vi.fn(),
-  remove: vi.fn((_, cb?: () => void) => cb?.()),
+let lastDownload: EventEmitter & {
+    start: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
+    getFile: ReturnType<typeof vi.fn>;
 };
-
-// Engine event handlers registered by startDownload — captured so tests can fire them.
-const engineHandlers: Record<string, (...args: unknown[]) => void> = {};
-
-vi.mock("torrent-stream", () => ({
-  default: vi.fn(() => mockEngine),
+let downloadConstructCount = 0;
+let lastDownloadSource: unknown;
+vi.mock("../torrent/torrent-download", () => ({
+    TorrentDownload: class MockTorrentDownload extends EventEmitter {
+        start = vi.fn(async () => {
+            this.emit("ready");
+        });
+        destroy = vi.fn();
+        getFile = vi.fn(() => mockFileHandle);
+        constructor(source: unknown) {
+            super();
+            downloadConstructCount++;
+            lastDownloadSource = source;
+            lastDownload = this;
+        }
+    },
 }));
-
 const mockPrisma = {
-  torrent: {
-    findUnique: vi.fn(),
-    update: vi.fn(),
-    findMany: vi.fn(),
-  },
+    torrent: {
+        findUnique: vi.fn(),
+        update: vi.fn(),
+        findMany: vi.fn(),
+    },
 };
-
 const mockConfig = {
-  get: vi.fn((key: string) => {
-    if (key === "STORAGE_PATH") return "/tmp/test-videos";
-    return "";
-  }),
+    get: vi.fn((key: string) => {
+        if (key === "STORAGE_PATH")
+            return "/tmp/test-videos";
+        return "";
+    }),
 };
-
 describe("TorrentService", () => {
-  let service: TorrentService;
-
-  beforeEach(async () => {
-    vi.clearAllMocks();
-
-    // Capture every engine handler, and auto-fire "ready" asynchronously.
-    for (const key of Object.keys(engineHandlers)) delete engineHandlers[key];
-    mockEngine.on.mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
-      engineHandlers[event] = cb;
-      if (event === "ready") {
-        setTimeout(() => cb(), 0);
-      }
+    let service: TorrentService;
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        downloadConstructCount = 0;
+        lastDownloadSource = undefined;
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                TorrentService,
+                { provide: PrismaService, useValue: mockPrisma },
+                { provide: ConfigService, useValue: mockConfig },
+            ],
+        }).compile();
+        service = module.get<TorrentService>(TorrentService);
     });
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        TorrentService,
-        { provide: PrismaService, useValue: mockPrisma },
-        { provide: ConfigService, useValue: mockConfig },
-      ],
-    }).compile();
-
-    service = module.get<TorrentService>(TorrentService);
-  });
-
-  afterEach(() => {
-    // Destroy any active engines
-    service.onModuleDestroy();
-  });
-
-  describe("ensurePlayback", () => {
-    it("should serve a ready torrent from disk without starting the swarm", async () => {
-      mockPrisma.torrent.findUnique.mockResolvedValue({
-        id: "t1",
-        downloadStatus: "ready",
-        filePath: "/tmp/test-videos/Movie.mp4",
-      });
-      vi.spyOn(fs, "stat").mockResolvedValue({
-        isFile: () => true,
-        size: 5_000_000,
-      } as Awaited<ReturnType<typeof fs.stat>>);
-
-      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
-
-      const torrentStream = await import("torrent-stream");
-      expect(torrentStream.default).not.toHaveBeenCalled();
-
-      const progress = service.getProgress("t1");
-      expect(progress).toEqual({
-        status: "ready",
-        progress: 100,
-        filePath: "/tmp/test-videos/Movie.mp4",
-        fileSize: 5_000_000,
-      });
-
-      const file = service.getFile("t1");
-      expect(file?.name).toBe("Movie.mp4");
-      expect(file?.length).toBe(5_000_000);
+    afterEach(() => {
+        service.onModuleDestroy();
     });
-
-    it("should re-download when the ready file is missing on disk", async () => {
-      mockPrisma.torrent.findUnique.mockResolvedValue({
-        id: "t1",
-        downloadStatus: "ready",
-        filePath: "/tmp/test-videos/missing.mp4",
-      });
-      vi.spyOn(fs, "stat").mockRejectedValue(new Error("ENOENT"));
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
-      await new Promise((r) => setTimeout(r, 50));
-
-      const torrentStream = await import("torrent-stream");
-      expect(torrentStream.default).toHaveBeenCalled();
+    describe("ensurePlayback", () => {
+        it("should serve a ready torrent from disk without starting download", async () => {
+            mockPrisma.torrent.findUnique.mockResolvedValue({
+                id: "t1",
+                downloadStatus: "ready",
+                filePath: "/tmp/test-videos/Movie.mp4",
+                magnetUrl: "magnet:?xt=urn:btih:abc123",
+                torrentFileUrl: null,
+            });
+            vi.spyOn(fs, "stat").mockResolvedValue({
+                isFile: () => true,
+                size: 5000000,
+            } as Awaited<ReturnType<typeof fs.stat>>);
+            await service.ensurePlayback("t1");
+            expect(downloadConstructCount).toBe(0);
+            const progress = service.getProgress("t1");
+            expect(progress).toEqual({
+                status: "ready",
+                progress: 100,
+                filePath: "/tmp/test-videos/Movie.mp4",
+                fileSize: 5000000,
+            });
+        });
+        it("should re-download when the ready file is missing on disk", async () => {
+            mockPrisma.torrent.findUnique.mockResolvedValue({
+                id: "t1",
+                downloadStatus: "ready",
+                filePath: "/tmp/test-videos/missing.mp4",
+                magnetUrl: "magnet:?xt=urn:btih:abc123",
+                torrentFileUrl: "https://yts.lt/torrent/download/abc",
+            });
+            vi.spyOn(fs, "stat").mockRejectedValue(new Error("ENOENT"));
+            mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+            await service.ensurePlayback("t1");
+            await new Promise((r) => setTimeout(r, 20));
+            expect(downloadConstructCount).toBe(1);
+        });
+        it("should prefer torrent file URL over magnet when available", async () => {
+            mockPrisma.torrent.findUnique.mockResolvedValue({
+                id: "t1",
+                downloadStatus: "idle",
+                magnetUrl: "magnet:?xt=urn:btih:abc123",
+                torrentFileUrl: "https://yts.lt/torrent/download/abc",
+            });
+            mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+            await service.ensurePlayback("t1");
+            await new Promise((r) => setTimeout(r, 20));
+            expect(lastDownloadSource).toEqual({
+                kind: "file",
+                url: "https://yts.lt/torrent/download/abc",
+            });
+        });
+        it("should not start duplicate playback for the same ready torrent", async () => {
+            mockPrisma.torrent.findUnique.mockResolvedValue({
+                id: "t1",
+                downloadStatus: "ready",
+                filePath: "/tmp/test-videos/Movie.mp4",
+                magnetUrl: "magnet:?xt=urn:btih:abc123",
+            });
+            vi.spyOn(fs, "stat").mockResolvedValue({
+                isFile: () => true,
+                size: 5000000,
+            } as Awaited<ReturnType<typeof fs.stat>>);
+            await service.ensurePlayback("t1");
+            await service.ensurePlayback("t1");
+            expect(mockPrisma.torrent.findUnique).toHaveBeenCalledTimes(1);
+        });
     });
-
-    it("should not start duplicate playback for the same ready torrent", async () => {
-      mockPrisma.torrent.findUnique.mockResolvedValue({
-        id: "t1",
-        downloadStatus: "ready",
-        filePath: "/tmp/test-videos/Movie.mp4",
-      });
-      vi.spyOn(fs, "stat").mockResolvedValue({
-        isFile: () => true,
-        size: 5_000_000,
-      } as Awaited<ReturnType<typeof fs.stat>>);
-
-      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
-      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
-
-      expect(mockPrisma.torrent.findUnique).toHaveBeenCalledTimes(1);
+    describe("startDownload", () => {
+        it("should start a torrent download and update DB status", async () => {
+            mockPrisma.torrent.update.mockResolvedValue({ id: "t1", downloadStatus: "downloading" });
+            await service.startDownload("t1", { kind: "magnet", uri: "magnet:?xt=urn:btih:abc123" });
+            await new Promise((r) => setTimeout(r, 20));
+            expect(mockPrisma.torrent.update).toHaveBeenCalledWith({
+                where: { id: "t1" },
+                data: expect.objectContaining({ downloadStatus: "downloading" }),
+            });
+        });
+        it("should not start duplicate download for same torrentId", async () => {
+            mockPrisma.torrent.update.mockResolvedValue({ id: "t1", downloadStatus: "downloading" });
+            await service.startDownload("t1", { kind: "magnet", uri: "magnet:?xt=urn:btih:abc123" });
+            await service.startDownload("t1", { kind: "magnet", uri: "magnet:?xt=urn:btih:abc123" });
+            expect(downloadConstructCount).toBe(1);
+        });
     });
-  });
-
-  describe("startDownload", () => {
-    it("should start a torrent download and update DB status", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1", downloadStatus: "downloading" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-
-      // Wait for the ready event to fire
-      await new Promise((r) => setTimeout(r, 50));
-
-      expect(mockPrisma.torrent.update).toHaveBeenCalledWith({
-        where: { id: "t1" },
-        data: expect.objectContaining({ downloadStatus: "downloading" }),
-      });
+    describe("getProgress", () => {
+        it("should return idle status when no download exists", () => {
+            expect(service.getProgress("nonexistent")).toEqual({
+                status: "idle",
+                progress: 0,
+                filePath: null,
+                fileSize: null,
+            });
+        });
+        it("should return ready status once the video file is available", async () => {
+            mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+            await service.startDownload("t1", { kind: "magnet", uri: "magnet:?xt=urn:btih:abc123" });
+            await new Promise((r) => setTimeout(r, 20));
+            const progress = service.getProgress("t1");
+            expect(progress.status).toBe("ready");
+            expect(progress.fileSize).toBe(1000000000);
+        });
     });
-
-    it("should not start duplicate download for same torrentId", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1", downloadStatus: "downloading" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-
-      // Should only create one engine
-      const torrentStream = await import("torrent-stream");
-      expect(torrentStream.default).toHaveBeenCalledTimes(1);
+    describe("destroy", () => {
+        it("should destroy an active download", async () => {
+            mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+            await service.startDownload("t1", { kind: "magnet", uri: "magnet:?xt=urn:btih:abc123" });
+            await new Promise((r) => setTimeout(r, 20));
+            service.destroyEngine("t1");
+            expect(lastDownload.destroy).toHaveBeenCalled();
+            expect(service.getFile("t1")).toBeNull();
+        });
     });
-
-    it("should select the largest video file from engine", async () => {
-      const smallFile = {
-        name: "sample.mp4",
-        path: "sample.mp4",
-        length: 100,
-        createReadStream: vi.fn(),
-        select: vi.fn(),
-        deselect: vi.fn(),
-      };
-      const largeVideo = {
-        name: "Movie.mkv",
-        path: "Movie.mkv",
-        length: 2_000_000_000,
-        createReadStream: vi.fn(),
-        select: vi.fn(),
-        deselect: vi.fn(),
-      };
-
-      mockEngine.files = [smallFile, largeVideo];
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t2" });
-
-      await service.startDownload("magnet:?xt=urn:btih:def456", "t2");
-      await new Promise((r) => setTimeout(r, 50));
-
-      expect(largeVideo.select).toHaveBeenCalled();
-      expect(smallFile.deselect).toHaveBeenCalled();
-
-      // Reset for other tests
-      mockEngine.files = [mockFile];
+    describe("complete event", () => {
+        it("marks the torrent ready in the DB once downloading completes", async () => {
+            mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+            await service.startDownload("t1", { kind: "magnet", uri: "magnet:?xt=urn:btih:abc123" });
+            await new Promise((r) => setTimeout(r, 20));
+            mockPrisma.torrent.update.mockClear();
+            lastDownload.emit("complete");
+            expect(mockPrisma.torrent.update).toHaveBeenCalledWith({
+                where: { id: "t1" },
+                data: { downloadStatus: "ready" },
+            });
+        });
     });
-  });
-
-  describe("getProgress", () => {
-    it("should return idle status when no engine exists", () => {
-      const progress = service.getProgress("nonexistent");
-
-      expect(progress).toEqual({
-        status: "idle",
-        progress: 0,
-        filePath: null,
-        fileSize: null,
-      });
-    });
-
-    it("should return downloading status before the video file is ready", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-
-      // getProgress is read synchronously, before the mocked async "ready"
-      // event has had a chance to fire and select a video file.
-      const progress = service.getProgress("t1");
-
-      expect(progress.status).toBe("downloading");
-      expect(progress.fileSize).toBeNull();
-
-      // let the "ready" event fire so the peer-log interval gets cleared
-      await new Promise((r) => setTimeout(r, 50));
-    });
-
-    it("should return ready status once the video file is selected", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await new Promise((r) => setTimeout(r, 50));
-
-      const progress = service.getProgress("t1");
-
-      expect(progress.status).toBe("ready");
-      expect(progress.fileSize).toBe(1_000_000_000);
-    });
-  });
-
-  describe("isActive", () => {
-    it("should return false for unknown torrent", () => {
-      expect(service.isActive("unknown")).toBe(false);
-    });
-
-    it("should return true for an active torrent", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await new Promise((r) => setTimeout(r, 50));
-
-      expect(service.isActive("t1")).toBe(true);
-    });
-  });
-
-  describe("getFile", () => {
-    it("should return null for unknown torrent", () => {
-      expect(service.getFile("unknown")).toBeNull();
-    });
-
-    it("should return the file for an active torrent", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await new Promise((r) => setTimeout(r, 50));
-
-      const file = service.getFile("t1");
-      expect(file).not.toBeNull();
-      expect(file?.name).toBe("Movie.mp4");
-    });
-  });
-
-  describe("destroy", () => {
-    it("should destroy an active engine", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await new Promise((r) => setTimeout(r, 50));
-
-      service.destroyEngine("t1");
-
-      expect(mockEngine.destroy).toHaveBeenCalled();
-      expect(service.getFile("t1")).toBeNull();
-    });
-
-    it("should do nothing for unknown torrent", () => {
-      expect(() => service.destroyEngine("unknown")).not.toThrow();
-    });
-  });
-
-  describe("onModuleDestroy", () => {
-    it("should destroy all active engines", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await new Promise((r) => setTimeout(r, 50));
-
-      service.onModuleDestroy();
-
-      expect(mockEngine.destroy).toHaveBeenCalled();
-    });
-  });
-
-  describe("engine events", () => {
-    it("marks the torrent ready in the DB once downloading completes", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await new Promise((r) => setTimeout(r, 50)); // let "ready" fire first
-
-      mockPrisma.torrent.update.mockClear();
-      engineHandlers.idle();
-
-      expect(mockPrisma.torrent.update).toHaveBeenCalledWith({
-        where: { id: "t1" },
-        data: { downloadStatus: "ready" },
-      });
-    });
-
-    it("does not crash when the engine emits an error", async () => {
-      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
-
-      await service.startDownload("magnet:?xt=urn:btih:abc123", "t1");
-      await new Promise((r) => setTimeout(r, 50));
-
-      expect(() =>
-        engineHandlers.error(new Error("swarm error")),
-      ).not.toThrow();
-    });
-  });
 });

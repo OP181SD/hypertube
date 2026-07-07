@@ -3,7 +3,6 @@ import { ConfigService } from "@nestjs/config";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { SubtitleService } from "./subtitle.service";
 
-// Mock fs/promises
 vi.mock("node:fs/promises", () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   readFile: vi.fn(),
@@ -27,7 +26,6 @@ describe("SubtitleService", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    // Restore the default config implementation in case a previous test overrode it
     mockConfig.get.mockImplementation((key: string) => {
       if (key === "OPENSUBTITLES_API_KEY") return "test-api-key";
       if (key === "OPENSUBTITLES_BASE_URL")
@@ -104,9 +102,7 @@ describe("SubtitleService", () => {
     });
 
     it("should return empty array when API key is missing", async () => {
-      // The API key is captured in the constructor, so the service must be
-      // rebuilt with an empty key. getAvailableSubtitles then short-circuits
-      // without any network call.
+
       mockConfig.get.mockImplementation((key: string) =>
         key === "OPENSUBTITLES_API_KEY" ? "" : "/tmp/test-videos",
       );
@@ -135,7 +131,7 @@ describe("SubtitleService", () => {
 
   describe("downloadSubtitle", () => {
     it("should download SRT and convert to VTT", async () => {
-      // Mock the download endpoint
+
       const downloadResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue({

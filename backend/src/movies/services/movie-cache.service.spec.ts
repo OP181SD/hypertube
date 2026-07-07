@@ -51,7 +51,7 @@ describe("MovieCacheService", () => {
           }),
         }),
       );
-      // ytsMovie has 2 torrents
+
       expect(mockPrisma.torrent.upsert).toHaveBeenCalledTimes(2);
     });
 
@@ -113,7 +113,6 @@ describe("MovieCacheService", () => {
       mockPrisma.movie.upsert.mockResolvedValue({ ...mockDbMovie, id: "series-id" });
       mockPrisma.torrent.upsert.mockResolvedValue({});
 
-      // eztvTorrent.title is "Breaking Bad S01E01 1080p BluRay x264"
       await service.cacheSeries(show, [eztvTorrent]);
 
       const torrentCall = mockPrisma.torrent.upsert.mock.calls[0][0];
@@ -153,7 +152,7 @@ describe("MovieCacheService", () => {
         { ...eztvTorrent, hash: "EP2_0000000000000000000000", title: "Breaking Bad S01E02 720p" },
       ]);
 
-      expect(mockPrisma.movie.upsert).not.toHaveBeenCalled(); // movie already exists
+      expect(mockPrisma.movie.upsert).not.toHaveBeenCalled();
       expect(mockPrisma.torrent.upsert).toHaveBeenCalledTimes(2);
       const firstCreate = mockPrisma.torrent.upsert.mock.calls[0][0].create;
       expect(firstCreate.movieId).toBe("series-id");

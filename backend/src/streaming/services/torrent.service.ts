@@ -1,234 +1,173 @@
 import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
-import type { DownloadProgress, TorrentEngine, TorrentFile } from "../interfaces";
-import torrentStream from "torrent-stream";
+import type { DownloadProgress, TorrentFile } from "../interfaces";
 import { createReadStream, promises as fs } from "node:fs";
 import { basename, join } from "node:path";
-
-const VIDEO_EXTENSIONS = [".mp4", ".mkv", ".avi", ".webm", ".mov"];
-
-interface ActiveTorrent {
-  engine: TorrentEngine;
-  file: TorrentFile | null;
-  progress: number;
+import { TorrentDownload, type TorrentSource, type TorrentFileHandle, } from "../torrent/torrent-download";
+interface ActiveDownload {
+    download: TorrentDownload;
+    progress: number;
+    file: TorrentFile | null;
 }
-
+function toTorrentFile(handle: TorrentFileHandle): TorrentFile {
+    return {
+        name: handle.name,
+        path: handle.path,
+        length: handle.length,
+        createReadStream: (opts) => handle.createReadStream(opts),
+    };
+}
 function createDiskTorrentFile(absolutePath: string, size: number): TorrentFile {
-  const name = basename(absolutePath);
-  return {
-    name,
-    path: absolutePath,
-    length: size,
-    createReadStream: (opts) =>
-      createReadStream(absolutePath, {
-        start: opts?.start,
-        end: opts?.end,
-      }),
-    select: () => {},
-    deselect: () => {},
-  };
+    return {
+        name: basename(absolutePath),
+        path: absolutePath,
+        length: size,
+        createReadStream: (opts) => createReadStream(absolutePath, { start: opts?.start, end: opts?.end }),
+    };
 }
-
 @Injectable()
 export class TorrentService implements OnModuleDestroy {
-  private readonly logger = new Logger("TorrentEngine");
-  private readonly activeTorrents = new Map<string, ActiveTorrent>();
-  /** Completed downloads served from disk without rejoining the swarm. */
-  private readonly diskFiles = new Map<string, TorrentFile>();
-  private readonly storagePath: string;
-
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly configService: ConfigService,
-  ) {
-    this.storagePath = join(process.cwd(), this.configService.get<string>("STORAGE_PATH") ?? "./data/videos");
-    this.logger.log(`[INIT] Storage path set to: ${this.storagePath}`);
-  }
-
-  // Start a swarm download unless the torrent is already complete on disk.
-  async ensurePlayback(torrentId: string, magnetUrl: string): Promise<void> {
-    if (this.activeTorrents.has(torrentId) || this.diskFiles.has(torrentId)) return;
-
-    const torrent = await this.prisma.torrent.findUnique({ where: { id: torrentId } });
-    if (
-      torrent?.downloadStatus === "ready" &&
-      torrent.filePath &&
-      (await this.tryLoadDiskFile(torrentId, torrent.filePath))
-    ) {
-      this.logger.log(`[DISK] Serving ${torrentId} from ${torrent.filePath}`);
-      return;
+    private readonly logger = new Logger("TorrentEngine");
+    private readonly activeDownloads = new Map<string, ActiveDownload>();
+    private readonly diskFiles = new Map<string, TorrentFile>();
+    private readonly storagePath: string;
+    constructor(private readonly prisma: PrismaService, private readonly configService: ConfigService) {
+        this.storagePath = join(process.cwd(), this.configService.get<string>("STORAGE_PATH") ?? "./data/videos");
+        this.logger.log(`[INIT] Storage path set to: ${this.storagePath}`);
     }
-
-    if (torrent?.downloadStatus === "ready" && torrent.filePath) {
-      this.logger.warn(
-        `[DISK] Ready torrent ${torrentId} missing on disk (${torrent.filePath}), re-downloading`,
-      );
+    async ensurePlayback(torrentId: string): Promise<void> {
+        if (this.activeDownloads.has(torrentId) || this.diskFiles.has(torrentId))
+            return;
+        const torrent = await this.prisma.torrent.findUnique({ where: { id: torrentId } });
+        if (!torrent)
+            return;
+        if (torrent.downloadStatus === "ready" &&
+            torrent.filePath &&
+            (await this.tryLoadDiskFile(torrentId, torrent.filePath))) {
+            this.logger.log(`[DISK] Serving ${torrentId} from ${torrent.filePath}`);
+            return;
+        }
+        if (torrent.downloadStatus === "ready" && torrent.filePath) {
+            this.logger.warn(`[DISK] Ready torrent ${torrentId} missing on disk (${torrent.filePath}), re-downloading`);
+        }
+        const source: TorrentSource = torrent.torrentFileUrl
+            ? { kind: "file", url: torrent.torrentFileUrl }
+            : { kind: "magnet", uri: torrent.magnetUrl };
+        await this.startDownload(torrentId, source);
     }
-
-    await this.startDownload(magnetUrl, torrentId);
-  }
-
-  async startDownload(magnetUrl: string, torrentId: string): Promise<void> {
-    if (this.activeTorrents.has(torrentId) || this.diskFiles.has(torrentId)) return;
-
-    this.logger.log(`[START] Initializing torrent: ${torrentId}`);
-    
-    const engine = torrentStream(magnetUrl, {
-      path: this.storagePath,
-      trackers: [
-        'udp://tracker.opentrackr.org:1337/announce',
-        'udp://9.rarbg.com:2810/announce',
-        'udp://tracker.openbittorrent.com:80/announce',
-      ],
-    }) as unknown as TorrentEngine;
-
-    const active: ActiveTorrent = { engine, file: null, progress: 0 };
-    this.activeTorrents.set(torrentId, active);
-
-    // Periodically log peer-discovery progress
-    const logPeers = setInterval(() => {
-      const swarm = engine.swarm;
-      if (swarm) {
-        this.logger.debug(`[STATUS] ${torrentId} - Peers: ${swarm?.connections?.length ?? 0} - Wired: ${swarm?.wired?.length ?? 0}`);
-      }
-    }, 5000);
-
-    engine.on("torrent", () => {
-      this.logger.log(`[METADATA] Metadata received for ${torrentId}.`);
-    });
-
-    engine.on("ready", () => {
-      clearInterval(logPeers);
-      const videoFile = this.selectVideoFile(engine.files);
-
-      if (!videoFile) {
-        this.logger.error(`[ERROR] No video file found for ${torrentId}`);
-        return;
-      }
-
-      this.logger.log(`[READY] Video found: ${videoFile.name} (${(videoFile.length / 1024 / 1024).toFixed(2)} MB)`);
-      active.file = videoFile;
-      videoFile.select();
-
-      // Deselect all other files to save bandwidth
-      for (const f of engine.files) {
-        if (f !== videoFile) f.deselect();
-      }
-
-      // Persist the file path + downloading status to DB.
-      // filePath is required by the cleanup cron to locate the file on disk.
-      this.prisma.torrent.update({
-        where: { id: torrentId },
-        data: {
-          downloadStatus: "downloading",
-          filePath: join(this.storagePath, videoFile.path),
-        },
-      }).catch((err: Error) => {
-        this.logger.error(`[ERROR] Failed to update torrent status: ${err.message}`);
-      });
-    });
-
-    engine.on("download", (pieceIndex) => {
-      // Total piece count, used to compute progress
-      const totalPieces = engine.torrent?.pieces?.length || 1;
-      active.progress = Math.round(((pieceIndex + 1) / totalPieces) * 100);
-
-      // Log every 50 pieces to avoid flooding the console
-      if (pieceIndex % 50 === 0) {
-        this.logger.debug(`[PROGRESS] ${torrentId}: ${active.progress}%`);
-      }
-    });
-
-    // Fired once every selected piece is downloaded — the video file is complete.
-    // Marking the DB status "ready" is what lets the cleanup cron pick up
-    // stale (unwatched for a month) files for deletion.
-    engine.on("idle", () => {
-      if (!active.file) return;
-      active.progress = 100;
-      this.logger.log(`[DONE] Download complete for ${torrentId}`);
-      this.prisma.torrent.update({
-        where: { id: torrentId },
-        data: { downloadStatus: "ready" },
-      }).catch((err: Error) => {
-        this.logger.error(`[ERROR] Failed to mark torrent ready: ${err.message}`);
-      });
-    });
-
-    engine.on("error", (err) => {
-      this.logger.error(`[CRITICAL] Torrent engine error: ${err}`);
-    });
-  }
-
-  isActive(torrentId: string): boolean {
-    return this.activeTorrents.has(torrentId);
-  }
-
-  getProgress(torrentId: string): DownloadProgress {
-    const disk = this.diskFiles.get(torrentId);
-    if (disk) {
-      return {
-        status: "ready",
-        progress: 100,
-        filePath: disk.path,
-        fileSize: disk.length,
-      };
+    async startDownload(torrentId: string, source: TorrentSource): Promise<void> {
+        if (this.activeDownloads.has(torrentId) || this.diskFiles.has(torrentId))
+            return;
+        this.logger.log(`[START] Initializing torrent: ${torrentId} (${source.kind})`);
+        const download = new TorrentDownload(source, this.storagePath);
+        const active: ActiveDownload = { download, progress: 0, file: null };
+        this.activeDownloads.set(torrentId, active);
+        download.on("ready", () => {
+            const handle = download.getFile();
+            if (!handle) {
+                this.logger.error(`[ERROR] No video file found for ${torrentId}`);
+                return;
+            }
+            active.file = toTorrentFile(handle);
+            this.logger.log(`[READY] Video found: ${handle.name} (${(handle.length / 1024 / 1024).toFixed(2)} MB)`);
+            void this.prisma.torrent
+                .update({
+                where: { id: torrentId },
+                data: {
+                    downloadStatus: "downloading",
+                    filePath: handle.path,
+                },
+            })
+                .catch((err: Error) => {
+                this.logger.error(`[ERROR] Failed to update torrent status: ${err.message}`);
+            });
+        });
+        download.on("progress", (progress: number) => {
+            active.progress = progress;
+            if (progress % 10 === 0) {
+                this.logger.debug(`[PROGRESS] ${torrentId}: ${progress}%`);
+            }
+        });
+        download.on("complete", () => {
+            active.progress = 100;
+            const handle = download.getFile();
+            if (handle) {
+                active.file = toTorrentFile(handle);
+                this.diskFiles.set(torrentId, active.file);
+            }
+            this.activeDownloads.delete(torrentId);
+            download.destroy();
+            this.logger.log(`[DONE] Download complete for ${torrentId}`);
+            void this.prisma.torrent
+                .update({
+                where: { id: torrentId },
+                data: { downloadStatus: "ready" },
+            })
+                .catch((err: Error) => {
+                this.logger.error(`[ERROR] Failed to mark torrent ready: ${err.message}`);
+            });
+        });
+        download.on("error", (err: Error) => {
+            this.logger.error(`[CRITICAL] Torrent engine error: ${err.message}`);
+            this.activeDownloads.delete(torrentId);
+            download.destroy();
+        });
+        await download.start();
     }
-
-    const active = this.activeTorrents.get(torrentId);
-    if (!active) return { status: "idle", progress: 0, filePath: null, fileSize: null };
-
-    return {
-      status: active.file ? "ready" : "downloading",
-      progress: active.progress,
-      filePath: active.file ? join(this.storagePath, active.file.path) : null,
-      fileSize: active.file?.length ?? null,
-    };
-  }
-
-  getFile(torrentId: string): TorrentFile | null {
-    const active = this.activeTorrents.get(torrentId);
-    if (active?.file) return active.file;
-    return this.diskFiles.get(torrentId) ?? null;
-  }
-
-  destroyEngine(torrentId: string): void {
-    const active = this.activeTorrents.get(torrentId);
-    if (!active) return;
-
-    active.engine.destroy();
-    this.activeTorrents.delete(torrentId);
-  }
-
-  onModuleDestroy(): void {
-    for (const [id, active] of this.activeTorrents) {
-      active.engine.destroy();
-      this.activeTorrents.delete(id);
+    isActive(torrentId: string): boolean {
+        return this.activeDownloads.has(torrentId);
     }
-  }
-
-  private async tryLoadDiskFile(torrentId: string, filePath: string): Promise<boolean> {
-    try {
-      const stat = await fs.stat(filePath);
-      if (!stat.isFile()) return false;
-      this.diskFiles.set(torrentId, createDiskTorrentFile(filePath, stat.size));
-      return true;
-    } catch {
-      return false;
+    getProgress(torrentId: string): DownloadProgress {
+        const disk = this.diskFiles.get(torrentId);
+        if (disk) {
+            return {
+                status: "ready",
+                progress: 100,
+                filePath: disk.path,
+                fileSize: disk.length,
+            };
+        }
+        const active = this.activeDownloads.get(torrentId);
+        if (!active)
+            return { status: "idle", progress: 0, filePath: null, fileSize: null };
+        return {
+            status: active.file ? "ready" : "downloading",
+            progress: active.progress,
+            filePath: active.file?.path ?? null,
+            fileSize: active.file?.length ?? null,
+        };
     }
-  }
-
-  private selectVideoFile(files: TorrentFile[]): TorrentFile | null {
-    const videoFiles = files.filter((f) => {
-      const ext = f.name.toLowerCase().slice(f.name.lastIndexOf("."));
-      return VIDEO_EXTENSIONS.includes(ext);
-    });
-
-    if (videoFiles.length === 0) return null;
-
-    // Return the largest video file
-    return videoFiles.reduce((largest, current) =>
-      current.length > largest.length ? current : largest,
-    );
-  }
+    getFile(torrentId: string): TorrentFile | null {
+        const disk = this.diskFiles.get(torrentId);
+        if (disk)
+            return disk;
+        const active = this.activeDownloads.get(torrentId);
+        return active?.file ?? null;
+    }
+    destroyEngine(torrentId: string): void {
+        const active = this.activeDownloads.get(torrentId);
+        if (!active)
+            return;
+        active.download.destroy();
+        this.activeDownloads.delete(torrentId);
+    }
+    onModuleDestroy(): void {
+        for (const [id, active] of this.activeDownloads) {
+            active.download.destroy();
+            this.activeDownloads.delete(id);
+        }
+    }
+    private async tryLoadDiskFile(torrentId: string, filePath: string): Promise<boolean> {
+        try {
+            const stat = await fs.stat(filePath);
+            if (!stat.isFile())
+                return false;
+            this.diskFiles.set(torrentId, createDiskTorrentFile(filePath, stat.size));
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
 }

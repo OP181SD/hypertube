@@ -1,76 +1,67 @@
-# Moteur BitTorrent — plan de rework
+# Moteur BitTorrent — référence technique
 
-> **Statut : pas commencé** (juillet 2026). `torrent-stream` toujours en place → **éliminatoire**.
+> **Statut : implémenté** (juillet 2026). `torrent-stream` retiré.
 >
 > Contexte sources : [decisions.md](./decisions.md) · État global : [status.md](./status.md)
 
 ---
 
-## Pourquoi ce rework est obligatoire
+## Conformité sujet
 
 Le sujet (Ch. II) interdit toute lib qui **« create a video stream from a torrent »**.
-`torrent-stream` en est une (et `peerflix`, cité comme interdit, est bâti dessus).
-
-Règle V.1 : *« Anything not specifically authorized is forbidden »* → risque de **0**.
-
-**Bonus** : supprimer `torrent-stream` élimine aussi les 5 vulns `ip` (CVE-2024-29415) — seule source dans le projet.
+Le moteur est hand-rollé dans `backend/src/streaming/torrent/` avec les built-ins Node uniquement (`net`, `dgram`, `crypto`, `stream`, `fs`).
 
 ---
 
-## Principe directeur : préserver la surface
+## Façade publique (`TorrentService`)
 
-`StreamingService` + `StreamingController` ne consomment que **6 points de contact** de `TorrentService`. On les fige comme contrat, on reconstruit tout derrière.
+`StreamingService` + `StreamingController` consomment uniquement :
 
-| Méthode | Attendu |
+| Méthode | Rôle |
 |---|---|
-| `isActive(id): boolean` | Un download tourne-t-il ? |
-| `startDownload(source, id): Promise<void>` | Démarre — **source = `.torrent` URL ou magnet** |
-| `getProgress(id): DownloadProgress` | `{ status, progress, filePath, fileSize }` |
-| `getFile(id): TorrentFile \| null` | `{ name, length, createReadStream({start,end}) }` |
+| `ensurePlayback(torrentId)` | Disque si `ready`, sinon démarre le download |
+| `isActive(id)` | Download en cours ? |
+| `getProgress(id)` | `{ status, progress, filePath, fileSize }` |
+| `getFile(id)` | `TorrentFile` avec `createReadStream({start,end})` |
 | `destroyEngine(id)` / `onModuleDestroy()` | Nettoyage |
 
-⚠️ **Piège n°1** : `file.createReadStream({start,end})` doit rendre un `Readable` qui **attend les pièces manquantes et les priorise** (streaming progressif + seek).
-
-⚠️ **Conformité disque** : le sujet exige qu'un film entièrement téléchargé soit **servi depuis le disque sans re-télécharger**. Implémenté via `ensurePlayback()` + `diskFiles` dans `torrent.service.ts` (patch juillet 2026). Le moteur maison (M5) reprendra la même branche.
+`createReadStream` attend les pièces manquantes et priorise la plage demandée (streaming progressif + seek).
 
 ---
 
 ## Sources & chemins d'entrée
 
-| Source | Format | Chemin moteur | Streamable après |
-|---|---|---|---|
-| **YTS** (films) | `.torrent` URL + `info_hash` | M1→M6 (`.torrent`) | **M6** |
-| **EZTV** (séries) | magnet only (`info_hash`) | M7 (BEP9) après M3 | **M7** |
+| Source | Format | Chemin |
+|---|---|---|
+| **YTS** (films) | `.torrent` URL (`torrentFileUrl`) + magnet en repli | `from-torrent-file.ts` |
+| **EZTV** (séries) | magnet only | `from-magnet.ts` + BEP9 `ut_metadata` |
 
-Les deux convergent vers un type unique `TorrentMetadata` — le moteur aval est identique.
-
-**Exigence sujet « ≥2 sources »** : satisfaite au niveau **recherche** dès YTS+EZTV en place. La 2ᵉ source **lisible** (EZTV magnet) dépend de **M7**.
+Les deux convergent vers `TorrentMetadata` — le moteur aval est identique.
 
 ---
 
-## Structure de fichiers cible
+## Structure des fichiers
 
 ```
-src/streaming/
+backend/src/streaming/
 ├── services/
-│   └── torrent.service.ts        ← REÉCRIT : façade fine (Map<id, TorrentDownload>)
-└── torrent/                      ← NOUVEAU : moteur hand-rollé
+│   └── torrent.service.ts        ← façade (Map<id, TorrentDownload>)
+└── torrent/
     ├── bencode.ts
+    ├── torrent-download.ts
     ├── metadata/
     │   ├── torrent-metadata.ts
-    │   ├── from-torrent-file.ts    ← YTS
-    │   └── from-magnet.ts          ← EZTV (BEP9)
+    │   ├── from-torrent-file.ts
+    │   └── from-magnet.ts
     ├── tracker/
-    │   ├── http-tracker.ts
-    │   └── udp-tracker.ts
+    │   └── tracker-client.ts     ← HTTP + UDP (BEP15)
     ├── peer/
     │   ├── peer-connection.ts
     │   ├── messages.ts
-    │   └── extension.ts            ← BEP10 + ut_metadata (BEP9)
-    ├── piece/
-    │   ├── piece-picker.ts
-    │   └── piece-store.ts
-    └── torrent-download.ts
+    │   └── extension.ts          ← BEP10 + ut_metadata (BEP9)
+    └── piece/
+        ├── piece-picker.ts
+        └── piece-store.ts
 ```
 
 ---
@@ -79,82 +70,33 @@ src/streaming/
 
 ```ts
 interface TorrentMetadata {
-  infoHash: Buffer;          // 20 bytes (SHA1)
+  infoHash: Buffer;
+  infoHashHex: string;
   name: string;
   pieceLength: number;
-  pieces: Buffer[];          // hash SHA1 (20 bytes) par pièce
+  pieces: Buffer[];
   files: { path: string; length: number; offset: number }[];
   totalLength: number;
   trackers: string[];
 }
 ```
 
-Une fois obtenu, **le moteur ne sait plus d'où ça vient**.
+`info_hash` = SHA1 des **bytes exacts** du dict `info` (slice brut via `extractInfoDictRaw`, pas de ré-encodage).
 
 ---
 
-## Milestones M1→M8
+## Milestones M1→M8 (tous livrés)
 
-### M1 — Bencode + métadonnées `.torrent`
-- `bencode.ts` + `from-torrent-file.ts`
-- Test : parser un `.torrent` YTS, recalculer `info_hash`, vérifier == `hash` API
-- ⚠️ Gotcha : `info_hash` = SHA1 des **bytes exacts** du dict `info` → exposer le slice brut, pas ré-encoder
-
-### M2 — Tracker client → liste de peers
-- `http-tracker.ts` puis `udp-tracker.ts`
-- Test : announce sur trackers publics → liste `{ip,port}` non vide
-- ⚠️ Re-announce périodique (respecter `interval` du tracker)
-
-### M3 — Peer wire : handshake + bitfield
-- `peer-connection.ts` + `messages.ts`
-- Handshake avec bit d'extension `0x10` activé (prérequis BEP9)
-- ⚠️ Bounds-check systématique sur tout `Buffer` venant d'un peer (crash = violation V.1)
-
-### M4 — Download d'une pièce + vérif SHA1 + disque
-- `piece-store.ts` + boucle request/piece (blocs 16 KiB)
-- ⚠️ Machine à états **choke/unchoke + interested** obligatoire : `interested` → `unchoke` → `request`
-
-### M5 — Picker séquentiel + download complet + service disque
-- `piece-picker.ts` + `torrent-download.ts`
-- Layout multi-fichiers réel (`metadata.files[].path/offset`)
-- À complétion → `ready` + branche « servir depuis disque » (`fs.createReadStream`)
-- Cleanup supprime le **dossier** du torrent, pas un seul `filePath`
-
-### M6 — Streaming progressif (contrat critique)
-- `piece-store.createReadStream({start,end})` : priorise les pièces de la plage
-- Test : `<video>` lit pendant le download (seek inclus)
-- ⚠️ Backpressure (`highWaterMark`) — ne pas bufferiser tout le fichier
-- → **Chemin critique conforme atteint** (films YTS via `.torrent`)
-
-### M7 — Branchement BEP9 (magnet / EZTV)
-- `extension.ts` (BEP10 + ut_metadata) + `from-magnet.ts`
-- Réutilise M3, pas de DHT — peers via trackers publics du magnet
-- ~150–200 lignes isolées, réinjecte dans M5/M6 inchangés
-- → **EZTV streamable**
-
-### M8 — Bascule + suppression `torrent-stream`
-- `torrent.service.ts` câble la `Map` sur `torrent-download`
-- Retirer `torrent-stream` + `@types/torrent-stream` du `package.json`
-- Adapter les `*.spec.ts` du module streaming
-
----
-
-## Stratégie de test
-
-| Catégorie | Contenu | Où |
+| # | Livrable | Fichiers |
 |---|---|---|
-| **Unitaires déterministes** | bencode, messages wire, UDP announce, ut_metadata + SHA1 | CI, fixtures binaires, zéro réseau |
-| **Intégration live** | M2 announce réel, M3 peer réel, M5/M6 download+stream | Manuel / flag env, **jamais** en CI par défaut |
-
----
-
-## Dépendances
-
-| | |
-|---|---|
-| **Autorisé** | `node:net`, `node:dgram`, `node:crypto`, `node:stream`, `node:fs` ; bencode hand-rollé recommandé |
-| **À retirer (M8)** | `torrent-stream`, `@types/torrent-stream` |
-| **Interdit** | webtorrent, peerflix, pulsar, bittorrent-tracker, bittorrent-dht, bittorrent-protocol, parse-torrent combo |
+| M1 | Bencode + `.torrent` | `bencode.ts`, `from-torrent-file.ts` |
+| M2 | Trackers HTTP + UDP | `tracker/tracker-client.ts` |
+| M3 | Peer wire + bitfield | `peer/messages.ts`, `peer-connection.ts` |
+| M4 | Download pièce + SHA1 | `piece/piece-store.ts` |
+| M5 | Picker séquentiel + disque | `piece/piece-picker.ts`, `torrent-download.ts` |
+| M6 | `createReadStream` progressif | `piece-store.ts` |
+| M7 | BEP9 / magnet | `peer/extension.ts`, `from-magnet.ts` |
+| M8 | Bascule + retrait `torrent-stream` | `torrent.service.ts`, specs |
 
 ---
 
@@ -162,32 +104,34 @@ Une fois obtenu, **le moteur ne sait plus d'où ça vient**.
 
 | Modif | Détail |
 |---|---|
-| **Prisma** | Ajouter `torrentFileUrl String?` à `Torrent`. Peupler depuis `torrent.url` YTS au cache |
-| **`startDownload`** | Reçoit `{ kind: "file", url }` (préféré) ou `{ kind: "magnet", uri }` |
-| **`StreamingService`** | ~2 lignes : choisir la source ; branche disque si `ready` + fichier présent |
-| **`interfaces/index.ts`** | Retirer champs torrent-stream (`swarm`, `select`/`deselect`, `remove`) |
-| **Cleanup cron** | Supprimer le dossier torrent (multi-fichiers) |
+| **Prisma** | `Torrent.torrentFileUrl` — peuplé depuis `torrent.url` YTS au cache |
+| **`ensurePlayback`** | Lit `torrentFileUrl` en DB, préfère `.torrent` à magnet |
+| **`interfaces/index.ts`** | `TorrentFile` sans champs `torrent-stream` |
+| **Cleanup cron** | Supprime `{STORAGE_PATH}/{hash}/` |
 
 ---
 
-## Risques (par ordre de douleur)
+## Tests
 
-1. **`createReadStream` qui attend + priorise** (M6) — cœur du streaming
-2. **Slice brut dict `info`** (M1) — mauvais ré-encodage = 0 peer
-3. **Choke/unchoke + interested** (M4) — oubli classique = stall à 0 pièce
-4. **UDP tracker BEP15** (M2) et **ut_metadata** (M7) — protocoles binaires
-5. **Peers muets** — timeouts + pool parallèle dès M3
-6. **Bounds-checks** sur Buffers non fiables — crash serveur = 0
-7. **Magnet-only peu seedé** (EZTV) — 0 peer possible sans DHT ; mitigation : contenu populaire en démo
+| Catégorie | Contenu | Où |
+|---|---|---|
+| Unitaires déterministes | bencode, messages wire, magnet parse, SHA1 | `src/streaming/torrent/**/*.spec.ts` |
+| Intégration live | announce réel, download+stream | Manuel uniquement |
 
 ---
 
-## Estimation
+## Dépendances
 
-| Phase | Effort |
+| ✅ Utilisé | ❌ Interdit |
 |---|---|
-| M1→M6 (moteur conforme, chemin `.torrent`/YTS) | ~80 % |
-| M7 (BEP9/magnet/EZTV) | ~150–200 L, isolé |
-| M8 (bascule + cleanup + specs) | Faible |
+| `node:net`, `dgram`, `crypto`, `stream`, `fs` | webtorrent, peerflix, pulsar, torrent-stream |
+| `fluent-ffmpeg` (transcodage) | bittorrent-tracker, bittorrent-dht, bittorrent-protocol |
 
-**Prochaine action** : démarrer **M1** (bencode + parsing `.torrent` + recalcul `info_hash`).
+---
+
+## Risques résiduels (soutenance)
+
+1. **Réseau école** — UDP tracker peut être bloqué ; HTTP tracker en fallback partiel
+2. **Peers muets** — contenu peu seedé = stall ; privilégier films YTS populaires
+3. **EZTV magnet** — pas de DHT ; dépend des trackers du magnet
+4. **Torrents DB sans `torrentFileUrl`** — re-cacher YTS ou fallback magnet

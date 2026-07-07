@@ -24,13 +24,13 @@
 | Films → YTS, Séries → EZTV (routage par `mediaType`) | Chaque source couvre son domaine ; recherche conforme (2 sources vidéo) |
 | Deep-fetch EZTV **lazy** (au clic sur une série) | Grille légère au seed ; coût pagination payé seulement pour la série regardée |
 | `episodesFetched` flag en DB | Évite de re-interroger EZTV à chaque ouverture |
-| Magnets construits pour YTS (`buildMagnetUrl`) en attendant le moteur | Fonctionne avec `torrent-stream` actuel ; `torrentFileUrl` viendra avec M1 |
+| YTS `.torrent` via `torrentFileUrl`, magnet en repli | Meilleure peer-discovery ; EZTV reste magnet + BEP9 |
 
 ### Moteur torrent
 
 | Décision | Raison |
 |---|---|
-| **Hand-roll obligatoire** — supprimer `torrent-stream` | Interdit par le sujet (Ch. II) ; éliminatoire |
+| **Hand-roll obligatoire** — `torrent-stream` retiré | Interdit par le sujet (Ch. II) ; **fait** juillet 2026 |
 | Coder **les deux chemins** : `.torrent` (YTS) + magnet/BEP9 (EZTV) | Choix de source = config, pas refonte moteur |
 | **Pas de DHT** (BEP5) | Trop coûteux (~400–700 L) ; peers via trackers publics |
 | Préserver la façade `TorrentService` (6 méthodes) | `StreamingService` / controller / frontend inchangés |

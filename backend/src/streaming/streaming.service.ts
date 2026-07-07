@@ -5,133 +5,112 @@ import { TranscodingService } from "./services/transcoding.service";
 import { SubtitleService } from "./services/subtitle.service";
 import type { DownloadProgress, StreamResult, SubtitleEntry } from "./interfaces";
 import { ERROR_MESSAGES } from "../common/constants/error-messages";
-
 @Injectable()
 export class StreamingService {
-  private readonly logger = new Logger(StreamingService.name);
-
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly torrentService: TorrentService,
-    private readonly transcodingService: TranscodingService,
-    private readonly subtitleService: SubtitleService,
-  ) {}
-
-  async initiateStream(torrentId: string, userId: string): Promise<DownloadProgress> {
-    const torrent = await this.prisma.torrent.findUnique({
-      where: { id: torrentId },
-    });
-
-    if (!torrent) throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
-
-    await this.torrentService.ensurePlayback(torrentId, torrent.magnetUrl);
-
-    if (userId && userId !== "anonymous") {
-      try {
-        await this.prisma.watchHistory.upsert({
-          where: { userId_movieId: { userId, movieId: torrent.movieId } },
-          create: { userId, movieId: torrent.movieId },
-          update: { watchedAt: new Date() },
+    private readonly logger = new Logger(StreamingService.name);
+    constructor(private readonly prisma: PrismaService, private readonly torrentService: TorrentService, private readonly transcodingService: TranscodingService, private readonly subtitleService: SubtitleService) { }
+    async initiateStream(torrentId: string, userId: string): Promise<DownloadProgress> {
+        const torrent = await this.prisma.torrent.findUnique({
+            where: { id: torrentId },
         });
-      } catch (e) {
-        this.logger.warn(
-          `Could not update watch history: ${e instanceof Error ? e.message : e}`,
-        );
-      }
+        if (!torrent)
+            throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
+        await this.torrentService.ensurePlayback(torrentId);
+        if (userId && userId !== "anonymous") {
+            try {
+                await this.prisma.watchHistory.upsert({
+                    where: { userId_movieId: { userId, movieId: torrent.movieId } },
+                    create: { userId, movieId: torrent.movieId },
+                    update: { watchedAt: new Date() },
+                });
+            }
+            catch (e) {
+                this.logger.warn(`Could not update watch history: ${e instanceof Error ? e.message : e}`);
+            }
+        }
+        await this.prisma.torrent.update({
+            where: { id: torrentId },
+            data: { lastAccessedAt: new Date() },
+        });
+        return this.torrentService.getProgress(torrentId);
     }
-
-    await this.prisma.torrent.update({
-      where: { id: torrentId },
-      data: { lastAccessedAt: new Date() },
-    });
-
-    return this.torrentService.getProgress(torrentId);
-  }
-
-  async getStreamStatus(torrentId: string): Promise<DownloadProgress> {
-    const torrent = await this.prisma.torrent.findUnique({
-      where: { id: torrentId },
-    });
-
-    if (!torrent) throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
-
-    await this.torrentService.ensurePlayback(torrentId, torrent.magnetUrl);
-
-    const progress = this.torrentService.getProgress(torrentId);
-    const file = this.torrentService.getFile(torrentId);
-    if (file) {
-      const mimeType = this.transcodingService.needsTranscoding(file.name)
-        ? "video/mp4"
-        : this.getMimeType(file.name);
-      return { ...progress, mimeType };
+    async getStreamStatus(torrentId: string): Promise<DownloadProgress> {
+        const torrent = await this.prisma.torrent.findUnique({
+            where: { id: torrentId },
+        });
+        if (!torrent)
+            throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
+        await this.torrentService.ensurePlayback(torrentId);
+        const progress = this.torrentService.getProgress(torrentId);
+        const file = this.torrentService.getFile(torrentId);
+        if (file) {
+            const mimeType = this.transcodingService.needsTranscoding(file.name)
+                ? "video/mp4"
+                : this.getMimeType(file.name);
+            return { ...progress, mimeType };
+        }
+        return progress;
     }
-    return progress;
-  }
-
-  async getVideoStream(torrentId: string, rangeHeader?: string): Promise<StreamResult> {
-    const file = this.torrentService.getFile(torrentId);
-    if (!file) throw new NotFoundException(ERROR_MESSAGES.VIDEO_NOT_READY);
-
-    if (this.transcodingService.needsTranscoding(file.name)) {
-      const inputStream = file.createReadStream();
-      const stream = this.transcodingService.transcodeToMp4(inputStream, file.name);
-      return { stream, mimeType: "video/mp4", fileSize: null };
+    async getVideoStream(torrentId: string, rangeHeader?: string): Promise<StreamResult> {
+        const file = this.torrentService.getFile(torrentId);
+        if (!file)
+            throw new NotFoundException(ERROR_MESSAGES.VIDEO_NOT_READY);
+        if (this.transcodingService.needsTranscoding(file.name)) {
+            const inputStream = file.createReadStream();
+            const stream = this.transcodingService.transcodeToMp4(inputStream, file.name);
+            return { stream, mimeType: "video/mp4", fileSize: null };
+        }
+        const fileSize = file.length;
+        const mimeType = this.getMimeType(file.name);
+        if (rangeHeader) {
+            const { start, end } = this.parseRange(rangeHeader, fileSize);
+            const stream = file.createReadStream({ start, end });
+            return { stream, mimeType, fileSize: end - start + 1, start, end, totalSize: fileSize };
+        }
+        return { stream: file.createReadStream(), mimeType, fileSize };
     }
-
-    // Direct stream with range support
-    const fileSize = file.length;
-    const mimeType = this.getMimeType(file.name);
-
-    if (rangeHeader) {
-      const { start, end } = this.parseRange(rangeHeader, fileSize);
-      const stream = file.createReadStream({ start, end });
-      return { stream, mimeType, fileSize: end - start + 1, start, end, totalSize: fileSize };
+    async getSubtitlesByMovieId(movieId: string): Promise<SubtitleEntry[]> {
+        const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
+        if (!movie)
+            throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
+        return this.subtitleService.getAvailableSubtitles(movie.imdbId);
     }
-
-    return { stream: file.createReadStream(), mimeType, fileSize };
-  }
-
-  async getSubtitlesByMovieId(movieId: string): Promise<SubtitleEntry[]> {
-    const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
-    if (!movie) throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
-    return this.subtitleService.getAvailableSubtitles(movie.imdbId);
-  }
-
-  async getSubtitleFileByMovieId(movieId: string, lang: string): Promise<{ content: string }> {
-    const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
-    if (!movie) throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
-
-    // Fast path: serve from disk cache without hitting the API
-    const cached = await this.subtitleService.getCachedSubtitle(movieId, lang);
-    if (cached) return { content: cached };
-
-    const subtitles = await this.subtitleService.getAvailableSubtitles(movie.imdbId);
-    const entry = subtitles.find((s) => s.lang === lang);
-    if (!entry) throw new NotFoundException(ERROR_MESSAGES.SUBTITLE_NOT_FOUND(lang));
-
-    const vttContent = await this.subtitleService.downloadSubtitle(entry.fileId, movieId, lang);
-
-    return { content: vttContent ?? "WEBVTT\n\n" };
-  }
-
-  private parseRange(rangeHeader: string, fileSize: number): { start: number; end: number } {
-    const parts = rangeHeader.replace(/bytes=/, "").split("-");
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-    return {
-      start: isNaN(start) ? 0 : start,
-      end: isNaN(end) ? fileSize - 1 : Math.min(end, fileSize - 1),
-    };
-  }
-
-  private getMimeType(fileName: string): string {
-    const ext = fileName.toLowerCase().slice(fileName.lastIndexOf("."));
-    const map: Record<string, string> = {
-      ".mp4": "video/mp4",
-      ".webm": "video/webm",
-      ".mkv": "video/x-matroska",
-      ".avi": "video/x-msvideo",
-    };
-    return map[ext] ?? "application/octet-stream";
-  }
+    async getSubtitleFileByMovieId(movieId: string, lang: string): Promise<{
+        content: string;
+    }> {
+        const movie = await this.prisma.movie.findUnique({ where: { id: movieId } });
+        if (!movie)
+            throw new NotFoundException(ERROR_MESSAGES.MOVIE_NOT_FOUND);
+        const cached = await this.subtitleService.getCachedSubtitle(movieId, lang);
+        if (cached)
+            return { content: cached };
+        const subtitles = await this.subtitleService.getAvailableSubtitles(movie.imdbId);
+        const entry = subtitles.find((s) => s.lang === lang);
+        if (!entry)
+            throw new NotFoundException(ERROR_MESSAGES.SUBTITLE_NOT_FOUND(lang));
+        const vttContent = await this.subtitleService.downloadSubtitle(entry.fileId, movieId, lang);
+        return { content: vttContent ?? "WEBVTT\n\n" };
+    }
+    private parseRange(rangeHeader: string, fileSize: number): {
+        start: number;
+        end: number;
+    } {
+        const parts = rangeHeader.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        return {
+            start: isNaN(start) ? 0 : start,
+            end: isNaN(end) ? fileSize - 1 : Math.min(end, fileSize - 1),
+        };
+    }
+    private getMimeType(fileName: string): string {
+        const ext = fileName.toLowerCase().slice(fileName.lastIndexOf("."));
+        const map: Record<string, string> = {
+            ".mp4": "video/mp4",
+            ".webm": "video/webm",
+            ".mkv": "video/x-matroska",
+            ".avi": "video/x-msvideo",
+        };
+        return map[ext] ?? "application/octet-stream";
+    }
 }

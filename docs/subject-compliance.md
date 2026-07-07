@@ -9,7 +9,7 @@
 | Règle | Implication |
 |---|---|
 | Aucune erreur/warning/notice serveur **ni** console client | Tester en conditions réelles avant soutenance |
-| *« Anything not specifically authorized is forbidden »* | `torrent-stream` = risque de 0 |
+| *« Anything not specifically authorized is forbidden »* | Pas de lib torrent streaming tierce |
 | Moindre faille de sécu = 0 | Mots de passe hashés, validation forms, pas d'injection SQL/XSS |
 | Credentials dans `.env`, exclus de git | Vérifier `.gitignore` |
 
@@ -21,7 +21,7 @@
 
 | Exigence | État | Notes |
 |---|---|---|
-| Pas de lib « stream from torrent » | ❌ | `torrent-stream` encore utilisé → [torrent-engine.md](./torrent-engine.md) |
+| Pas de lib « stream from torrent » | ✅ | Moteur hand-rollé — [torrent-engine.md](./torrent-engine.md) |
 | Firefox + Chrome latest | ✅ | À re-vérifier avant soutenance |
 | Layout header / main / footer | ✅ | |
 | Mobile acceptable | ✅ | |
@@ -49,7 +49,7 @@
 | Search field + thumbnails | ✅ | |
 | Résultats triés par nom si recherche | ✅ | |
 | Popular si pas de recherche | ✅ | |
-| Thumbnail : nom, année (si dispo), note (si dispo), **cover** | ✅ | `PosterImage` avec placeholder sur grille, fiche détail et preview |
+| Thumbnail : nom, année (si dispo), note (si dispo), **cover** | ✅ | `PosterImage` avec placeholder |
 | Watched / unwatched différenciés | ✅ | |
 | Pagination scroll infini (pas de lien) | ✅ | |
 | Tri / filtres (nom, genre, note, année…) | ✅ | |
@@ -58,10 +58,10 @@
 
 | Exigence | État | Notes |
 |---|---|---|
-| Détails vidéo (player, résumé, casting, année, durée, note, cover…) | ✅ | Cover via `PosterImage` sur fiche lecture |
+| Détails vidéo (player, résumé, casting, année, durée, note, cover…) | ✅ | |
 | Commentaires | ✅ | |
-| Lancer torrent si pas DL, stream dès assez de données, non-bloquant | ✅* | *via lib interdite |
-| Film complet sauvé, **pas de re-download** | ✅ | `ensurePlayback` + branche disque dans `TorrentService` |
+| Lancer torrent si pas DL, stream dès assez de données, non-bloquant | ✅ | Moteur maison |
+| Film complet sauvé, **pas de re-download** | ✅ | Branche disque dans `TorrentService` |
 | Suppression si non regardé 1 mois | ✅ | `cleanup.service.ts` |
 | Sous-titres EN + langue préférée si dispo | ✅ | OpenSubtitles |
 | Transcodage mkv si pas lisible nativement | ✅ | ffmpeg |
@@ -85,18 +85,14 @@
 
 ### Covers / posters
 
-> *« Each thumbnail must display […] a cover image. »*
-
-- L'année et la note ont « (if available) » — **pas la cover**.
 - **Ne pas filtrer** les contenus sans poster TMDb.
-- **Afficher un placeholder** local si `poster_path === null` (éviter 404 console sur URL invalide).
-- État actuel : grille, fiche détail et preview utilisent `PosterImage` (placeholder local + `onError`)
+- **Afficher un placeholder** local si pas de poster.
+- État actuel : `PosterImage` sur grille, fiche détail et preview.
 
 ### Sources
 
 - **TMDb ne compte pas** comme source (métadonnées, pas contenu torrent).
-- **≥2 sources** = minimum, pas exactement 2 → Prowlarr en 3ᵉ est permis en bonus.
-- magnet / DHT / BEP9 / `.torrent` ne sont **pas exigés** — moyens techniques.
+- **≥2 sources** = minimum → Prowlarr en 3ᵉ est permis en bonus.
 - Séries TV : **bonus**, pas explicitement demandé.
 
 ### Libs autorisées pour le hand-roll
@@ -104,15 +100,14 @@
 | ✅ OK | ❌ Interdit |
 |---|---|
 | `node:net`, `dgram`, `crypto`, `stream`, `fs` | torrent-stream, webtorrent, peerflix, pulsar |
-| `fluent-ffmpeg` (transcodage, déjà utilisé) | bittorrent-tracker, bittorrent-dht, bittorrent-protocol |
-| bencode / magnet-uri si pure manipulation de données | combo parse-torrent + download clé en main |
+| `fluent-ffmpeg` (transcodage) | bittorrent-tracker, bittorrent-dht, bittorrent-protocol |
 
 ---
 
 ## Points de vigilance soutenance
 
-1. **`torrent-stream`** — correcteur peut demander d'où vient le stream → expliquer le rework en cours ou démontrer le moteur maison
+1. **Moteur maison** — savoir expliquer bencode, trackers, peer wire, `createReadStream` progressif
 2. **Re-download** — démontrer qu'un film `ready` se lit après restart sans re-téléchargement
-3. **Console navigateur** — 0 erreur (images 404, JS warnings)
-4. **Réseau école** — tester UDP tracker jour 1 ; HTTP tracker en fallback si bloqué
-5. **Contenu démo** — films/séries populaires et bien seedés (YTS prioritaire)
+3. **Console navigateur** — 0 erreur
+4. **Réseau école** — tester UDP tracker ; contenu bien seedé
+5. **Contenu démo** — films YTS populaires en priorité

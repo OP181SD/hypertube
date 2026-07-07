@@ -2,7 +2,7 @@
 
 > Dernière mise à jour : juillet 2026 · Branche `develop` · Sujet : [`en.subject.pdf`](../en.subject.pdf) v6.3
 
-Ce dossier est la **source de vérité** du projet. En cas de contradiction avec d’anciens chats ou transcripts, **ces fichiers font foi**.
+Ce dossier est la **source de vérité** du projet. En cas de contradiction avec d'anciens chats ou transcripts, **ces fichiers font foi**.
 
 ---
 
@@ -10,34 +10,34 @@ Ce dossier est la **source de vérité** du projet. En cas de contradiction avec
 
 | Document | Contenu |
 |---|---|
-| [**status.md**](./status.md) | État du projet : fait, en cours (non commité), reste à faire |
+| [**status.md**](./status.md) | État du projet : fait, en cours, reste à faire |
 | [**decisions.md**](./decisions.md) | Choix actés vs options gardées de côté |
-| [**handoff-torrent-engine.md**](./handoff-torrent-engine.md) | **Briefing agent** — démarrer le moteur BitTorrent maison |
-| [**torrent-engine.md**](./torrent-engine.md) | Plan du moteur BitTorrent maison (M1→M8) — chantier bloquant |
+| [**torrent-engine.md**](./torrent-engine.md) | Référence technique du moteur BitTorrent hand-rollé |
 | [**subject-compliance.md**](./subject-compliance.md) | Règles du sujet et points de vigilance éliminatoires |
 | [**api-restful.md**](./api-restful.md) | Guide REST pour la soutenance (curl + arguments) |
 | [**defense-checklist.md**](./defense-checklist.md) | Checklist console 0 erreur + navigateurs |
-| [**archive/**](./archive/) | Anciens handoffs et transcripts (référence historique uniquement) |
+| [**handoff-torrent-engine.md**](./handoff-torrent-engine.md) | Archive — brief initial du chantier moteur (terminé) |
+| [**archive/**](./archive/) | Anciens handoffs et transcripts (référence historique) |
 
 ---
 
-## Vue d’ensemble en 30 secondes
+## Vue d'ensemble en 30 secondes
 
 ```
 Hypertube — état juillet 2026
 │
-├── Mandatory UI / auth / API / library     ✅ ~90 % (commité)
-├── Sources YTS + EZTV + séries TV          ✅ fait, NON COMMITÉ
-├── Moteur BitTorrent maison (M1→M8)        ❌ 0 % — ÉLIMINATOIRE si non fait
-├── Servir depuis disque (pas de re-DL)     ✅ fait (juillet 2026)
-└── Bonus (Prowlarr, grisage 0-seed…)       ⏸ différé
+├── Mandatory UI / auth / API / library     ✅
+├── Sources YTS + EZTV + séries TV          ✅
+├── Moteur BitTorrent maison (M1→M8)      ✅ (non commité)
+├── Servir depuis disque (pas de re-DL)     ✅
+└── Bonus (Prowlarr, grisage 0-seed…)      ⏸ différé
 ```
 
-**Prochaine priorité** : committer le travail séries/EZTV, puis attaquer **M1** du moteur torrent.
+**Prochaine priorité** : committer le moteur torrent, migration Prisma, test live soutenance.
 
 ---
 
-## Architecture des sources (décision actuelle)
+## Architecture des sources
 
 | Rôle | Service | Contenu |
 |---|---|---|
@@ -46,28 +46,4 @@ Hypertube — état juillet 2026
 | Métadonnées | **TMDb** | Posters, casting, catalogue séries — *ne compte pas* comme source |
 | Bonus (plus tard) | **Prowlarr** | Agrégateur Torznab — 3ᵉ source optionnelle |
 
-Le moteur torrent sera **agnostique** de la source : les deux chemins d’entrée (`.torrent` et magnet/BEP9) seront codés pour pouvoir changer de provider sans retoucher le moteur.
-
----
-
-## Commits suggérés (travail non commité)
-
-Voir le détail dans [status.md § Travail non commité](./status.md#travail-non-commité).
-
-```bash
-# 1. Schéma + migrations
-git add backend/prisma/schema.prisma backend/prisma/migrations/20260625120000_add_media_type/ \
-        backend/prisma/migrations/20260625130000_add_episode_label/ \
-        backend/prisma/migrations/20260625140000_add_episodes_fetched/
-
-# 2. Backend (providers, séries, tests)
-git add backend/
-
-# 3. Frontend (onglet Séries, episode picker, locales)
-git add frontend/
-```
-
-Message de commit suggéré :
-```
-feat(series): add YTS/EZTV split, TMDb series catalog and lazy EZTV deep-fetch
-```
+Le moteur torrent est **agnostique** de la source : `.torrent` (YTS) et magnet/BEP9 (EZTV) convergent vers `TorrentMetadata`.

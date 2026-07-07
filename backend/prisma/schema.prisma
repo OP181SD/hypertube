@@ -166,6 +166,7 @@ model Torrent {
   peers          Int       @default(0)
   sizeBytes      BigInt    @default(0) @map("size_bytes")
   magnetUrl      String    @map("magnet_url") @db.Text
+  torrentFileUrl String?   @map("torrent_file_url")
   filePath       String?   @map("file_path")
   downloadStatus String    @default("idle") @map("download_status")
   lastAccessedAt DateTime? @map("last_accessed_at")

@@ -4,7 +4,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { PassThrough } from "node:stream";
 import { TranscodingService } from "./transcoding.service";
 
-// Mock fluent-ffmpeg
 const mockFfmpegInstance = {
   ffprobe: vi.fn(),
   inputFormat: vi.fn().mockReturnThis(),
