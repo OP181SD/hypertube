@@ -1,6 +1,6 @@
 # État du projet
 
-> Dernière vérification : juillet 2026, branche `develop`, commit HEAD `f747d6d`.
+> Dernière vérification : juillet 2026, branche `develop`, commit HEAD `31d1d36`.
 
 ---
 
@@ -48,12 +48,11 @@
 
 ---
 
-## 2. Travail non commité
+## 2. Commité récemment (juillet 2026)
 
-> **43 fichiers modifiés**, **+863 / −157 lignes**, **3 migrations** + **1 composant** nouveau.
-> Tout est testé (movies : 110 tests, build OK) mais **rien n’est dans git**.
+> Commits `eaa13e2` → `31d1d36` (5 commits, working tree propre).
 
-### Schéma Prisma 🟡
+### Schéma Prisma ✅
 
 | Champ / modèle | Migration | Rôle |
 |---|---|---|
@@ -63,7 +62,7 @@
 
 **Pas encore ajouté** (prévu pour le moteur torrent) : `Torrent.torrentFileUrl`.
 
-### Backend — providers & séries 🟡
+### Backend — providers & séries ✅
 
 | Fichier | Changement |
 |---|---|
@@ -85,7 +84,7 @@
 
 **Limite connue** : EZTV ne couvre pas toujours toutes les saisons (ex. GoT : S1, S5–S8 seulement). Ce n’est pas un bug applicatif — lacune du catalogue source.
 
-### Frontend 🟡
+### Frontend ✅
 
 | Fichier | Changement |
 |---|---|
@@ -101,7 +100,7 @@
 | `types/ui/Tabs.ts` | Tab `series` |
 | `locales/*.json` (×15) | Clé `series` |
 
-### Config 🟡
+### Config ✅
 - `backend/.env.example` + `config.module.ts` : `EZTV_BASE_URL` confirmé (pas de Jackett/apibay)
 
 ---
@@ -115,7 +114,7 @@
 | 1 | **Moteur BitTorrent maison** | Remplacer `torrent-stream` par implémentation hand-roll M1→M8 | [torrent-engine.md](./torrent-engine.md) |
 | 2 | **Servir depuis disque** | Si `downloadStatus=ready` + fichier présent → `fs.createReadStream`, sans relancer le swarm | ✅ fait (juillet 2026) |
 | 3 | **`torrentFileUrl`** | Champ Prisma + peupler depuis `torrent.url` YTS ; `startDownload` choisit `.torrent` ou magnet | [torrent-engine.md § Modifs hors moteur](./torrent-engine.md#modifs-hors-moteur) |
-| 4 | **Committer** le travail séries/EZTV | Voir [README.md](./README.md) | — |
+| 4 | ~~**Committer** le travail séries/EZTV~~ | ✅ fait (`eaa13e2`→`31d1d36`) | — |
 
 ### Important — qualité / soutenance
 
@@ -137,8 +136,8 @@
 ## 4. Ordre de travail recommandé
 
 ```
-1. Commit séries/EZTV + patch disque   (~30 min)
-2. M1  bencode + .torrent      (socle isolé, testable)
+1. ~~Commit séries/EZTV + patch disque~~   ✅
+2. M1  bencode + .torrent
 3. M2  trackers HTTP + UDP
 4. M3  peer wire + bitfield
 5. M4  download pièce + SHA1
