@@ -297,18 +297,25 @@ describe("Auth E2E", () => {
     it("should logout authenticated user", async () => {
       const { tokens } = await registerUser(app);
 
-      const response = await app.inject({
+      const logoutResponse = await app.inject({
         method: "POST",
         url: "/auth/logout",
         headers: {
           authorization: `Bearer ${tokens.access_token}`,
         },
-        payload: {
-          refresh_token: tokens.refresh_token,
+      });
+
+      expect(logoutResponse.statusCode).toBe(200);
+
+      const protectedResponse = await app.inject({
+        method: "GET",
+        url: "/users",
+        headers: {
+          authorization: `Bearer ${tokens.access_token}`,
         },
       });
 
-      expect(response.statusCode).toBe(200);
+      expect(protectedResponse.statusCode).toBe(401);
     });
   });
 

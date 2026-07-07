@@ -70,6 +70,28 @@ export class AuthController {
     });
   }
 
+  private extractAccessToken(req: FastifyRequest): string | null {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      return authHeader.slice(7);
+    }
+    return (req.cookies as Record<string, string>)?.access_token ?? null;
+  }
+
+  private remainingAccessTokenTtl(token: string): number {
+    try {
+      const payload = JSON.parse(
+        Buffer.from(token.split(".")[1], "base64url").toString("utf8"),
+      ) as { exp?: number };
+      if (typeof payload.exp === "number") {
+        return Math.max(1, payload.exp - Math.floor(Date.now() / 1000));
+      }
+    } catch {
+      // ignore malformed token
+    }
+    return 900;
+  }
+
   @Public()
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
@@ -198,6 +220,13 @@ export class AuthController {
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
     const rt = (req.cookies as Record<string, string>)?.refresh_token;
+    const accessToken = this.extractAccessToken(req);
+    if (accessToken) {
+      await this.authService.blacklistAccessToken(
+        accessToken,
+        this.remainingAccessTokenTtl(accessToken),
+      );
+    }
     await this.authService.logout(user.id, rt);
     res.clearCookie("access_token", { path: "/" });
     res.clearCookie("refresh_token", { path: "/" });

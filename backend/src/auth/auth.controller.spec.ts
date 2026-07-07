@@ -48,7 +48,8 @@ const mockRes = {
 };
 
 const mockReq = {
-  cookies: { refresh_token: "mock-refresh-token" },
+  cookies: { refresh_token: "mock-refresh-token", access_token: "mock.jwt.token" },
+  headers: { authorization: "Bearer mock.jwt.token" },
 };
 
 describe("AuthController", () => {
@@ -212,8 +213,9 @@ describe("AuthController", () => {
   });
 
   describe("POST /auth/logout", () => {
-    it("should logout and return success message", async () => {
+    it("should logout, blacklist access token and return success message", async () => {
       mockAuthService.logout.mockResolvedValue(undefined);
+      mockAuthService.blacklistAccessToken.mockResolvedValue(undefined);
 
       const result = await controller.logout(
         mockDbUser as any,
@@ -222,6 +224,10 @@ describe("AuthController", () => {
       );
 
       expect(result.message).toBeDefined();
+      expect(mockAuthService.blacklistAccessToken).toHaveBeenCalledWith(
+        "mock.jwt.token",
+        expect.any(Number),
+      );
       expect(mockAuthService.logout).toHaveBeenCalledWith(
         mockDbUser.id,
         "mock-refresh-token",
