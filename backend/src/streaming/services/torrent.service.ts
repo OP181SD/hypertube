@@ -3,7 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { DownloadProgress, TorrentEngine, TorrentFile } from "../interfaces";
 import torrentStream from "torrent-stream";
-import { join } from "path";
+import { createReadStream, promises as fs } from "node:fs";
+import { basename, join } from "node:path";
 
 const VIDEO_EXTENSIONS = [".mp4", ".mkv", ".avi", ".webm", ".mov"];
 
@@ -13,10 +14,28 @@ interface ActiveTorrent {
   progress: number;
 }
 
+function createDiskTorrentFile(absolutePath: string, size: number): TorrentFile {
+  const name = basename(absolutePath);
+  return {
+    name,
+    path: absolutePath,
+    length: size,
+    createReadStream: (opts) =>
+      createReadStream(absolutePath, {
+        start: opts?.start,
+        end: opts?.end,
+      }),
+    select: () => {},
+    deselect: () => {},
+  };
+}
+
 @Injectable()
 export class TorrentService implements OnModuleDestroy {
   private readonly logger = new Logger("TorrentEngine");
   private readonly activeTorrents = new Map<string, ActiveTorrent>();
+  /** Completed downloads served from disk without rejoining the swarm. */
+  private readonly diskFiles = new Map<string, TorrentFile>();
   private readonly storagePath: string;
 
   constructor(
@@ -27,8 +46,31 @@ export class TorrentService implements OnModuleDestroy {
     this.logger.log(`[INIT] Storage path set to: ${this.storagePath}`);
   }
 
+  // Start a swarm download unless the torrent is already complete on disk.
+  async ensurePlayback(torrentId: string, magnetUrl: string): Promise<void> {
+    if (this.activeTorrents.has(torrentId) || this.diskFiles.has(torrentId)) return;
+
+    const torrent = await this.prisma.torrent.findUnique({ where: { id: torrentId } });
+    if (
+      torrent?.downloadStatus === "ready" &&
+      torrent.filePath &&
+      (await this.tryLoadDiskFile(torrentId, torrent.filePath))
+    ) {
+      this.logger.log(`[DISK] Serving ${torrentId} from ${torrent.filePath}`);
+      return;
+    }
+
+    if (torrent?.downloadStatus === "ready" && torrent.filePath) {
+      this.logger.warn(
+        `[DISK] Ready torrent ${torrentId} missing on disk (${torrent.filePath}), re-downloading`,
+      );
+    }
+
+    await this.startDownload(magnetUrl, torrentId);
+  }
+
   async startDownload(magnetUrl: string, torrentId: string): Promise<void> {
-    if (this.activeTorrents.has(torrentId)) return;
+    if (this.activeTorrents.has(torrentId) || this.diskFiles.has(torrentId)) return;
 
     this.logger.log(`[START] Initializing torrent: ${torrentId}`);
     
@@ -123,6 +165,16 @@ export class TorrentService implements OnModuleDestroy {
   }
 
   getProgress(torrentId: string): DownloadProgress {
+    const disk = this.diskFiles.get(torrentId);
+    if (disk) {
+      return {
+        status: "ready",
+        progress: 100,
+        filePath: disk.path,
+        fileSize: disk.length,
+      };
+    }
+
     const active = this.activeTorrents.get(torrentId);
     if (!active) return { status: "idle", progress: 0, filePath: null, fileSize: null };
 
@@ -134,9 +186,10 @@ export class TorrentService implements OnModuleDestroy {
     };
   }
 
-
   getFile(torrentId: string): TorrentFile | null {
-    return this.activeTorrents.get(torrentId)?.file ?? null;
+    const active = this.activeTorrents.get(torrentId);
+    if (active?.file) return active.file;
+    return this.diskFiles.get(torrentId) ?? null;
   }
 
   destroyEngine(torrentId: string): void {
@@ -151,6 +204,17 @@ export class TorrentService implements OnModuleDestroy {
     for (const [id, active] of this.activeTorrents) {
       active.engine.destroy();
       this.activeTorrents.delete(id);
+    }
+  }
+
+  private async tryLoadDiskFile(torrentId: string, filePath: string): Promise<boolean> {
+    try {
+      const stat = await fs.stat(filePath);
+      if (!stat.isFile()) return false;
+      this.diskFiles.set(torrentId, createDiskTorrentFile(filePath, stat.size));
+      return true;
+    } catch {
+      return false;
     }
   }
 

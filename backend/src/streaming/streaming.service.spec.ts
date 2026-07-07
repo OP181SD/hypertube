@@ -9,7 +9,7 @@ import { SubtitleService } from "./services/subtitle.service";
 import { PrismaService } from "../prisma/prisma.service";
 
 const mockTorrentService = {
-  startDownload: vi.fn(),
+  ensurePlayback: vi.fn(),
   getProgress: vi.fn(),
   isActive: vi.fn(),
   getFile: vi.fn(),
@@ -68,7 +68,7 @@ describe("StreamingService", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it("should start download for idle torrent", async () => {
+    it("should start playback for idle torrent", async () => {
       const torrent = {
         id: "t1",
         movieId: "m1",
@@ -79,8 +79,7 @@ describe("StreamingService", () => {
       mockPrisma.torrent.findUnique.mockResolvedValue(torrent);
       mockPrisma.torrent.update.mockResolvedValue(torrent);
       mockPrisma.watchHistory.upsert.mockResolvedValue({});
-      mockTorrentService.isActive.mockReturnValue(false);
-      mockTorrentService.startDownload.mockResolvedValue(undefined);
+      mockTorrentService.ensurePlayback.mockResolvedValue(undefined);
       mockTorrentService.getProgress.mockReturnValue({
         status: "downloading",
         progress: 0,
@@ -90,14 +89,14 @@ describe("StreamingService", () => {
 
       const result = await service.initiateStream("t1", "user-1");
 
-      expect(mockTorrentService.startDownload).toHaveBeenCalledWith(
-        "magnet:?xt=urn:btih:abc",
+      expect(mockTorrentService.ensurePlayback).toHaveBeenCalledWith(
         "t1",
+        "magnet:?xt=urn:btih:abc",
       );
       expect(result.status).toBe("downloading");
     });
 
-    it("should not restart download for already downloading torrent", async () => {
+    it("should resolve playback without restarting an active download", async () => {
       const torrent = {
         id: "t1",
         movieId: "m1",
@@ -108,7 +107,7 @@ describe("StreamingService", () => {
       mockPrisma.torrent.findUnique.mockResolvedValue(torrent);
       mockPrisma.torrent.update.mockResolvedValue(torrent);
       mockPrisma.watchHistory.upsert.mockResolvedValue({});
-      mockTorrentService.isActive.mockReturnValue(true);
+      mockTorrentService.ensurePlayback.mockResolvedValue(undefined);
       mockTorrentService.getProgress.mockReturnValue({
         status: "downloading",
         progress: 50,
@@ -118,7 +117,10 @@ describe("StreamingService", () => {
 
       const result = await service.initiateStream("t1", "user-1");
 
-      expect(mockTorrentService.startDownload).not.toHaveBeenCalled();
+      expect(mockTorrentService.ensurePlayback).toHaveBeenCalledWith(
+        "t1",
+        "magnet:?xt=urn:btih:abc",
+      );
       expect(result.progress).toBe(50);
     });
 
@@ -133,6 +135,7 @@ describe("StreamingService", () => {
       mockPrisma.torrent.findUnique.mockResolvedValue(torrent);
       mockPrisma.torrent.update.mockResolvedValue(torrent);
       mockPrisma.watchHistory.upsert.mockResolvedValue({});
+      mockTorrentService.ensurePlayback.mockResolvedValue(undefined);
       mockTorrentService.getProgress.mockReturnValue({
         status: "ready",
         progress: 100,
@@ -160,6 +163,7 @@ describe("StreamingService", () => {
       mockPrisma.torrent.findUnique.mockResolvedValue(torrent);
       mockPrisma.torrent.update.mockResolvedValue(torrent);
       mockPrisma.watchHistory.upsert.mockResolvedValue({});
+      mockTorrentService.ensurePlayback.mockResolvedValue(undefined);
       mockTorrentService.getProgress.mockReturnValue({
         status: "ready",
         progress: 100,
@@ -188,8 +192,10 @@ describe("StreamingService", () => {
     it("should return progress for existing torrent", async () => {
       mockPrisma.torrent.findUnique.mockResolvedValue({
         id: "t1",
+        magnetUrl: "magnet:?xt=urn:btih:abc",
         downloadStatus: "downloading",
       });
+      mockTorrentService.ensurePlayback.mockResolvedValue(undefined);
       mockTorrentService.getProgress.mockReturnValue({
         status: "downloading",
         progress: 75,
@@ -199,6 +205,10 @@ describe("StreamingService", () => {
 
       const result = await service.getStreamStatus("t1");
 
+      expect(mockTorrentService.ensurePlayback).toHaveBeenCalledWith(
+        "t1",
+        "magnet:?xt=urn:btih:abc",
+      );
       expect(result.status).toBe("downloading");
       expect(result.progress).toBe(75);
     });

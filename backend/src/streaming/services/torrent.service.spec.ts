@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { promises as fs } from "node:fs";
 import { TorrentService } from "./torrent.service";
 import { PrismaService } from "../../prisma/prisma.service";
 
@@ -74,6 +75,70 @@ describe("TorrentService", () => {
   afterEach(() => {
     // Destroy any active engines
     service.onModuleDestroy();
+  });
+
+  describe("ensurePlayback", () => {
+    it("should serve a ready torrent from disk without starting the swarm", async () => {
+      mockPrisma.torrent.findUnique.mockResolvedValue({
+        id: "t1",
+        downloadStatus: "ready",
+        filePath: "/tmp/test-videos/Movie.mp4",
+      });
+      vi.spyOn(fs, "stat").mockResolvedValue({
+        isFile: () => true,
+        size: 5_000_000,
+      } as Awaited<ReturnType<typeof fs.stat>>);
+
+      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
+
+      const torrentStream = await import("torrent-stream");
+      expect(torrentStream.default).not.toHaveBeenCalled();
+
+      const progress = service.getProgress("t1");
+      expect(progress).toEqual({
+        status: "ready",
+        progress: 100,
+        filePath: "/tmp/test-videos/Movie.mp4",
+        fileSize: 5_000_000,
+      });
+
+      const file = service.getFile("t1");
+      expect(file?.name).toBe("Movie.mp4");
+      expect(file?.length).toBe(5_000_000);
+    });
+
+    it("should re-download when the ready file is missing on disk", async () => {
+      mockPrisma.torrent.findUnique.mockResolvedValue({
+        id: "t1",
+        downloadStatus: "ready",
+        filePath: "/tmp/test-videos/missing.mp4",
+      });
+      vi.spyOn(fs, "stat").mockRejectedValue(new Error("ENOENT"));
+      mockPrisma.torrent.update.mockResolvedValue({ id: "t1" });
+
+      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
+      await new Promise((r) => setTimeout(r, 50));
+
+      const torrentStream = await import("torrent-stream");
+      expect(torrentStream.default).toHaveBeenCalled();
+    });
+
+    it("should not start duplicate playback for the same ready torrent", async () => {
+      mockPrisma.torrent.findUnique.mockResolvedValue({
+        id: "t1",
+        downloadStatus: "ready",
+        filePath: "/tmp/test-videos/Movie.mp4",
+      });
+      vi.spyOn(fs, "stat").mockResolvedValue({
+        isFile: () => true,
+        size: 5_000_000,
+      } as Awaited<ReturnType<typeof fs.stat>>);
+
+      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
+      await service.ensurePlayback("t1", "magnet:?xt=urn:btih:abc123");
+
+      expect(mockPrisma.torrent.findUnique).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("startDownload", () => {

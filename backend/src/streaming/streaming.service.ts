@@ -24,9 +24,7 @@ export class StreamingService {
 
     if (!torrent) throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
 
-    if (!this.torrentService.isActive(torrentId)) {
-      await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
-    }
+    await this.torrentService.ensurePlayback(torrentId, torrent.magnetUrl);
 
     if (userId && userId !== "anonymous") {
       try {
@@ -57,9 +55,7 @@ export class StreamingService {
 
     if (!torrent) throw new NotFoundException(ERROR_MESSAGES.TORRENT_NOT_FOUND);
 
-    if (!this.torrentService.isActive(torrentId)) {
-      await this.torrentService.startDownload(torrent.magnetUrl, torrentId);
-    }
+    await this.torrentService.ensurePlayback(torrentId, torrent.magnetUrl);
 
     const progress = this.torrentService.getProgress(torrentId);
     const file = this.torrentService.getFile(torrentId);
