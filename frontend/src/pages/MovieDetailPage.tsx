@@ -7,7 +7,7 @@ import { VideoPlayer } from "@/components/player/VideoPlayer";
 import { QualitySelector } from "@/components/player/QualitySelector";
 import { SeriesEpisodePicker } from "@/components/player/SeriesEpisodePicker";
 import { CommentsSection } from "@/components/comments/CommentsSection";
-import type { MovieDetail, Comment } from "@/types/api";
+import { PosterImage } from "@/components/ui/PosterImage";
 
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -84,10 +84,12 @@ export default function MovieDetailPage() {
       <div className="relative">
         {movie.backdropUrl && (
           <div className="absolute inset-0 h-32 overflow-hidden">
-            <img
+            <PosterImage
               src={movie.backdropUrl}
               alt=""
+              placeholder="silent"
               className="w-full h-full object-cover opacity-20 blur-2xl"
+              placeholderClassName="hidden"
             />
             <div className="absolute inset-0 bg-linear-to-b from-black/60 to-black" />
           </div>
@@ -184,13 +186,12 @@ export default function MovieDetailPage() {
           </div>
 
           <div className="lg:w-80 space-y-3 text-sm text-white/70">
-            {movie.posterUrl && (
-              <img
-                src={movie.posterUrl}
-                alt={movie.title}
-                className="w-full rounded-xl"
-              />
-            )}
+            <PosterImage
+              src={movie.posterUrl}
+              alt={movie.title}
+              className="w-full rounded-xl object-cover"
+              placeholderClassName="w-full aspect-2/3 rounded-xl bg-gray-800 flex items-center justify-center text-white/40 text-sm"
+            />
 
             {movie.director && (
               <div>

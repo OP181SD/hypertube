@@ -52,6 +52,7 @@
   "confirm_password_placeholder": "确认密码",
   "signup_oauth_hint": "您也可以使用 Google 或 42 School 账户快速注册。",
   "back": "返回",
+  "no_poster": "暂无海报",
   "reset_your_password": "重置密码",
   "reset_description": "输入与您账户关联的邮箱，我们将向您发送重置链接。",
   "reset_confirmation": "如果该邮箱存在账户，您将很快收到密码重置链接。",

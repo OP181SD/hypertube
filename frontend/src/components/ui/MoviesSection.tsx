@@ -1,10 +1,8 @@
 import { FC, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { PosterImage } from "@/components/ui/PosterImage";
 import type { MovieListItem } from "@/types/api";
-
-interface MoviesSectionProps {
-  movies: MovieListItem[];
   loading?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
@@ -59,17 +57,12 @@ export const MoviesSection: FC<MoviesSectionProps> = ({
             key={m.id}
             className="group relative rounded-lg overflow-hidden bg-gray-900 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
           >
-            {m.posterUrl ? (
-              <img
-                src={m.posterUrl}
-                alt={m.title}
-                className="w-full h-87.5 object-cover"
-              />
-            ) : (
-              <div className="w-full h-87.5 bg-gray-800 flex items-center justify-center text-white/40 text-sm">
-                No image
-              </div>
-            )}
+            <PosterImage
+              src={m.posterUrl}
+              alt={m.title}
+              className="w-full h-87.5 object-cover"
+              placeholderClassName="w-full h-87.5 bg-gray-800 flex items-center justify-center text-white/40 text-sm"
+            />
 
             <div className="absolute top-2 right-2 flex flex-col gap-1">
               {m.watched && (

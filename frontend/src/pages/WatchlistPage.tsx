@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BookmarkSlashIcon, BookmarkIcon } from "@heroicons/react/24/solid";
 import { getWatchlist, removeFromWatchlist } from "@/api/watchlist.api";
-import type { MovieListItem } from "@/types/api";
+import { PosterImage } from "@/components/ui/PosterImage";
 
 export function WatchlistPage() {
   const { t } = useTranslation();
@@ -67,17 +67,12 @@ export function WatchlistPage() {
               to={`/movies/preview/${m.id}`}
               className="block relative rounded-lg overflow-hidden bg-gray-900 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
             >
-              {m.posterUrl ? (
-                <img
-                  src={m.posterUrl}
-                  alt={m.title}
-                  className="w-full h-87.5 object-cover"
-                />
-              ) : (
-                <div className="w-full h-87.5 bg-gray-800 flex items-center justify-center text-white/40 text-sm">
-                  No image
-                </div>
-              )}
+              <PosterImage
+                src={m.posterUrl}
+                alt={m.title}
+                className="w-full h-87.5 object-cover"
+                placeholderClassName="w-full h-87.5 bg-gray-800 flex items-center justify-center text-white/40 text-sm"
+              />
 
               {m.watched && (
                 <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">

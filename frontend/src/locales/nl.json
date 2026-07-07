@@ -52,6 +52,7 @@
   "confirm_password_placeholder": "Wachtwoord bevestigen",
   "signup_oauth_hint": "Je kunt ook snel registreren met je Google- of 42 School-account.",
   "back": "Terug",
+  "no_poster": "Geen poster beschikbaar",
   "reset_your_password": "Wachtwoord resetten",
   "reset_description": "Voer het e-mailadres in dat is gekoppeld aan je account en we sturen je een resetlink.",
   "reset_confirmation": "Als er een account bestaat met dit e-mailadres, ontvang je binnenkort een wachtwoordresetlink.",

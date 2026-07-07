@@ -52,6 +52,7 @@
   "confirm_password_placeholder": "Conferma password",
   "signup_oauth_hint": "Puoi anche registrarti rapidamente usando il tuo account Google o 42 School.",
   "back": "Indietro",
+  "no_poster": "Locandina non disponibile",
   "reset_your_password": "Reimposta la tua password",
   "reset_description": "Inserisci l'email associata al tuo account e ti invieremo un link per reimpostare la password.",
   "reset_confirmation": "Se esiste un account con questa email, riceverai un link a breve.",

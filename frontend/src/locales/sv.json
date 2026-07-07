@@ -52,6 +52,7 @@
   "confirm_password_placeholder": "Bekräfta lösenord",
   "signup_oauth_hint": "Du kan även registrera dig snabbt med ditt Google- eller 42 School-konto.",
   "back": "Tillbaka",
+  "no_poster": "Ingen affisch tillgänglig",
   "reset_your_password": "Återställ lösenord",
   "reset_description": "Ange e-postadressen kopplad till ditt konto så skickar vi en återställningslänk.",
   "reset_confirmation": "Om ett konto finns med den här e-postadressen kommer du snart att få en lösenordsåterställningslänk.",

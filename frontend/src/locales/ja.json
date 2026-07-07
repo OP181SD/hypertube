@@ -52,6 +52,7 @@
   "confirm_password_placeholder": "パスワードを確認",
   "signup_oauth_hint": "GoogleまたはAcademy 42のアカウントで素早く登録することもできます。",
   "back": "戻る",
+  "no_poster": "ポスターがありません",
   "reset_your_password": "パスワードをリセット",
   "reset_description": "アカウントに関連付けられたメールを入力してください。パスワードリセット用のリンクをお送りします。",
   "reset_confirmation": "このメールでアカウントが存在する場合、間もなくパスワードリセットリンクが届きます。",

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getUser } from "@/api/users.api";
 import { useAuth } from "@/contexts/AuthContext";
+import { AvatarImage } from "@/components/ui/AvatarImage";
 import type { UserPublic } from "@/types/api";
 
 const LANG_LABELS: Record<string, string> = {
@@ -82,8 +83,6 @@ export default function UserProfilePage() {
     );
   }
 
-  const initials = `${profile.firstName?.[0] ?? ""}${profile.lastName?.[0] ?? ""}`.toUpperCase();
-
   return (
     <div className="min-h-screen bg-black text-white px-6 sm:px-10 md:px-20 pt-16 flex flex-col items-center">
       <button
@@ -98,17 +97,11 @@ export default function UserProfilePage() {
 
       <div className="flex flex-col items-center mb-10">
         <div className="rounded-full p-1 bg-linear-to-tr from-[#795EF0] via-[#C270ED] to-[#38BDF8]">
-          {profile.profilePictureUrl ? (
-            <img
-              src={profile.profilePictureUrl}
-              alt={profile.username}
-              className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20"
-            />
-          ) : (
-            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-white/10 flex items-center justify-center text-3xl font-bold text-white/60 ring-2 ring-black/20">
-              {initials}
-            </div>
-          )}
+          <AvatarImage
+            profilePictureUrl={profile.profilePictureUrl}
+            username={profile.username}
+            className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20"
+          />
         </div>
 
         <h1 className="mt-5 text-3xl sm:text-4xl font-semibold tracking-wide text-white">

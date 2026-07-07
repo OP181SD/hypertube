@@ -52,6 +52,7 @@
   "confirm_password_placeholder": "Şifreyi onayla",
   "signup_oauth_hint": "Google veya 42 School hesabınla hızlıca kayıt da olabilirsin.",
   "back": "Geri",
+  "no_poster": "Afiş mevcut değil",
   "reset_your_password": "Şifreni sıfırla",
   "reset_description": "Hesabınla ilişkili e-postayı gir ve sana bir sıfırlama bağlantısı gönderelim.",
   "reset_confirmation": "Bu e-posta ile bir hesap varsa, yakında şifre sıfırlama bağlantısı alacaksın.",

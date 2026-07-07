@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useProfileForm } from "@/hooks/useProfileForm";
-import { API_BASE_URL } from "@/constants/api";
-import { getAvatarUrl } from "@/constants/avatar";
+import { AvatarImage } from "@/components/ui/AvatarImage";
 
 export function Profile() {
   const { t } = useTranslation();
@@ -21,10 +20,6 @@ export function Profile() {
   if (!user) return null;
 
   // Deterministic fallback avatar derived from the username
-  const profileSrc = user.profilePictureUrl
-    ? `${API_BASE_URL}${user.profilePictureUrl}`
-    : getAvatarUrl(user.username);
-
   return (
     <div className="min-h-screen bg-black text-white px-6 sm:px-10 md:px-20 pt-16 flex flex-col items-center">
       <div className="flex flex-col items-center mb-10">
@@ -34,9 +29,9 @@ export function Profile() {
             disabled={uploading}
             className="relative rounded-full p-1 bg-gradient-to-tr from-[#795EF0] via-[#C270ED] to-[#38BDF8] cursor-pointer"
           >
-            <img
-              src={profileSrc}
-              alt={user.username}
+            <AvatarImage
+              profilePictureUrl={user.profilePictureUrl}
+              username={user.username}
               className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover ring-2 ring-black/20 transition-transform duration-300 hover:scale-105"
             />
 

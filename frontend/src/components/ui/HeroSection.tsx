@@ -1,6 +1,7 @@
 import { FC, useEffect, useRef, useCallback } from "react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { PosterImage } from "@/components/ui/PosterImage";
 import type { HeroMovie } from "@/types/api";
 
 interface HeroSectionProps {
@@ -84,11 +85,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
               }`}
             >
               {img ? (
-                <img
+                <PosterImage
                   src={img}
                   alt={m.title}
+                  placeholder="silent"
                   className="w-full h-full object-cover object-[center_20%]"
-                  loading={index === 0 ? "eager" : "lazy"}
+                  placeholderClassName="w-full h-full bg-gray-900"
                 />
               ) : (
                 <div className="w-full h-full bg-gray-900" />

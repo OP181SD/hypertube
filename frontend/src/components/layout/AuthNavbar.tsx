@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
-import { API_BASE_URL } from "@/constants/api";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { AvatarImage } from "@/components/ui/AvatarImage";
 
 export default function AuthNavbar() {
   const { t } = useTranslation();
@@ -35,13 +35,11 @@ export default function AuthNavbar() {
           <div className="flex items-center gap-2 sm:gap-3">
             <LanguageSelector className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm" />
 
-            {user?.profilePictureUrl && (
-              <img
-                src={`${API_BASE_URL}${user.profilePictureUrl}`}
-                alt={user.username}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-white/20"
-              />
-            )}
+            <AvatarImage
+              profilePictureUrl={user?.profilePictureUrl}
+              username={user?.username ?? "guest"}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-white/20"
+            />
 
             <button
               onClick={handleLogout}

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { MovieDetail, Comment } from "@/types/api";
 import { getComments } from "@/api/comments.api";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import { PosterImage } from "@/components/ui/PosterImage";
 import { useWatchlist } from "@/hooks/useWatchlist";
 
 interface MoviePresentationProps {
@@ -36,13 +37,18 @@ const MoviePresentation: React.FC<MoviePresentationProps> = ({ movie }) => {
     refreshComments();
   }, [refreshComments]);
 
+  const headerImage = movie.backdropUrl ?? movie.posterUrl;
+
   return (
     <div className="bg-black min-h-screen">
-      {/* HEADER IMAGE */}
-      <div
-        className="relative w-full h-[50vh] sm:h-[70vh] lg:h-[75vh] max-h-200 bg-cover bg-center bg-no-repeat flex items-end"
-        style={{ backgroundImage: `url(${movie.backdropUrl || movie.posterUrl})` }}
-      >
+      <div className="relative w-full h-[50vh] sm:h-[70vh] lg:h-[75vh] max-h-200 overflow-hidden flex items-end">
+        <PosterImage
+          src={headerImage}
+          alt={movie.title}
+          placeholder="silent"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          placeholderClassName="absolute inset-0 w-full h-full bg-gray-900"
+        />
         <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/90" />
 
         {/* Back button */}

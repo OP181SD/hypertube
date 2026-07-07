@@ -52,6 +52,7 @@
   "confirm_password_placeholder": "Potwierdź hasło",
   "signup_oauth_hint": "Możesz też szybko zarejestrować się za pomocą konta Google lub 42 School.",
   "back": "Wstecz",
+  "no_poster": "Brak plakatu",
   "reset_your_password": "Zresetuj hasło",
   "reset_description": "Wpisz adres e-mail powiązany z kontem, a wyślemy Ci link do zresetowania hasła.",
   "reset_confirmation": "Jeśli konto z tym adresem e-mail istnieje, wkrótce otrzymasz link do zresetowania hasła.",

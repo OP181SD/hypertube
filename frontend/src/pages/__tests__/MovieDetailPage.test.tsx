@@ -152,6 +152,22 @@ describe("MovieDetailPage", () => {
     expect(screen.getByText("Not bad.")).toBeInTheDocument();
   });
 
+  it("shows a poster placeholder when no cover image is available", async () => {
+    const { getMovie } = await import("@/api/movies.api");
+    const { getComments } = await import("@/api/comments.api");
+    vi.mocked(getMovie).mockResolvedValue({ ...mockMovie, posterUrl: null });
+    vi.mocked(getComments).mockResolvedValue(mockComments);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Movie")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("img", { name: "Test Movie" })).toHaveTextContent(
+      "no_poster",
+    );
+  });
+
   it("shows loading state initially", async () => {
     const { getMovie } = await import("@/api/movies.api");
     const { getComments } = await import("@/api/comments.api");
