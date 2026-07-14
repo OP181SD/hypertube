@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { BookmarkSlashIcon, BookmarkIcon } from "@heroicons/react/24/solid";
 import { getWatchlist, removeFromWatchlist } from "@/api/watchlist.api";
 import { PosterImage } from "@/components/ui/PosterImage";
+import type { MovieListItem } from "@/types/api";
 
 export function WatchlistPage() {
   const { t } = useTranslation();

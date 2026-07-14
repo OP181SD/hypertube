@@ -8,6 +8,7 @@ import { QualitySelector } from "@/components/player/QualitySelector";
 import { SeriesEpisodePicker } from "@/components/player/SeriesEpisodePicker";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { PosterImage } from "@/components/ui/PosterImage";
+import type { Comment, MovieDetail } from "@/types/api";
 
 export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>();
