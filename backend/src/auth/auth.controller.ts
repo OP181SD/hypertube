@@ -87,7 +87,6 @@ export class AuthController {
         return Math.max(1, payload.exp - Math.floor(Date.now() / 1000));
       }
     } catch {
-      // ignore malformed token
     }
     return 900;
   }
@@ -151,6 +150,8 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
   @Post("auth/register")
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {
@@ -171,6 +172,8 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 3_600_000 } })
   @Post("auth/resend-verification")
   @HttpCode(HttpStatus.OK)
   async resendVerification(@Body() dto: ResendVerificationDto) {
@@ -239,7 +242,7 @@ export class AuthController {
     const frontendUrl = this.configService.get<string>("FRONTEND_URL")!;
 
     if (!user) {
-      return res.status(302).redirect(`${frontendUrl}/login?error=auth_failed`);
+      return res.status(302).redirect(`${frontendUrl}/?auth=failed`);
     }
 
     try {

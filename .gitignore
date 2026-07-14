@@ -35,6 +35,7 @@ prisma/*.db
 uploads/
 downloads/
 videos/
+data/
 
 # Logs
 *.log

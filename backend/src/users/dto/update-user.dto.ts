@@ -3,7 +3,6 @@ import {
   IsEnum,
   IsOptional,
   IsString,
-  IsUrl,
   MinLength,
   MaxLength,
   Matches,
@@ -47,10 +46,6 @@ firstName?: string;
       "Password must contain at least one uppercase letter, one lowercase letter, and one number",
   })
   password?: string;
-
-  @IsOptional()
-  @IsUrl()
-  profilePictureUrl?: string;
 
   @IsOptional()
   @IsEnum(Language)

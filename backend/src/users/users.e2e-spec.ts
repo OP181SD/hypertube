@@ -196,5 +196,27 @@ describe("Users E2E", () => {
 
       expect(response.statusCode).toBe(400);
     });
+
+    it("should reject profilePictureUrl in PATCH body", async () => {
+      const { tokens } = await registerUser(app);
+
+      const listResponse = await app.inject({
+        method: "GET",
+        url: "/users",
+        headers: { authorization: `Bearer ${tokens.access_token}` },
+      });
+      const users = JSON.parse(listResponse.body);
+
+      const response = await app.inject({
+        method: "PATCH",
+        url: `/users/${users[0].id}`,
+        headers: { authorization: `Bearer ${tokens.access_token}` },
+        payload: {
+          profilePictureUrl: "https://evil.com/track.gif",
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
   });
 });

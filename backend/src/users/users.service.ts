@@ -49,7 +49,6 @@ export interface UpdateUserData {
   firstName?: string;
   lastName?: string;
   password?: string;
-  profilePictureUrl?: string;
   language?: Language;
 }
 
@@ -159,8 +158,6 @@ export class UsersService {
 
     if (data.firstName !== undefined) updateData.firstName = data.firstName;
     if (data.lastName !== undefined) updateData.lastName = data.lastName;
-    if (data.profilePictureUrl !== undefined)
-      updateData.profilePictureUrl = data.profilePictureUrl;
     if (data.language !== undefined) updateData.language = data.language;
 
     if (data.password) {
