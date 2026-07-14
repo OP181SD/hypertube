@@ -309,14 +309,14 @@ describe("AuthController", () => {
       );
     });
 
-    it("redirects to the login page with an error when no user is resolved", async () => {
+    it("redirects to the home page with auth=failed when no user is resolved", async () => {
       const res = makeOAuthRes();
 
       await controller.ft42Callback({ user: undefined } as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(302);
       expect(res.redirect).toHaveBeenCalledWith(
-        "http://localhost:5173/login?error=auth_failed",
+        "http://localhost:5173/?auth=failed",
       );
     });
 

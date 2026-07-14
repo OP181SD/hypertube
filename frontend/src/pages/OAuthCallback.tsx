@@ -12,7 +12,7 @@ export default function OAuthCallback() {
         navigate("/dashboard", { replace: true });
       })
       .catch(() => {
-        navigate("/login", { replace: true });
+        navigate("/?auth=failed", { replace: true });
       });
   }, [navigate, restoreSession]);
 
