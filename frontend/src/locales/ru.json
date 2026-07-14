@@ -63,6 +63,7 @@
   "error_passwords_not_match": "Пароли не совпадают.",
   "error_invalid_email": "Пожалуйста, введите корректный email.",
   "popular_movies": "Популярные фильмы",
+  "popular_series": "Популярные сериалы",
   "loading": "Загрузка...",
   "downloading": "Загрузка...",
   "stream_error": "При загрузке потока произошла ошибка.",

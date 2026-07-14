@@ -25,14 +25,14 @@ export function MobileMenu({ menuOpen, setMenuOpen, activeTab, setActiveTab, han
       <div className={`lg:hidden fixed top-14 left-0 right-0 w-full bg-black/95 backdrop-blur-lg border-b border-white/10 shadow-2xl transition-all duration-300 z-40 ${menuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-full">
           <div className="flex flex-col space-y-1.5 sm:space-y-2">
-            {(["home", "series", "watchlist", "profile"] as Tab[]).map((tab) => (
+            {(["home", "series", "watchlist"] as Tab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
                   setActiveTab(tab);
                   setMenuOpen(false);
                 }}
-                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-left text-sm sm:text-base font-medium transition-all duration-200 ${
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-left text-sm sm:text-base font-medium transition-all duration-200 cursor-pointer ${
                   activeTab === tab ? "bg-white/10 text-white" : "text-white/50 hover:text-white hover:bg-white/10"
                 }`}
               >
@@ -46,7 +46,7 @@ export function MobileMenu({ menuOpen, setMenuOpen, activeTab, setActiveTab, han
               handleLogout();
               setMenuOpen(false);
             }}
-            className="lg:hidden w-full px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 hover:bg-white/10 hover:border-white/40 text-white/90 text-xs sm:text-sm font-medium transition-all duration-300"
+            className="lg:hidden w-full px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 hover:bg-white/10 hover:border-white/40 text-white/90 text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer"
           >
             {t("logout")}
           </button>

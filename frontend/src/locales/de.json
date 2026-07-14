@@ -63,6 +63,7 @@
   "error_passwords_not_match": "Passwörter stimmen nicht überein.",
   "error_invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein.",
   "popular_movies": "Beliebte Filme",
+  "popular_series": "Beliebte Serien",
   "loading": "Laden...",
   "downloading": "Herunterladen...",
   "stream_error": "Beim Laden des Streams ist ein Fehler aufgetreten.",

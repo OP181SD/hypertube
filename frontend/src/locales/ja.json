@@ -63,6 +63,7 @@
   "error_passwords_not_match": "パスワードが一致しません。",
   "error_invalid_email": "有効なメールアドレスを入力してください。",
   "popular_movies": "人気映画",
+  "popular_series": "人気シリーズ",
   "loading": "読み込み中...",
   "downloading": "ダウンロード中...",
   "stream_error": "ストリームの読み込み中にエラーが発生しました。",

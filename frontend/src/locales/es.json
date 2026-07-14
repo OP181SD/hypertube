@@ -63,6 +63,7 @@
   "error_passwords_not_match": "Las contraseñas no coinciden.",
   "error_invalid_email": "Por favor, ingresa una dirección de correo válida.",
   "popular_movies": "Películas populares",
+  "popular_series": "Series populares",
   "loading": "Cargando...",
   "downloading": "Descargando...",
   "stream_error": "Se produjo un error al cargar la transmisión.",

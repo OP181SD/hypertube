@@ -63,6 +63,7 @@
   "error_passwords_not_match": "Şifreler eşleşmiyor.",
   "error_invalid_email": "Lütfen geçerli bir e-posta adresi girin.",
   "popular_movies": "Popüler filmler",
+  "popular_series": "Popüler diziler",
   "loading": "Yükleniyor...",
   "downloading": "İndiriliyor...",
   "stream_error": "Yayın yüklenirken bir hata oluştu.",

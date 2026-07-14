@@ -63,6 +63,7 @@
   "error_passwords_not_match": "Hasła nie pasują do siebie.",
   "error_invalid_email": "Proszę podać prawidłowy adres e-mail.",
   "popular_movies": "Popularne filmy",
+  "popular_series": "Popularne seriale",
   "loading": "Ładowanie...",
   "downloading": "Pobieranie...",
   "stream_error": "Wystąpił błąd podczas ładowania strumienia.",

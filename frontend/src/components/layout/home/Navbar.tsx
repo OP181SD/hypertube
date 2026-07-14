@@ -37,13 +37,14 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center justify-end gap-4">
-            <LanguageSelector className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm" />
+            <LanguageSelector className="bg-black/50 text-white/90 px-2 py-1 rounded-md border border-white/20 hover:bg-white/10 transition-all duration-200 text-xs sm:text-sm cursor-pointer" />
 
-            <button className="px-4 md:px-5 xl:px-6 py-1 rounded-md border border-white/30 hover:bg-white/10 transition">
-              <span
-                onClick={() => setIsOpenModal(true)}
-                className="text-[13px] font-medium text-white opacity-90 cursor-pointer"
-              >
+            <button
+              type="button"
+              onClick={() => setIsOpenModal(true)}
+              className="px-4 md:px-5 xl:px-6 py-1 rounded-md border border-white/30 hover:bg-white/10 transition cursor-pointer"
+            >
+              <span className="text-[13px] font-medium text-white opacity-90">
                 {t("signin")}
               </span>
             </button>

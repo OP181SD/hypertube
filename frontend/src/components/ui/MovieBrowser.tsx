@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useHeroMovies } from "@/hooks/useHeroMovies";
 import { useMovies } from "@/hooks/useMovies";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -21,6 +22,7 @@ const sortMap: Record<SortTypes, SearchMoviesParams["sortBy"] | undefined> = {
 };
 
 export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search, mediaType = "movie" }) => {
+  const { t } = useTranslation();
   const debouncedSearch = useDebounce(search || "", 300);
   const isSeries = mediaType === "series";
   const [selectedGenre, setSelectedGenre] = useState("");
@@ -87,7 +89,13 @@ export const MovieBrowser: React.FC<MovieBrowserProps> = ({ search, mediaType = 
           loading={loading}
           hasMore={hasMore}
           onLoadMore={loadMore}
-          title={isSearching ? `Résultats pour « ${debouncedSearch} »` : undefined}
+          title={
+            isSearching
+              ? `Résultats pour « ${debouncedSearch} »`
+              : isSeries
+                ? t("popular_series")
+                : undefined
+          }
         />
       </div>
     </section>

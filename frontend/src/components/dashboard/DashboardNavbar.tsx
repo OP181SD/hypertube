@@ -51,7 +51,7 @@ export function DashboardNavbar({
           <div className="hidden lg:flex flex-1 items-center space-x-1 md:space-x-2 lg:space-x-4">
             <button
               onClick={() => setActiveTab("home")}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 activeTab === "home" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
               }`}
             >
@@ -59,7 +59,7 @@ export function DashboardNavbar({
             </button>
             <button
               onClick={() => setActiveTab("series")}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 activeTab === "series" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
               }`}
             >
@@ -67,19 +67,11 @@ export function DashboardNavbar({
             </button>
             <button
               onClick={() => setActiveTab("watchlist")}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 activeTab === "watchlist" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
               }`}
             >
               {t("watchlist")}
-            </button>
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === "profile" ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
-              }`}
-            >
-              {t("profile")}
             </button>
           </div>
 
@@ -94,7 +86,7 @@ export function DashboardNavbar({
 
             <button
               onClick={handleLogout}
-              className="hidden lg:block px-4 py-1.5 rounded-full border border-white/20 hover:bg-white/10 text-white/90 text-sm font-medium transition-all"
+              className="hidden lg:block px-4 py-1.5 rounded-full border border-white/20 hover:bg-white/10 text-white/90 text-sm font-medium transition-all cursor-pointer"
             >
               {t("logout")}
             </button>
@@ -104,7 +96,7 @@ export function DashboardNavbar({
                 setMobileSearchOpen((prev) => !prev);
                 setMenuOpen(false);
               }}
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
               aria-label="Toggle search"
             >
               {mobileSearchOpen ? (
@@ -123,7 +115,7 @@ export function DashboardNavbar({
                 setMenuOpen(!menuOpen);
                 setMobileSearchOpen(false);
               }}
-              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10"
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 cursor-pointer"
             >
               <Hamburger menuOpen={menuOpen} />
             </button>

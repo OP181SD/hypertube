@@ -63,6 +63,7 @@
   "error_passwords_not_match": "كلمتا المرور غير متطابقتين.",
   "error_invalid_email": "يرجى إدخال عنوان بريد إلكتروني صحيح.",
   "popular_movies": "الأفلام الشائعة",
+  "popular_series": "المسلسلات الشائعة",
   "loading": "جار التحميل...",
   "downloading": "جار التنزيل...",
   "stream_error": "حدث خطأ أثناء تحميل البث.",

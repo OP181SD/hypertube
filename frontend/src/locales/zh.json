@@ -63,6 +63,7 @@
   "error_passwords_not_match": "密码不匹配。",
   "error_invalid_email": "请输入有效的邮箱地址。",
   "popular_movies": "热门电影",
+  "popular_series": "热门剧集",
   "loading": "加载中...",
   "downloading": "下载中...",
   "stream_error": "加载流媒体时发生错误。",

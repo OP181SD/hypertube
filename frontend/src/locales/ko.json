@@ -63,6 +63,7 @@
   "error_passwords_not_match": "비밀번호가 일치하지 않습니다.",
   "error_invalid_email": "유효한 이메일 주소를 입력해 주세요.",
   "popular_movies": "인기 영화",
+  "popular_series": "인기 시리즈",
   "loading": "로딩 중...",
   "downloading": "다운로드 중...",
   "stream_error": "스트림을 불러오는 중 오류가 발생했습니다.",

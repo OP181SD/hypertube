@@ -63,6 +63,7 @@
   "error_passwords_not_match": "Lösenorden stämmer inte överens.",
   "error_invalid_email": "Ange en giltig e-postadress.",
   "popular_movies": "Populära filmer",
+  "popular_series": "Populära serier",
   "loading": "Laddar...",
   "downloading": "Laddar ner...",
   "stream_error": "Ett fel uppstod vid inläsning av streamen.",
