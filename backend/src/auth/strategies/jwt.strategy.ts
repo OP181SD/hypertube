@@ -1,0 +1,56 @@
+import { ExtractJwt, Strategy, StrategyOptionsWithRequest } from "passport-jwt";
+import { PassportStrategy } from "@nestjs/passport";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { UsersService } from "../../users/users.service";
+import { AuthService, JWT_API_AUDIENCE } from "../auth.service";
+import { ERROR_MESSAGES } from "../../common/constants/error-messages";
+import { FastifyRequest } from "fastify";
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(
+    configService: ConfigService,
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService,
+  ) {
+    const opts: StrategyOptionsWithRequest = {
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: FastifyRequest) =>
+          (req?.cookies as Record<string, string>)?.access_token ?? null,
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>("JWT_ACCESS_SECRET")!,
+      passReqToCallback: true,
+    };
+    super(opts);
+  }
+
+  async validate(
+    req: FastifyRequest,
+    payload: { sub: string; aud?: string },
+  ) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader
+      ? authHeader.replace("Bearer ", "")
+      : (req.cookies as Record<string, string>)?.access_token;
+
+    if (token) {
+      const isBlacklisted = await this.authService.isAccessTokenBlacklisted(token);
+      if (isBlacklisted) {
+        throw new UnauthorizedException(ERROR_MESSAGES.TOKEN_REVOKED);
+      }
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+    if (!user) {
+      throw new UnauthorizedException(ERROR_MESSAGES.USER_NOT_FOUND);
+    }
+
+    (req as FastifyRequest & { isApiClient?: boolean }).isApiClient =
+      payload.aud === JWT_API_AUDIENCE;
+
+    return user;
+  }
+}

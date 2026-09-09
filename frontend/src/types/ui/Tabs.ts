@@ -1,0 +1,1 @@
+export type Tab = "movies" | "series" | "profile" | "watchlist" | "settings";

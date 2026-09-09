@@ -1,0 +1,253 @@
+
+
+export interface YtsTorrent {
+  url: string;
+  hash: string;
+  quality: string;
+  type: string;
+  seeds: number;
+  peers: number;
+  size: string;
+  size_bytes: number;
+}
+
+export interface YtsMovie {
+  id: number;
+  url: string;
+  imdb_code: string;
+  title: string;
+  title_english: string;
+  title_long: string;
+  year: number;
+  rating: number;
+  runtime: number;
+  genres: string[];
+  summary: string;
+  synopsis: string;
+  medium_cover_image: string;
+  large_cover_image: string;
+  background_image: string;
+  background_image_original: string;
+  torrents: YtsTorrent[];
+}
+
+export interface YtsListResponse {
+  status: string;
+  status_message: string;
+  data: {
+    movie_count: number;
+    limit: number;
+    page_number: number;
+    movies?: YtsMovie[];
+  };
+}
+
+export interface EztvTorrent {
+  id: number;
+  hash: string;
+  filename: string;
+  /** Dropped by the current EZTV mirrors, which only expose the magnet. */
+  episode_url?: string;
+  /** Idem: no .torrent to download from, so metadata comes from the peers. */
+  torrent_url?: string;
+  magnet_url: string;
+  title: string;
+  imdb_id: string;
+  season: string;
+  episode: string;
+  small_screenshot: string;
+  large_screenshot: string;
+  seeds: number;
+  peers: number;
+  date_released_unix: number;
+  size_bytes: number;
+}
+
+export interface EztvListResponse {
+  torrents_count: number;
+  limit: number;
+  page: number;
+  torrents?: EztvTorrent[];
+}
+
+export interface TmdbSearchResult {
+  id: number;
+  title: string;
+  original_title: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date: string;
+  vote_average: number;
+  vote_count: number;
+  genre_ids: number[];
+  popularity: number;
+}
+
+export interface TmdbGenre {
+  id: number;
+  name: string;
+}
+
+export interface TmdbCastMember {
+  name: string;
+  character: string;
+  order: number;
+}
+
+export interface TmdbCrewMember {
+  name: string;
+  job: string;
+  department: string;
+}
+
+export interface TmdbMovieDetail {
+  id: number;
+  imdb_id: string;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date: string;
+  runtime: number | null;
+  vote_average: number;
+  genres: TmdbGenre[];
+  credits?: {
+    cast: TmdbCastMember[];
+    crew: TmdbCrewMember[];
+  };
+}
+
+export interface TmdbTvResult {
+  id: number;
+  name: string;
+  original_name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date: string;
+  vote_average: number;
+  genre_ids: number[];
+  popularity: number;
+}
+
+export interface TmdbFindResponse {
+  movie_results: TmdbSearchResult[];
+  tv_results: TmdbTvResult[];
+}
+
+export interface TmdbTvListResponse {
+  page: number;
+  results: TmdbTvResult[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface TmdbTvExternalIds {
+  imdb_id: string | null;
+}
+
+export interface SeriesShow {
+  tmdbId: number;
+  name: string;
+  year: number | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  rating: number | null;
+  genres: string[];
+  popularity: number;
+}
+
+export interface TmdbPopularResponse {
+  page: number;
+  results: TmdbSearchResult[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface HeroMovie {
+  id: string;
+  tmdbId: number;
+  title: string;
+  year: number | null;
+  rating: number;
+  genres: string[];
+  posterUrl: string | null;
+  backdropUrl: string;
+  overview: string;
+  popularity: number;
+}
+
+export type FrontpageMovie = HeroMovie & { name: string };
+
+export interface PaginatedMovies {
+  data: MovieListItem[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+export interface MovieListItem {
+  id: string;
+  title: string;
+  year: number | null;
+  imdbRating: number | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  genres: string[];
+  watched: boolean;
+  inWatchlist: boolean;
+}
+
+export interface SubtitleInfo {
+  lang: string;
+  label: string;
+}
+
+export interface MovieDetail {
+  id: string;
+  title: string;
+  imdbId: string;
+  year: number | null;
+  imdbRating: number | null;
+  runtime: number | null;
+  summary: string | null;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  genres: string[];
+  director: string | null;
+  producer: string | null;
+  cast: string[];
+  torrents: TorrentItem[];
+  subtitles: SubtitleInfo[];
+  commentsCount: number;
+  watched: boolean;
+  inWatchlist: boolean;
+}
+
+export interface TorrentItem {
+  id: string;
+  quality: string;
+  episodeLabel: string | null;
+  season: number | null;
+  episode: number | null;
+  seeds: number;
+  peers: number;
+  sizeBytes: string;
+  magnetUrl: string;
+}
+
+export interface SearchParams {
+  query?: string;
+  genre?: string;
+  mediaType?: "movie" | "series";
+  sortBy?: string;
+  order?: string;
+  minRating?: number;
+  minYear?: number;
+  maxYear?: number;
+  page?: number;
+  limit?: number;
+}

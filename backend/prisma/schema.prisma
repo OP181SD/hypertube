@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuthProvider {
+  LOCAL
+  FORTY_TWO
+  GOOGLE
+  GITHUB
+  DISCORD
+}
+
+enum Language {
+  EN
+  FR
+  ES
+  IT
+  PT
+  DE
+  RU
+  JA
+  KO
+  ZH
+  AR
+  NL
+  PL
+  SV
+  TR
+}
+
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  username          String       @unique
+  firstName         String       @map("first_name")
+  lastName          String       @map("last_name")
+  passwordHash      String?      @map("password_hash")
+  profilePictureUrl String?      @map("profile_picture_url")
+  language          Language     @default(EN)
+  authProvider      AuthProvider @default(LOCAL) @map("auth_provider")
+  providerId        String?      @map("provider_id")
+  emailVerified     Boolean      @default(false) @map("email_verified")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  passwordResets      PasswordReset[]
+  refreshTokens       RefreshToken[]
+  emailVerifications  EmailVerification[]
+  comments            Comment[]
+  watchHistory        WatchHistory[]
+  watchlist           Watchlist[]
+
+  @@map("users")
+}
+
+model EmailVerification {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String    @map("user_id")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verifications")
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String    @map("user_id")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String    @map("user_id")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model OAuthClient {
+  id           String @id @default(uuid())
+  clientId     String @unique @map("client_id")
+  clientSecret String @map("client_secret")
+  name         String
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("oauth_clients")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  movieId   String   @map("movie_id")
+  authorId  String   @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  movie  Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Movie {
+  id         String   @id @default(uuid())
+  imdbId     String   @unique @map("imdb_id")
+  title      String
+  year       Int?
+  imdbRating Float?   @map("imdb_rating")
+  runtime    Int?
+  posterUrl   String?  @map("poster_url")
+  backdropUrl String?  @map("backdrop_url")
+  summary     String?
+  tmdbId     Int?     @map("tmdb_id")
+  genres     String[] @default([])
+  director   String?
+  producer   String?
+  cast       String[] @default([])
+  mediaType  String   @default("movie") @map("media_type")
+  episodesFetched Boolean @default(false) @map("episodes_fetched")
+  /// Highest seed count among torrents (YTS/EZTV).
+  maxSeeds   Int      @default(0) @map("max_seeds")
+  /// TMDb popularity score — used for Library "Popular" sort (same source as hero/fill).
+  popularity Float    @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  comments     Comment[]
+  watchHistory WatchHistory[]
+  watchlist    Watchlist[]
+  torrents     Torrent[]
+
+  @@index([title])
+  @@index([imdbRating])
+  @@index([year])
+  @@index([mediaType])
+  @@index([maxSeeds])
+  @@index([popularity])
+  @@map("movies")
+}
+
+model Torrent {
+  id             String    @id @default(uuid())
+  movieId        String    @map("movie_id")
+  hash           String    @unique
+  quality        String
+  episodeLabel   String?   @map("episode_label")
+  source         String
+  seeds          Int       @default(0)
+  peers          Int       @default(0)
+  sizeBytes      BigInt    @default(0) @map("size_bytes")
+  magnetUrl      String    @map("magnet_url") @db.Text
+  torrentFileUrl String?   @map("torrent_file_url")
+  filePath       String?   @map("file_path")
+  downloadStatus String    @default("idle") @map("download_status")
+  lastAccessedAt DateTime? @map("last_accessed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@index([downloadStatus, lastAccessedAt])
+  @@map("torrents")
+}
+
+model Watchlist {
+  id      String   @id @default(uuid())
+  userId  String   @map("user_id")
+  movieId String   @map("movie_id")
+  addedAt DateTime @default(now()) @map("added_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@map("watchlist")
+}
+
+model WatchHistory {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  movieId   String   @map("movie_id")
+  watchedAt DateTime @default(now()) @map("watched_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@map("watch_history")
+}

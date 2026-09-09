@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: docker.io/postgres:18-alpine
+    container_name: hypertube-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hypertube}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hypertube_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-hypertube}
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hypertube"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: docker.io/redis:8-alpine
+    container_name: hypertube-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mailpit:
+    image: docker.io/axllent/mailpit:latest
+    container_name: hypertube-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  pgdata:
+  redisdata:

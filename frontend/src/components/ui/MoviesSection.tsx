@@ -1,0 +1,139 @@
+import { FC, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { PosterImage } from "@/components/ui/PosterImage";
+import type { MovieListItem } from "@/types/api";
+
+interface MoviesSectionProps {
+  movies: MovieListItem[];
+  loading?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  title?: string;
+}
+
+export const MoviesSection: FC<MoviesSectionProps> = ({
+  movies,
+  loading,
+  hasMore,
+  onLoadMore,
+  title,
+}) => {
+  const { t } = useTranslation();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(loading);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  });
+
+  useEffect(() => {
+    if (!onLoadMore || !hasMore) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingRef.current) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [onLoadMore, hasMore]);
+
+  return (
+    <section className="w-full max-w-400 mt-6 px-4 sm:px-6">
+      {title ? (
+        <h2 className="text-xl font-semibold text-white mb-4">{title}</h2>
+      ) : null}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {movies.map((m) => (
+          <Link
+            to={`/movies/${m.id}`}
+            key={m.id}
+            className="group relative rounded-lg overflow-hidden bg-gray-900 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
+          >
+            <PosterImage
+              src={m.posterUrl}
+              alt={m.title}
+              className={`w-full h-87.5 object-cover transition-[filter,opacity] ${
+                m.watched ? "opacity-55 brightness-75" : ""
+              }`}
+              placeholderClassName="w-full h-87.5 bg-gray-800 flex items-center justify-center text-white/40 text-sm"
+            />
+
+            {m.watched && (
+              <div className="absolute inset-0 ring-2 ring-inset ring-emerald-400/80 pointer-events-none rounded-lg" />
+            )}
+
+            <div className="absolute top-2 left-2 right-2 flex justify-between items-start gap-1">
+              {m.watched ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500 px-2 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wide text-white shadow-lg">
+                  <svg
+                    className="w-3.5 h-3.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  {t("watched")}
+                </span>
+              ) : (
+                <span />
+              )}
+              {m.inWatchlist && (
+                <div className="bg-blue-500 rounded-full p-1.5 shadow-lg shrink-0">
+                  <svg
+                    className="w-3.5 h-3.5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path d="M6 2a1 1 0 00-1 1v18l7-3 7 3V3a1 1 0 00-1-1H6z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            <div className="absolute bottom-0 left-0 w-full h-2/5 bg-linear-to-t from-black via-black/60 to-transparent pointer-events-none" />
+
+            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-inner" />
+
+            <div className="absolute bottom-0 w-full p-3 text-white">
+              <h3 className="text-sm font-semibold leading-tight line-clamp-2 drop-shadow-lg">
+                {m.title}
+              </h3>
+
+              <div className="flex justify-between items-center text-[11px] text-white/90 mt-1 drop-shadow-md">
+                <span>{m.year}</span>
+                <span>{m.imdbRating?.toFixed(1)}</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+
+      </div>
+
+      <div ref={sentinelRef} className="w-full py-8 flex justify-center">
+        {loading && (
+          <div className="flex items-center gap-2 text-white/60 text-sm">
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
+            {t("loading")}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
